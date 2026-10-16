@@ -15,7 +15,7 @@
     "keyEnv": "FAL_API_KEY",
     "prompt": "roof"
   },
-  "activeProvider": "gemini",
+  "activeProvider": "fal-krea-v3-edit",
   "providers": [
     {
       "id": "gemini",
