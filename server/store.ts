@@ -329,7 +329,8 @@ function cleanProvider(p: Partial<ProviderConfig>, seen: Set<string>): ProviderC
   let id = String(p.id ?? '').trim() || slug(label);
   while (seen.has(id)) id = `${slug(label)}-${Math.random().toString(36).slice(2, 6)}`;
   seen.add(id);
-  return { id, label, type, model, keyEnv };
+  const systemPrompt = String(p.systemPrompt ?? '').trim().slice(0, 30000);
+  return { id, label, type, model, keyEnv, ...(systemPrompt ? { systemPrompt } : {}) };
 }
 
 function cleanSegmentation(s: SegmentationSettings): SegmentationSettings {

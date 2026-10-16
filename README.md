@@ -61,6 +61,10 @@ the same effect you see in other roof visualizer apps.
 | Replicate | `REPLICATE_API_TOKEN` | `black-forest-labs/flux-kontext-pro` | 1 |
 | Demo | none | none | runs the whole pipeline, returns the photo |
 
+Each model card can have its **own system prompt** (used instead of the general one). Models with a prompt limit
+(Krea 3 on fal.ai: 5,000 characters, `promptLimit` in `src/lib/models.ts`) get the system prompt shortened at a
+paragraph when needed; product data and the image guide are always sent whole.
+
 Each model card has **Test this model**: one real generation on the start photo with a chosen product, showing the
 result or the provider's error message.
 

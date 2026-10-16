@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, Plus, RotateCcw, Trash2, TriangleAlert } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from '../components/ui';
-import { imageLimit, PROVIDER_TYPES } from '../lib/models';
-import { buildFinalPrompt, DEFAULT_SYSTEM_PROMPT, type ImageRoles } from '../lib/prompt';
+import { imageLimit, promptLimit, PROVIDER_TYPES } from '../lib/models';
+import { buildModelPrompt, DEFAULT_SYSTEM_PROMPT, type ImageRoles } from '../lib/prompt';
 import { productThumb } from '../lib/swatch';
 import { mergeMasks } from '../lib/roofmask';
 import type { AiSettings, AiSettingsView, Catalog, ProviderConfig, ProviderType } from '../types';
@@ -150,6 +150,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
                 </div>
                 {PROVIDER_TYPES[p.type].help && <p className="mt-2 text-xs text-muted">Model: {PROVIDER_TYPES[p.type].help}</p>}
                 <p className="mt-1 text-xs text-muted">{supportText(p)}</p>
+                {p.type !== 'demo' && <OwnPrompt provider={p} general={draft.systemPrompt} onChange={(systemPrompt) => setProvider(i, { systemPrompt })} />}
                 {p.type !== 'demo' && <TestModel password={password} provider={p} catalog={catalog} />}
               </div>
             );
@@ -244,7 +245,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
         </div>
       </div>
 
-      <FinalPromptPreview draft={draft} catalog={catalog} limit={activeLimit} />
+      <FinalPromptPreview draft={draft} catalog={catalog} limit={activeLimit} model={active} />
 
       {error && <p className="text-sm font-semibold text-brand">{error}</p>}
       <div className="sticky bottom-0 flex gap-3 border-t border-line bg-white py-4">
@@ -324,6 +325,47 @@ function RoofMaskTool({
       )}
       {seg.tool === 'sam3' && <TestRoofMask password={password} segmentation={seg} />}
       {!draft.include.roofMask && <p className="mt-3 text-sm text-brand">The roof mask is switched off under “What the AI receives”.</p>}
+    </div>
+  );
+}
+
+/** Optional system prompt for one model, e.g. a shorter one for a model with a prompt limit (Krea 3: 5,000). */
+function OwnPrompt({ provider, general, onChange }: { provider: ProviderConfig; general: string; onChange: (v: string) => void }) {
+  const limit = promptLimit(provider);
+  const own = provider.systemPrompt ?? '';
+  const [open, setOpen] = useState(Boolean(own) || Boolean(limit));
+  return (
+    <div className="mt-3 border-t border-line pt-3">
+      <button type="button" onClick={() => setOpen(!open)} className="text-xs font-semibold text-brand">
+        {open ? '▾' : '▸'} Own system prompt for this model {own ? '(in use)' : '(optional)'}
+      </button>
+      {limit && (
+        <p className="mt-1 text-xs text-muted">
+          This model accepts at most {limit.toLocaleString()} characters in total (system prompt + product data + image guide, about
+          1,500–2,000). Longer prompts are shortened automatically; a system prompt of up to about 3,000 characters fits.
+        </p>
+      )}
+      {open && (
+        <>
+          <textarea
+            value={own}
+            onChange={(e) => onChange(e.target.value)}
+            rows={8}
+            placeholder="Empty = use the general system prompt below."
+            className={`${fieldClass} font-mono text-[12px] leading-relaxed`}
+          />
+          <div className="mt-1 flex items-center gap-3 text-xs text-muted">
+            <span>
+              {own.length.toLocaleString()} characters{!own && ` (general prompt: ${general.length.toLocaleString()})`}
+            </span>
+            {!own && (
+              <button type="button" onClick={() => onChange(general)} className="font-semibold text-brand">
+                Copy the general prompt here to shorten it
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -439,7 +481,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 }
 
 /** General prompt + product data = final prompt, for any product, exactly as the model will receive it. */
-function FinalPromptPreview({ draft, catalog, limit }: { draft: AiSettings; catalog: Catalog; limit: number }) {
+function FinalPromptPreview({ draft, catalog, limit, model }: { draft: AiSettings; catalog: Catalog; limit: number; model: ProviderConfig }) {
   const [productId, setProductId] = useState(catalog.products.find((p) => p.images.length)?.id ?? catalog.products[0]?.id ?? '');
   const product = catalog.products.find((p) => p.id === productId);
   const category = catalog.categories.find((c) => c.id === product?.category);
@@ -458,7 +500,8 @@ function FinalPromptPreview({ draft, catalog, limit }: { draft: AiSettings; cata
   }, [draft, product, limit]);
 
   if (!product) return null;
-  const prompt = buildFinalPrompt(draft, product, category, roles);
+  const { prompt, shortened } = buildModelPrompt(draft, model, product, category, roles);
+  const maxChars = promptLimit(model);
   const images = [
     'House photo',
     ...(roles.depth ? ['Depth map'] : []),
@@ -470,7 +513,9 @@ function FinalPromptPreview({ draft, catalog, limit }: { draft: AiSettings; cata
   return (
     <div>
       <h2 className="border-b border-line pb-2 text-lg font-bold">Final prompt preview</h2>
-      <p className="mt-2 text-sm text-muted">System prompt + product data, exactly as the model receives it (unsaved changes included).</p>
+      <p className="mt-2 text-sm text-muted">
+        System prompt + product data, exactly as the active model ({model.label}) receives it (unsaved changes included).
+      </p>
       <label className="mt-4 block text-sm font-semibold">
         Product
         <select value={productId} onChange={(e) => setProductId(e.target.value)} className={fieldClass}>
@@ -506,7 +551,14 @@ function FinalPromptPreview({ draft, catalog, limit }: { draft: AiSettings; cata
               </li>
             ))}
           </ol>
-          <p className="mt-3 text-xs text-muted">{prompt.length.toLocaleString()} characters</p>
+          <p className="mt-3 text-xs text-muted">
+            {prompt.length.toLocaleString()} characters{maxChars ? ` (limit ${maxChars.toLocaleString()})` : ''}
+          </p>
+          {shortened && (
+            <p className="mt-1 text-xs font-semibold text-brand">
+              Shortened to fit this model: the end of the system prompt is left out. Write a shorter prompt for this model on its card.
+            </p>
+          )}
         </div>
       </div>
     </div>

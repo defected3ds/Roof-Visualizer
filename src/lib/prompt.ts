@@ -1,4 +1,5 @@
-import type { AiSettings, Category, Product } from '../types';
+import type { AiSettings, Category, Product, ProviderConfig } from '../types';
+import { promptLimit } from './models';
 
 /**
  * Builds the final prompt sent to the image model: the admin's general system prompt plus the
@@ -89,4 +90,43 @@ export function buildFinalPrompt(
   text = text.includes('{{images}}') ? text.replace('{{images}}', imagesText) : `${text}\n\n${imagesText}`;
   if (variant > 0) text += `\n\nVariation ${variant + 1}: allow natural, subtle differences in colour blend and weathering.`;
   return text.replace(/\n{3,}/g, '\n\n').trim();
+}
+
+/**
+ * The prompt for one model: its own system prompt if it has one, and shortened to the model's prompt limit
+ * if needed. Product data and the image guide are always kept whole; the system prompt is cut at a paragraph.
+ */
+export function buildModelPrompt(
+  settings: AiSettings,
+  cfg: Pick<ProviderConfig, 'type' | 'model' | 'systemPrompt'>,
+  product: Product,
+  category: Category | undefined,
+  roles: ImageRoles,
+  variant = 0,
+): { prompt: string; shortened: boolean } {
+  const own = cfg.systemPrompt?.trim() ? { ...settings, systemPrompt: cfg.systemPrompt } : settings;
+  const full = buildFinalPrompt(own, product, category, roles, variant);
+  const limit = promptLimit(cfg);
+  if (!limit || full.length <= limit) return { prompt: full, shortened: false };
+
+  // Keep product data + image guide (+ variation note) whole, and fit as much of the system prompt as possible.
+  const tail = [
+    productBlock(own, product, category),
+    imageGuide(roles),
+    variant > 0 ? `Variation ${variant + 1}: allow natural, subtle differences in colour blend and weathering.` : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+  const rules = (own.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT)
+    .replace(/\{\{(product|images)\}\}/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  const budget = limit - tail.length - 4;
+  let head = '';
+  for (const para of rules.split(/\n\n/)) {
+    if (head.length + para.length + 2 > budget) break;
+    head += (head ? '\n\n' : '') + para;
+  }
+  return { prompt: `${head}\n\n${tail}`.trim().slice(0, limit), shortened: true };
 }

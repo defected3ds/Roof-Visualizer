@@ -24,7 +24,7 @@ import {
   syncFromGitHub,
 } from './server/store';
 import { createProvider, hasKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
-import { buildFinalPrompt, type ImageRoles } from './src/lib/prompt';
+import { buildModelPrompt, type ImageRoles } from './src/lib/prompt';
 import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_HOUR) || 20;
@@ -246,7 +246,7 @@ async function startServer() {
     const roles: ImageRoles = { depth: Boolean(depth), mask: Boolean(mask), productPhotos: photos.length, swatch: Boolean(swatch) };
     const images = [body.image, depth, mask, ...photos, swatch].filter((x): x is string => Boolean(x));
     const category = getCategory(product.category);
-    const prompts = Array.from({ length: variants }, (_, v) => buildFinalPrompt(ai, product, category, roles, v));
+    const prompts = Array.from({ length: variants }, (_, v) => buildModelPrompt(ai, cfg, product, category, roles, v).prompt);
     return { images, prompts, depth, mask, photos, swatch };
   }
 

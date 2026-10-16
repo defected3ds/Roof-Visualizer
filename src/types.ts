@@ -69,6 +69,8 @@ export interface ProviderConfig {
   model: string;
   /** Name of the server environment variable holding the API key, e.g. GEMINI_API_KEY. */
   keyEnv: string;
+  /** Optional system prompt used instead of the general one, e.g. a shorter one for a model with a prompt limit. */
+  systemPrompt?: string;
 }
 
 /** AI settings edited in /admin > AI settings (data/ai.json). */
