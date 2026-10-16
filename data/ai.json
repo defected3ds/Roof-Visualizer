@@ -4,8 +4,8 @@
     "productData": true,
     "specs": true,
     "productPhotos": true,
-    "depthMap": false,
-    "roofMask": false
+    "depthMap": true,
+    "roofMask": true
   },
   "maxProductPhotos": 3,
   "variants": 1,
