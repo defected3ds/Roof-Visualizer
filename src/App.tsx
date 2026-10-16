@@ -241,14 +241,20 @@ function RoofApp() {
 
   if (!base) {
     return (
-      <Shell>
+      <Shell app>
         {pickers}
         <Header />
-        <img src={t('start.image')} alt="" className="aspect-[4/3] w-full object-cover" />
-        <div className="flex flex-1 flex-col justify-between px-5 pb-8 pt-6">
+        {/* Desktop: photo on the left, text and buttons on the right. */}
+        <div className="flex flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        <img
+          src={t('start.image')}
+          alt=""
+          className="aspect-[4/3] w-full object-cover lg:sticky lg:top-16 lg:aspect-auto lg:h-[calc(100dvh-4rem)]"
+        />
+        <div className="flex flex-1 flex-col justify-between px-5 pb-8 pt-6 lg:mx-auto lg:w-full lg:max-w-xl lg:justify-center lg:gap-4 lg:px-12 lg:py-12">
           <div>
             <Tag>{t('start.tag')}</Tag>
-            <h1 className="mt-4 text-[34px] font-bold leading-tight">{t('start.title')}</h1>
+            <h1 className="mt-4 text-[34px] font-bold leading-tight lg:text-[44px]">{t('start.title')}</h1>
             <p className="mt-4 whitespace-pre-line text-[17px] leading-relaxed text-muted">{t('start.intro')}</p>
             <ol className="mt-8 divide-y divide-dotted divide-line border-y border-line">
               {[t('start.step1'), t('start.step2'), t('start.step3')].map((text, i) => (
@@ -272,12 +278,13 @@ function RoofApp() {
             </a>
           </div>
         </div>
+        </div>
       </Shell>
     );
   }
 
   return (
-    <Shell>
+    <Shell app>
       {pickers}
       <Header
         left={
@@ -305,7 +312,10 @@ function RoofApp() {
         }
       />
 
-      <div className="flex items-baseline justify-between px-5 pb-3 pt-5">
+      {/* Desktop: photo area on the left, product panel on the right, both fitting the window height. */}
+      <div className="flex flex-1 flex-col lg:grid lg:h-[calc(100dvh-4rem)] lg:flex-none lg:grid-cols-[minmax(0,1fr)_minmax(380px,440px)] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden">
+      <div className="flex flex-1 flex-col lg:min-h-0">
+      <div className="flex items-baseline justify-between px-5 pb-3 pt-5 lg:px-8">
         <p className="shrink-0 text-xs font-bold uppercase tracking-[0.1em] text-muted">{t('editor.heading')}</p>
         {product && (
           <button
@@ -317,7 +327,7 @@ function RoofApp() {
           </button>
         )}
       </div>
-      <div className="flex flex-1 items-center">
+      <div className="flex flex-1 items-center lg:min-h-0 lg:px-8">
         <Stage
           base={base}
           results={results}
@@ -330,7 +340,7 @@ function RoofApp() {
         />
       </div>
 
-      <div className="flex items-center justify-between px-5 py-4">
+      <div className="flex items-center justify-between px-5 py-4 lg:px-8">
         <div className="flex gap-2">
           <ToolButton label="Change photo" onClick={() => fileInput.current?.click()} disabled={busy}>
             <ImageIcon size={20} />
@@ -357,7 +367,9 @@ function RoofApp() {
         </div>
       </div>
 
-      <section className="border-t border-line bg-paper pb-6 pt-3">
+      </div>
+
+      <section className="border-t border-line bg-paper pb-6 pt-3 lg:flex lg:min-h-0 lg:flex-col lg:border-l lg:border-t-0 lg:pt-4">
         {product ? (
           <MaterialPicker
             categories={categories}
@@ -369,7 +381,7 @@ function RoofApp() {
         ) : (
           <p className="px-5 py-6 text-center text-sm text-muted">No products yet. Add some at /admin.</p>
         )}
-        <div className="mt-5 grid grid-cols-2 gap-3 px-5">
+        <div className="mt-5 grid shrink-0 grid-cols-2 gap-3 px-5 lg:mt-0 lg:border-t lg:border-line lg:pt-5">
           <SecondaryButton onClick={accept} disabled={busy || results.length === 0}>
             <Check size={20} /> {t('editor.accept')}
           </SecondaryButton>
@@ -378,6 +390,7 @@ function RoofApp() {
           </PrimaryButton>
         </div>
       </section>
+      </div>
 
       {toast && (
         <div className="fixed inset-x-4 bottom-28 z-20 mx-auto flex max-w-lg items-start gap-3 rounded-wb border-l-4 border-brand bg-white p-4 text-ink shadow-2xl">
@@ -490,9 +503,9 @@ function ToolButton({
 function ProductDetails({ product, category, onClose }: { product: Product; category: string; onClose: () => void }) {
   const t = useT();
   return (
-    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 lg:items-center" onClick={onClose}>
       <div
-        className="max-h-[85dvh] w-full max-w-xl overflow-y-auto rounded-t-[6px] bg-white px-5 pb-8 pt-5 text-ink"
+        className="max-h-[85dvh] w-full max-w-xl overflow-y-auto rounded-t-[6px] bg-white px-5 pb-8 pt-5 text-ink lg:rounded-[6px] lg:px-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">

@@ -12,6 +12,9 @@ interface Props {
   edgeMaps: string[];
 }
 
+/** Phones: full width at natural height. Desktop: fitted inside the available area. */
+const PHOTO = 'block w-full lg:h-full lg:object-contain';
+
 /** The photo area: current image, swipeable results, before/after slider and the generating overlay. */
 export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps }: Props) {
   const t = useT();
@@ -32,18 +35,18 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
   const showing = results.length > 0;
 
   return (
-    <div className="relative w-full overflow-hidden bg-paper">
+    <div className="relative w-full overflow-hidden bg-paper lg:h-full lg:bg-transparent">
       {showing ? (
-        <div ref={scroller} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
+        <div ref={scroller} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto lg:h-full">
           {results.map((src, i) => (
-            <div key={i} className="relative w-full shrink-0 snap-center">
+            <div key={i} className="relative w-full shrink-0 snap-center lg:h-full">
               {compare ? (
-                <div className="relative">
-                  <img src={base} alt="Before" className="block w-full" />
+                <div className="relative lg:h-full">
+                  <img src={base} alt="Before" className={PHOTO} />
                   <img
                     src={src}
                     alt="After"
-                    className="absolute inset-0 h-full w-full"
+                    className="absolute inset-0 h-full w-full lg:object-contain"
                     style={{ clipPath: `inset(0 0 0 ${split}%)` }}
                   />
                   <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white shadow" style={{ left: `${split}%` }} />
@@ -60,13 +63,13 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
                   />
                 </div>
               ) : (
-                <img src={src} alt={`Result ${i + 1}`} className="block w-full" />
+                <img src={src} alt={`Result ${i + 1}`} className={PHOTO} />
               )}
             </div>
           ))}
         </div>
       ) : (
-        <img src={base} alt="Your house" className="block w-full" />
+        <img src={base} alt="Your house" className={PHOTO} />
       )}
 
       {showing && results.length > 1 && !generating && (
@@ -103,7 +106,7 @@ function GeneratingOverlay({ startedAt, edgeMaps }: { startedAt: number | null; 
           key={i}
           src={src}
           alt=""
-          className="absolute inset-0 h-full w-full transition-opacity duration-700"
+          className="absolute inset-0 h-full w-full transition-opacity duration-700 lg:object-contain"
           style={{ opacity: stage === i ? 1 : 0 }}
         />
       ))}

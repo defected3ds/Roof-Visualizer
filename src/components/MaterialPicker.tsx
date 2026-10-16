@@ -18,8 +18,8 @@ export function MaterialPicker({ categories, products, selected, onSelect, disab
   const items = useMemo(() => (filter === 'all' ? products : products.filter((p) => p.category === filter)), [filter, products]);
 
   return (
-    <div className="space-y-4">
-      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line px-3 [mask-image:linear-gradient(to_right,black_88%,transparent)]">
+    <div className="space-y-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:space-y-0">
+      <div className="no-scrollbar flex shrink-0 gap-1 overflow-x-auto border-b border-line px-3 [mask-image:linear-gradient(to_right,black_88%,transparent)] lg:flex-wrap lg:overflow-visible lg:px-4 lg:[mask-image:none]">
         {[{ id: 'all', name: t('editor.all') }, ...tabs].map((c) => (
           <button
             key={c.id}
@@ -32,7 +32,8 @@ export function MaterialPicker({ categories, products, selected, onSelect, disab
           </button>
         ))}
       </div>
-      <div className="no-scrollbar flex snap-x gap-3 overflow-x-auto px-4 pb-1">
+      {/* Phone: one swipeable row. Desktop: a scrollable grid filling the side panel. */}
+      <div className="no-scrollbar flex snap-x gap-3 overflow-x-auto px-4 pb-1 lg:grid lg:min-h-0 lg:flex-1 lg:auto-rows-max lg:grid-cols-3 lg:content-start lg:overflow-y-auto lg:overflow-x-hidden lg:py-4 lg:[scrollbar-width:thin]">
         {items.map((p) => {
           const active = p.id === selected.id;
           return (
@@ -41,7 +42,7 @@ export function MaterialPicker({ categories, products, selected, onSelect, disab
               disabled={disabled}
               onClick={() => onSelect(p)}
               title={[p.brand, p.name].filter(Boolean).join(' ')}
-              className={`flex w-36 shrink-0 snap-start flex-col overflow-hidden rounded-wb border bg-white text-left transition disabled:opacity-60 ${
+              className={`flex w-36 shrink-0 snap-start flex-col lg:w-auto overflow-hidden rounded-wb border bg-white text-left transition disabled:opacity-60 ${
                 active ? 'border-brand shadow-[0_0_0_1px_var(--color-brand)]' : 'border-line hover:shadow-md'
               }`}
             >

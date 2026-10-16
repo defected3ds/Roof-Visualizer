@@ -1,10 +1,12 @@
-export function Shell({ children, wide }: { children: React.ReactNode; wide?: boolean }) {
-  return <main className={`mx-auto flex min-h-dvh flex-col bg-white text-ink ${wide ? 'max-w-3xl' : 'max-w-xl'}`}>{children}</main>;
+/** Page frame. `app` screens use the full window width on desktop (lg and up). */
+export function Shell({ children, wide, app }: { children: React.ReactNode; wide?: boolean; app?: boolean }) {
+  const width = app ? 'max-w-xl lg:max-w-none' : wide ? 'max-w-3xl' : 'max-w-xl';
+  return <main className={`mx-auto flex min-h-dvh w-full flex-col bg-white text-ink ${width}`}>{children}</main>;
 }
 
 export function Header({ left, right }: { left?: React.ReactNode; right?: React.ReactNode }) {
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-line bg-white px-5">
+    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b border-line bg-white px-5 lg:px-8">
       {left}
       <span className="flex items-center gap-1.5" aria-label="wienerberger">
         <img src="/w-symbol.png" alt="" className="h-7 w-7" />
