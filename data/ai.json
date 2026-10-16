@@ -4,11 +4,11 @@
     "productData": true,
     "specs": true,
     "productPhotos": true,
-    "depthMap": true,
-    "roofMask": true
+    "depthMap": false,
+    "roofMask": false
   },
   "maxProductPhotos": 3,
-  "variants": 3,
+  "variants": 1,
   "activeProvider": "gemini",
   "providers": [
     {
@@ -17,27 +17,6 @@
       "type": "gemini",
       "model": "gemini-nano-banana-2.1",
       "keyEnv": "GEMINI_API_KEY"
-    },
-    {
-      "id": "openai",
-      "label": "OpenAI – GPT Image",
-      "type": "openai",
-      "model": "gpt-image-1",
-      "keyEnv": "OPENAI_API_KEY"
-    },
-    {
-      "id": "replicate",
-      "label": "Replicate – FLUX.1 Kontext Pro",
-      "type": "replicate",
-      "model": "black-forest-labs/flux-kontext-pro",
-      "keyEnv": "REPLICATE_API_TOKEN"
-    },
-    {
-      "id": "demo",
-      "label": "Demo – returns the photo unchanged",
-      "type": "demo",
-      "model": "",
-      "keyEnv": ""
     }
   ]
 }
