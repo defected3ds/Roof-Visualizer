@@ -1,7 +1,7 @@
 /**
- * Roof segmentation: finds the roof in the house photo with CLIPSeg (text-prompted segmentation,
- * prompts "roof" and "roof tiles"), running in the browser via transformers.js like the depth map.
- * The mask is approximate; the prompt tells the image model to follow the real roof edges.
+ * Roof segmentation. With SAM 3 switched on (/admin > AI settings) the server asks Meta SAM 3 on fal.ai for
+ * sharp roof masks; otherwise, or when that fails, CLIPSeg (text-prompted, "roof" / "roof tiles") runs in the
+ * browser via transformers.js like the depth map. CLIPSeg masks are approximate.
  */
 import { loadTransformers } from './depth';
 
@@ -16,6 +16,12 @@ export interface RoofMask {
   mask: string;
   /** The photo with the roof tinted red, for the loading animation. */
   overlay: string;
+}
+
+/** Set from /api/health: which tool to use, and the access code for /api/roof-mask. */
+const config = { tool: 'clipseg' as 'sam3' | 'clipseg', accessCode: '' };
+export function configureRoofMask(next: Partial<typeof config>) {
+  Object.assign(config, next);
 }
 
 let segmenter: Promise<{ tokenizer: any; processor: any; model: any; RawImage: any }> | null = null;
@@ -44,7 +50,83 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+/** Size of the mask and overlay: the photo's proportions, at most 1024 px. */
+function maskSize(img: HTMLImageElement) {
+  const scale = Math.min(1, 1024 / Math.max(img.naturalWidth, img.naturalHeight));
+  return { W: Math.round(img.naturalWidth * scale), H: Math.round(img.naturalHeight * scale) };
+}
+
+/** SAM 3 via the server: merges the masks of all roofs found into one. */
+async function runSam3(photo: string): Promise<RoofMask | null> {
+  const res = await fetch('/api/roof-mask', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Access-Code': config.accessCode },
+    body: JSON.stringify({ image: photo }),
+  });
+  if (!res.ok) throw new Error(`roof mask ${res.status}`);
+  const { masks } = (await res.json()) as { masks: string[] };
+  if (!masks?.length) return null;
+
+  const img = await loadImage(photo);
+  const { W, H } = maskSize(img);
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  const roof = new Uint8ClampedArray(W * H);
+  for (const src of masks) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(await loadImage(src), 0, 0, W, H);
+    const d = ctx.getImageData(0, 0, W, H).data;
+    // White (or opaque light) pixels are the roof; black or transparent ones are not.
+    for (let i = 0; i < W * H; i++) {
+      const v = d[i * 4 + 3] < 128 ? 0 : (d[i * 4] + d[i * 4 + 1] + d[i * 4 + 2]) / 3;
+      if (v > roof[i]) roof[i] = v;
+    }
+  }
+  return paint(img, W, H, roof);
+}
+
+/** Black-and-white mask for the AI and a red-tinted photo for the loading animation. */
+function paint(img: HTMLImageElement, W: number, H: number, roof: Uint8ClampedArray): RoofMask | null {
+  let roofPixels = 0;
+  for (const v of roof) if (v > 127) roofPixels++;
+  // No roof found (e.g. a photo without a house): don't send a misleading empty mask.
+  if (roofPixels < W * H * 0.01) return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d')!;
+  const out = ctx.createImageData(W, H);
+  const tint = ctx.createImageData(W, H);
+  for (let i = 0; i < W * H; i++) {
+    out.data.set([roof[i], roof[i], roof[i], 255], i * 4);
+    tint.data.set([179, 0, 0, Math.round(roof[i] * 0.6)], i * 4);
+  }
+  ctx.putImageData(out, 0, 0);
+  const mask = canvas.toDataURL('image/png');
+  const layer = document.createElement('canvas');
+  layer.width = W;
+  layer.height = H;
+  layer.getContext('2d')!.putImageData(tint, 0, 0);
+  ctx.drawImage(img, 0, 0, W, H);
+  ctx.drawImage(layer, 0, 0);
+  return { mask, overlay: canvas.toDataURL('image/jpeg', 0.85) };
+}
+
 async function run(photo: string): Promise<RoofMask | null> {
+  if (config.tool === 'sam3') {
+    try {
+      const result = await runSam3(photo);
+      if (result) return result;
+    } catch (err) {
+      console.warn('SAM 3 roof mask unavailable, using CLIPSeg:', err);
+    }
+  }
+  return runClipSeg(photo);
+}
+
+async function runClipSeg(photo: string): Promise<RoofMask | null> {
   try {
     const { tokenizer, processor, model, RawImage } = await loadSegmenter();
     const img = await loadImage(photo);
@@ -75,9 +157,7 @@ async function run(photo: string): Promise<RoofMask | null> {
     if (roofPixels < w * h * 0.01) return null;
 
     // Scale back to the photo's proportions.
-    const scale = Math.min(1, 1024 / Math.max(img.naturalWidth, img.naturalHeight));
-    const W = Math.round(img.naturalWidth * scale);
-    const H = Math.round(img.naturalHeight * scale);
+    const { W, H } = maskSize(img);
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = H;
@@ -101,10 +181,11 @@ async function run(photo: string): Promise<RoofMask | null> {
 
 /** Starts (or reuses) roof segmentation for a photo; runs alongside the depth map. */
 export function roofMaskFor(photo: string): Promise<RoofMask | null> {
-  let job = cache.get(photo);
+  const key = `${config.tool}:${photo}`;
+  let job = cache.get(key);
   if (!job) {
     job = run(photo);
-    cache.set(photo, job);
+    cache.set(key, job);
   }
   return job;
 }

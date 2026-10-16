@@ -90,12 +90,25 @@ export interface AiSettings {
   variants: number;
   /** Show line and edge maps of the photo while generating (display only, never sent to the AI). */
   showEdgeMaps: boolean;
+  /** How the roof mask is made. */
+  segmentation: SegmentationSettings;
   activeProvider: string;
   providers: ProviderConfig[];
+}
+
+export interface SegmentationSettings {
+  /** sam3 = Meta SAM 3 on fal.ai (sharp, about $0.005 per photo); clipseg = free, in the browser, rough. */
+  tool: 'sam3' | 'clipseg';
+  /** Env variable with the fal.ai key, e.g. FAL_API_KEY. */
+  keyEnv: string;
+  /** What SAM 3 looks for, e.g. "roof". */
+  prompt: string;
 }
 
 /** What the admin receives: settings plus which providers have their API key set on the server. */
 export interface AiSettingsView {
   settings: AiSettings;
   keyStatus: Record<string, boolean>;
+  /** Whether the roof mask tool's key is set on the server. */
+  segmentationKey: boolean;
 }

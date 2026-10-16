@@ -44,8 +44,8 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
     setBusy(true);
     setError('');
     try {
-      const res = await api<SaveResult & { settings: AiSettings; keyStatus: Record<string, boolean> }>(password, 'PUT', '/api/admin/ai', draft);
-      setLoaded((l) => (l ? { ...l, settings: res.settings, keyStatus: res.keyStatus } : l));
+      const res = await api<SaveResult & AiSettingsView>(password, 'PUT', '/api/admin/ai', draft);
+      setLoaded((l) => (l ? { ...l, settings: res.settings, keyStatus: res.keyStatus, segmentationKey: res.segmentationKey } : l));
       setDraft(res.settings);
       onSaved(res);
     } catch (err: any) {
@@ -227,6 +227,9 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
         )}
       </div>
 
+      {/* ---- Roof mask tool ---- */}
+      <RoofMaskTool draft={draft} loaded={loaded} set={set} />
+
       {/* ---- Loading screen ---- */}
       <div>
         <h2 className="border-b border-line pb-2 text-lg font-bold">While generating</h2>
@@ -251,6 +254,64 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
         </PrimaryButton>
       </div>
     </section>
+  );
+}
+
+function RoofMaskTool({ draft, loaded, set }: { draft: AiSettings; loaded: AiSettingsView; set: (patch: Partial<AiSettings>) => void }) {
+  const seg = draft.segmentation;
+  const setSeg = (patch: Partial<AiSettings['segmentation']>) => set({ segmentation: { ...seg, ...patch } });
+  const keyKnown = loaded.settings.segmentation.keyEnv === seg.keyEnv;
+  const keySet = keyKnown && loaded.segmentationKey;
+  return (
+    <div>
+      <h2 className="border-b border-line pb-2 text-lg font-bold">Roof mask tool</h2>
+      <p className="mt-2 text-sm text-muted">
+        How the roof is found in the customer&apos;s photo. SAM 3 gives sharp, accurate roof outlines; if it fails, the app
+        uses CLIPSeg automatically.
+      </p>
+      <div className="mt-4 space-y-3">
+        {(
+          [
+            ['sam3', 'Meta SAM 3 on fal.ai', 'Sharp and accurate. About $0.005 per photo, needs a fal.ai key.'],
+            ['clipseg', 'CLIPSeg in the browser', 'Free, runs on the customer’s device. Rough edges, can miss parts of the roof.'],
+          ] as const
+        ).map(([tool, label, help]) => (
+          <label
+            key={tool}
+            className={`flex cursor-pointer gap-3 rounded-wb border p-4 ${seg.tool === tool ? 'border-brand shadow-[0_0_0_1px_var(--color-brand)]' : 'border-line'}`}
+          >
+            <input type="radio" name="mask-tool" checked={seg.tool === tool} onChange={() => setSeg({ tool })} className="mt-1 accent-[var(--color-brand)]" />
+            <span>
+              <span className="block font-semibold">{label}</span>
+              <span className="block text-sm text-muted">{help}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      {seg.tool === 'sam3' && (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm font-semibold">
+            API key variable (in Render → Environment)
+            <input value={seg.keyEnv} onChange={(e) => setSeg({ keyEnv: e.target.value.toUpperCase() })} className={`${fieldClass} font-mono`} />
+            {keySet ? (
+              <span className="mt-1 flex items-center gap-1 text-xs font-semibold text-ink">
+                <Check size={14} /> Key {seg.keyEnv} is set
+              </span>
+            ) : (
+              <span className="mt-1 flex items-center gap-1 text-xs font-semibold text-brand">
+                <TriangleAlert size={14} /> {keyKnown ? `Key ${seg.keyEnv} missing on the server: CLIPSeg is used` : 'Save to check the key'}
+              </span>
+            )}
+          </label>
+          <label className="block text-sm font-semibold">
+            What to find
+            <input value={seg.prompt} onChange={(e) => setSeg({ prompt: e.target.value })} className={fieldClass} />
+            <span className="mt-1 block text-xs font-normal text-muted">A short phrase in English, e.g. &quot;roof&quot;.</span>
+          </label>
+        </div>
+      )}
+      {!draft.include.roofMask && <p className="mt-3 text-sm text-brand">The roof mask is switched off under “What the AI receives”.</p>}
+    </div>
   );
 }
 

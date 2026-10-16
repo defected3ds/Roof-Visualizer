@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { imageLimit as imageLimitFor } from '../src/lib/models';
 import { DEFAULT_SYSTEM_PROMPT } from '../src/lib/prompt';
-import type { AiSettings, ProviderConfig } from '../src/types';
+import type { AiSettings, ProviderConfig, SegmentationSettings } from '../src/types';
 
 /** What every image model receives: the ordered images (house photo first) and one prompt per variant. */
 export interface ModelInput {
@@ -28,6 +28,45 @@ export function hasKey(cfg: ProviderConfig): boolean {
   return cfg.type === 'demo' || (validKeyEnv(cfg.keyEnv) && Boolean(process.env[cfg.keyEnv]));
 }
 
+/** SAM 3 when a fal.ai key is set (FAL_API_KEY or FAL_KEY), else CLIPSeg in the browser. */
+function defaultSegmentation(): SegmentationSettings {
+  const keyEnv = process.env.FAL_API_KEY || !process.env.FAL_KEY ? 'FAL_API_KEY' : 'FAL_KEY';
+  return { tool: process.env[keyEnv] ? 'sam3' : 'clipseg', keyEnv, prompt: 'roof' };
+}
+
+export function hasSegmentationKey(seg: SegmentationSettings): boolean {
+  return validKeyEnv(seg.keyEnv) && Boolean(process.env[seg.keyEnv]);
+}
+
+const FAL_RUN = process.env.FAL_RUN_URL || 'https://fal.run';
+
+/**
+ * Roof masks with Meta SAM 3 on fal.ai (text prompt, e.g. "roof"). Returns one black-and-white mask per roof
+ * found, as data URLs; the browser merges them.
+ */
+export async function segmentRoof(seg: SegmentationSettings, image: string): Promise<string[]> {
+  const apiKey = process.env[seg.keyEnv];
+  if (!apiKey) throw new Error(`${seg.keyEnv} is not set`);
+  const res = await fetch(`${FAL_RUN}/fal-ai/sam-3/image`, {
+    method: 'POST',
+    headers: { Authorization: `Key ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      image_url: image,
+      prompt: seg.prompt || 'roof',
+      apply_mask: false,
+      sync_mode: true,
+      output_format: 'png',
+      return_multiple_masks: true,
+      max_masks: 8,
+    }),
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!res.ok) throw new Error(`fal.ai SAM 3 ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const data = (await res.json()) as { masks?: { url?: string }[] };
+  const urls = (data.masks ?? []).map((m) => m.url).filter((u): u is string => Boolean(u));
+  return Promise.all(urls.map((u) => (u.startsWith('data:') ? u : urlToDataUrl(u))));
+}
+
 export function defaultAiSettings(): AiSettings {
   const providers: ProviderConfig[] = [
     { id: 'gemini', label: 'Google Gemini – Nano Banana 2.1', type: 'gemini', model: 'gemini-nano-banana-2.1', keyEnv: 'GEMINI_API_KEY' },
@@ -47,6 +86,7 @@ export function defaultAiSettings(): AiSettings {
     maxProductPhotos: 3,
     variants: 3,
     showEdgeMaps: true,
+    segmentation: defaultSegmentation(),
     activeProvider: active.id,
     providers,
   };

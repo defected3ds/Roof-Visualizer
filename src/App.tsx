@@ -19,7 +19,7 @@ import { MaterialPicker } from './components/MaterialPicker';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
 import { depthFor, depthWithin } from './lib/depth';
-import { roofMaskFor, roofMaskWithin } from './lib/roofmask';
+import { configureRoofMask, roofMaskFor, roofMaskWithin } from './lib/roofmask';
 import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
@@ -95,6 +95,7 @@ function RoofApp() {
         const health = await (await fetch('/api/health')).json();
         setProvider(health.provider);
         if (health.analysis) setAnalysis(health.analysis);
+        configureRoofMask({ tool: health.maskTool === 'sam3' ? 'sam3' : 'clipseg' });
         if (typeof health.edgeMaps === 'boolean') setShowEdgeMaps(health.edgeMaps);
         if (!health.locked) return setGate('open');
         const saved = storedCode();
@@ -121,6 +122,8 @@ function RoofApp() {
       })
       .catch((err) => setToast(err.message));
   }, [gate, accessCode]);
+
+  useEffect(() => configureRoofMask({ accessCode }), [accessCode]);
 
   // Analyse the photo (depth map, then roof mask) as soon as there is one, while the customer picks a product.
   const analyse = (photo: string) =>

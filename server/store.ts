@@ -3,7 +3,7 @@ import path from 'path';
 import { commitFiles, githubConfig, readRepoFile, type FileChange } from './github';
 import { DEFAULT_TEXTS, IMAGE_TEXT_KEYS } from '../src/texts';
 import { defaultAiSettings, validKeyEnv, PROVIDER_TYPES } from './providers';
-import type { AiSettings, Category, Product, ProductInput, ProviderConfig, Spec, Texts } from '../src/types';
+import type { AiSettings, Category, Product, ProductInput, ProviderConfig, SegmentationSettings, Spec, Texts } from '../src/types';
 
 /**
  * Catalog data (categories, products, product photos, app texts) lives in data/ in the repo.
@@ -309,6 +309,7 @@ export function getAiSettings(): AiSettings {
     ...defaults,
     ...aiSettings,
     include: { ...defaults.include, ...aiSettings.include },
+    segmentation: { ...defaults.segmentation, ...aiSettings.segmentation },
     providers: aiSettings.providers?.length ? aiSettings.providers : defaults.providers,
   };
 }
@@ -327,6 +328,16 @@ function cleanProvider(p: Partial<ProviderConfig>, seen: Set<string>): ProviderC
   while (seen.has(id)) id = `${slug(label)}-${Math.random().toString(36).slice(2, 6)}`;
   seen.add(id);
   return { id, label, type, model, keyEnv };
+}
+
+function cleanSegmentation(s: SegmentationSettings): SegmentationSettings {
+  const tool = s.tool === 'sam3' ? 'sam3' : 'clipseg';
+  const keyEnv = String(s.keyEnv ?? '').trim().toUpperCase() || 'FAL_API_KEY';
+  if (tool === 'sam3' && !validKeyEnv(keyEnv)) {
+    throw new Error('Roof mask: the key variable must be a name like FAL_API_KEY (ending in KEY or TOKEN)');
+  }
+  const prompt = String(s.prompt ?? '').trim().slice(0, 100) || 'roof';
+  return { tool, keyEnv, prompt };
 }
 
 export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult & { settings: AiSettings }> {
@@ -349,6 +360,7 @@ export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult &
       maxProductPhotos: clamp(input.maxProductPhotos ?? current.maxProductPhotos, 1, 3, 3),
       variants: clamp(input.variants ?? current.variants, 1, 4, 3),
       showEdgeMaps: Boolean(input.showEdgeMaps ?? current.showEdgeMaps),
+      segmentation: cleanSegmentation({ ...current.segmentation, ...input.segmentation }),
       activeProvider,
       providers,
     };

@@ -69,8 +69,14 @@ API keys are never stored in the settings (they are committed to GitHub); each m
 that holds its key (see the table). Before the first save the
 active model is chosen as before (`AI_PROVIDER`, else the first model with a key).
 
-**Roof mask:** CLIPSeg (`Xenova/clipseg-rd64-refined`, prompts "roof" / "roof tiles") runs in the browser next to the
-depth map (`src/lib/roofmask.ts`). It is approximate; the prompt tells the model to follow the real roof edges.
+**Roof mask** (Admin > AI settings > Roof mask tool):
+- **Meta SAM 3 on fal.ai** (default when `FAL_API_KEY` or `FAL_KEY` is set): the server sends the photo to
+  `fal-ai/sam-3/image` with the text "roof" (`POST /api/roof-mask`, about $0.005 per photo) and the browser merges
+  the returned masks. Sharp, accurate outlines. `FAL_RUN_URL` overrides the API address.
+- **CLIPSeg** (`Xenova/clipseg-rd64-refined`, prompts "roof" / "roof tiles"), free in the browser next to the depth
+  map, rough edges. Also used automatically when SAM 3 fails.
+
+Both live in `src/lib/roofmask.ts`.
 
 ## Products
 

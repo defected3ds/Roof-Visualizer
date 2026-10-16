@@ -23,17 +23,20 @@ import {
   SITE_URL_PREFIX,
   syncFromGitHub,
 } from './server/store';
-import { createProvider, hasKey, imageLimit, PROVIDER_TYPES, type Provider } from './server/providers';
+import { createProvider, hasKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
 import { buildFinalPrompt, type ImageRoles } from './src/lib/prompt';
 import type { AiSettings, Category, GenerateBody, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_HOUR) || 20;
 const hits = new Map<string, number[]>();
 
-function rateLimited(ip: string): boolean {
+// Roof masks per visitor IP per hour (one per photo, so more than generations).
+const MASK_LIMIT = RATE_LIMIT * 3;
+
+function rateLimited(ip: string, limit = RATE_LIMIT): boolean {
   const now = Date.now();
   const recent = (hits.get(ip) ?? []).filter((t) => now - t < 3_600_000);
-  if (recent.length >= RATE_LIMIT) {
+  if (recent.length >= limit) {
     hits.set(ip, recent);
     return true;
   }
@@ -97,6 +100,8 @@ async function startServer() {
       locked: Boolean(accessCode),
       // Which photo analyses the app should run (they're only useful when the model receives them).
       analysis: { depth: usesImages && ai.include.depthMap, mask: usesImages && ai.include.roofMask },
+      // Roof mask tool: SAM 3 on the server (needs its fal.ai key), else CLIPSeg in the browser.
+      maskTool: ai.segmentation.tool === 'sam3' && hasSegmentationKey(ai.segmentation) ? 'sam3' : 'clipseg',
       // Line / edge maps on the loading screen (display only).
       edgeMaps: ai.showEdgeMaps,
     });
@@ -162,18 +167,46 @@ async function startServer() {
     res.json({
       settings,
       keyStatus: Object.fromEntries(settings.providers.map((p) => [p.id, hasKey(p)])),
+      segmentationKey: hasSegmentationKey(settings.segmentation),
       types: PROVIDER_TYPES,
     });
   });
   admin.put('/ai', async (req, res) => {
     try {
       const result = await saveAiSettings(req.body as Partial<AiSettings>);
-      res.json({ ...result, keyStatus: Object.fromEntries(result.settings.providers.map((p) => [p.id, hasKey(p)])) });
+      res.json({
+        ...result,
+        keyStatus: Object.fromEntries(result.settings.providers.map((p) => [p.id, hasKey(p)])),
+        segmentationKey: hasSegmentationKey(result.settings.segmentation),
+      });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
     }
   });
   app.use('/api/admin', admin);
+
+  // Roof mask with SAM 3 (fal.ai). The browser falls back to CLIPSeg when this fails.
+  app.post('/api/roof-mask', async (req, res) => {
+    if (!hasAccess(req)) {
+      return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
+    }
+    if (rateLimited(`mask:${req.ip ?? 'unknown'}`, MASK_LIMIT)) {
+      return res.status(429).json({ code: 'limit', error: 'Too many roof masks. Try again later.' });
+    }
+    const image = (req.body as { image?: string }).image;
+    if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
+    const seg = getAiSettings().segmentation;
+    if (seg.tool !== 'sam3' || !hasSegmentationKey(seg)) return res.status(503).json({ code: 'unavailable', error: 'SAM 3 is off' });
+    try {
+      const started = Date.now();
+      const masks = await segmentRoof(seg, image);
+      console.log(`[roof-mask] SAM 3 "${seg.prompt}" -> ${masks.length} mask(s) in ${Date.now() - started} ms`);
+      res.json({ masks });
+    } catch (err) {
+      console.error('[roof-mask] failed:', err);
+      res.status(502).json({ code: 'unavailable', error: 'Roof segmentation failed' });
+    }
+  });
 
   app.post('/api/generate', async (req, res) => {
     if (!hasAccess(req)) {
