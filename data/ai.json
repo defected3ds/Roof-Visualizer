@@ -17,6 +17,13 @@
       "type": "gemini",
       "model": "gemini-nano-banana-2.1",
       "keyEnv": "GEMINI_API_KEY"
+    },
+    {
+      "id": "open-ai-gpt-2-5",
+      "label": "Open AI GPT 2.5",
+      "type": "openai",
+      "model": "gpt-image-2.5",
+      "keyEnv": "OPENAI_API_KEY"
     }
   ]
 }
