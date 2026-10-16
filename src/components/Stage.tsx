@@ -38,6 +38,14 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
 
   const showing = results.length > 0;
 
+  // Width / height of the photo, so the loading overlay covers exactly the photo and not the white sides.
+  const [ratio, setRatio] = useState<number | null>(null);
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setRatio(img.naturalWidth / img.naturalHeight);
+    img.src = base;
+  }, [base]);
+
   return (
     <div className="relative w-full overflow-hidden bg-paper lg:h-full lg:bg-transparent">
       {showing ? (
@@ -84,13 +92,44 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
         </div>
       )}
 
-      {generating && <GeneratingOverlay startedAt={startedAt} edgeMaps={edgeMaps} analysing={analysing} note={note} />}
+      {generating && <GeneratingOverlay startedAt={startedAt} edgeMaps={edgeMaps} analysing={analysing} note={note} ratio={ratio} />}
     </div>
   );
 }
 
-function GeneratingOverlay({ startedAt, edgeMaps, analysing, note }: { startedAt: number | null; edgeMaps: string[]; analysing?: boolean; note?: string }) {
+function GeneratingOverlay({
+  startedAt,
+  edgeMaps,
+  analysing,
+  note,
+  ratio,
+}: {
+  startedAt: number | null;
+  edgeMaps: string[];
+  analysing?: boolean;
+  note?: string;
+  ratio: number | null;
+}) {
   const t = useT();
+  // The photo is fitted inside the area (white sides on a wide window); keep the dark layer to the photo itself.
+  const area = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  useEffect(() => {
+    const el = area.current;
+    if (!el || !ratio) return;
+    const fit = () => {
+      const cw = el.clientWidth;
+      const ch = el.clientHeight;
+      if (!cw || !ch) return;
+      const width = cw / ch > ratio ? ch * ratio : cw;
+      const height = cw / ch > ratio ? ch : cw / ratio;
+      setBox({ left: (cw - width) / 2, top: (ch - height) / 2, width, height });
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ratio]);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 100);
@@ -107,7 +146,8 @@ function GeneratingOverlay({ startedAt, edgeMaps, analysing, note }: { startedAt
   const progress = (elapsed % 12) / 12;
 
   return (
-    <div className="absolute inset-0">
+    <div ref={area} className="absolute inset-0">
+      <div className="absolute inset-0 overflow-hidden" style={box ? { ...box, right: 'auto', bottom: 'auto' } : undefined}>
       {edgeMaps.map((src, i) => (
         <img
           key={i}
@@ -137,6 +177,7 @@ function GeneratingOverlay({ startedAt, edgeMaps, analysing, note }: { startedAt
         </div>
         <p className="text-lg font-semibold text-white drop-shadow">{t(analysing ? 'editor.analysing' : 'editor.generating')}</p>
         {note && <p className="max-w-xs px-4 text-center text-sm text-white/90 drop-shadow">{note}</p>}
+      </div>
       </div>
     </div>
   );

@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { MaterialPicker } from './components/MaterialPicker';
+import { History, type HistoryItem } from './components/History';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
 import { depthFor, depthWithin } from './lib/depth';
@@ -58,6 +59,9 @@ export default function App() {
   );
 }
 
+/** How many earlier generations are kept for the history strip (each holds full-size images in memory). */
+const HISTORY_LIMIT = 10;
+
 function RoofApp() {
   const t = useT();
   const textsReady = useTextsReady();
@@ -71,6 +75,9 @@ function RoofApp() {
   const [productId, setProductId] = useState<string | null>(null);
   const [results, setResults] = useState<string[]>([]);
   const [active, setActive] = useState(0);
+  // Earlier generations of this photo (newest first) and the one currently on the stage.
+  const [gallery, setGallery] = useState<(HistoryItem & { base: string })[]>([]);
+  const [viewing, setViewing] = useState<number | null>(null);
   const [generating, setGenerating] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [edgeMaps, setEdgeMaps] = useState<string[]>([]);
@@ -164,6 +171,8 @@ function RoofApp() {
       setHistory([url]);
       setCursor(0);
       setResults([]);
+      setGallery([]);
+      setViewing(null);
       setCompare(false);
     } catch (err: any) {
       setToast(err.message);
@@ -224,6 +233,9 @@ function RoofApp() {
       }
       setResults(data.images);
       setActive(0);
+      const id = Date.now();
+      setGallery((g) => [{ id, base, product: [product.brand, product.name].filter(Boolean).join(' '), images: data.images }, ...g].slice(0, HISTORY_LIMIT));
+      setViewing(id);
       if (data.provider === 'demo') {
         setToast('Demo mode: add GEMINI_API_KEY or REPLICATE_API_TOKEN on the server to generate real roofs.');
       } else if (data.images.length > 1 && !tipShown.current) {
@@ -245,11 +257,25 @@ function RoofApp() {
     setHistory(next);
     setCursor(next.length - 1);
     setResults([]);
+    setViewing(null);
+    setCompare(false);
+  }
+
+  /** Shows the results of an earlier generation again, on the photo they were made from. */
+  function openGeneration(id: number) {
+    const item = gallery.find((g) => g.id === id);
+    if (!item || generating) return;
+    const at = history.indexOf(item.base);
+    if (at >= 0) setCursor(at);
+    setResults(item.images);
+    setActive(0);
+    setViewing(id);
     setCompare(false);
   }
 
   function step(delta: number) {
     setResults([]);
+    setViewing(null);
     setCompare(false);
     setCursor((c) => Math.min(history.length - 1, Math.max(0, c + delta)));
   }
@@ -331,6 +357,8 @@ function RoofApp() {
               if (busy) return;
               setHistory([]);
               setResults([]);
+              setGallery([]);
+              setViewing(null);
             }}
             className="-ml-2 p-2 text-brand"
             aria-label="Back"
@@ -406,6 +434,8 @@ function RoofApp() {
           </ToolButton>
         </div>
       </div>
+
+      <History items={gallery} viewing={viewing} onOpen={openGeneration} disabled={busy} />
 
       </div>
 

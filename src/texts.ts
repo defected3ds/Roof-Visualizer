@@ -56,6 +56,7 @@ export const TEXT_GROUPS: { title: string; fields: TextField[] }[] = [
         label: 'Note when depth map and roof mask could not be made on this device',
         value: '3D analysis is not available on this device. The roof is generated from the photo only.',
       },
+      { key: 'editor.history', label: 'Heading above the earlier results', value: 'Previous results' },
       { key: 'editor.before', label: 'Before label (compare)', value: 'Before' },
       { key: 'editor.after', label: 'After label (compare)', value: 'After' },
       { key: 'editor.details', label: 'Product details link', value: 'Technical data' },
