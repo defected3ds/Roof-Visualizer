@@ -97,11 +97,11 @@ function GeneratingOverlay({ startedAt, edgeMaps, analysing, note }: { startedAt
     return () => clearInterval(t);
   }, []);
   const elapsed = startedAt ? (now - startedAt) / 1000 : 0;
-  // Cycle through the structure maps (depth first), then fade back to the photo, like "analysing" the house.
-  // Counting from when the maps arrived keeps the sequence starting at the depth map.
+  // Show the structure maps once, in order (depth map, roof mask, then line maps if switched on), and stay on
+  // the last one until the result arrives. Counting from when the maps arrived starts it at the depth map.
   const [mapsSince, setMapsSince] = useState(0);
   useEffect(() => setMapsSince(Date.now()), [edgeMaps]);
-  const stage = Math.floor((now - mapsSince) / 3500) % (edgeMaps.length + 1);
+  const stage = Math.min(Math.floor((now - mapsSince) / 3500), edgeMaps.length - 1);
   const r = 26;
   const circ = 2 * Math.PI * r;
   const progress = (elapsed % 12) / 12;
