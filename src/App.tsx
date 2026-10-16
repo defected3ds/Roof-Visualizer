@@ -218,7 +218,9 @@ function RoofApp() {
       if (data.code === 'busy') throw new Error(t('message.busy'));
       if (!res.ok) {
         console.error('Generation failed:', data.error);
-        throw new Error(t('message.error'));
+        // Add the provider's reason (shortened), so a wrong model name or setting can be spotted at once.
+        const reason = String(data.error ?? '').replace(/\s+/g, ' ').trim().slice(0, 220);
+        throw new Error(reason ? `${t('message.error')} (${reason})` : t('message.error'));
       }
       setResults(data.images);
       setActive(0);
