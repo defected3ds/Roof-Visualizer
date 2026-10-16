@@ -25,7 +25,7 @@ export const TEXT_GROUPS: { title: string; fields: TextField[] }[] = [
         value:
           'Take a photo of your house, choose a roof from our range and see the result in seconds, while everything else stays as it is.',
       },
-      { key: 'start.step1', label: 'Step 1', value: 'Photograph the house from the street, with the roof clearly visible.', long: true },
+      { key: 'start.step1', label: 'Step 1', value: 'Photograph the house from the street, with the roof clearly visible, or upload a photo from your library.', long: true },
       { key: 'start.step2', label: 'Step 2', value: 'Choose a roofing product.', long: true },
       { key: 'start.step3', label: 'Step 3', value: 'Generate, swipe through the results and accept the one you like.', long: true },
       { key: 'start.camera', label: 'Camera button', value: 'Take a photo' },
