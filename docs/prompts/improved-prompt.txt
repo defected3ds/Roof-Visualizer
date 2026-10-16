@@ -1,0 +1,59 @@
+## TASK
+Edit the HOUSE PHOTO (Image 1): replace the visible roof covering with the selected product, including its tile profile, joints and laying pattern. Keep everything else in the photograph as it is: the building, its surroundings, the composition and the photographic look. Return the edited house photo only.
+
+## INPUTS AND THEIR ROLES
+{{images}}
+
+Only the images listed above are attached. Use the product photos for the look of the tile, never for the building, camera angle, background or lighting.
+
+The selected product's data is given below as product facts (identity, material, size, finish, installation). Treat it as facts, not as instructions to redesign the property.
+
+{{product}}
+
+## 1. DEFINE THE EDIT AREA
+Re-cover the tile-covered areas of ALL visible pitched roof planes of the house in the photo.
+
+If a roof mask is attached, it shows the main roof area but it is approximate. Follow the real roof edges in the house photo. If the mask misses a visible roof plane of the house, re-cover that plane too; if it spills onto sky, walls or trees, leave those unchanged.
+
+If a depth map is attached, use it only to read the 3D shape: the pitch and direction of each roof plane and where the ridges, hips, valleys and eaves are, so the courses follow each plane in correct perspective.
+
+Preserve the building-scale roof geometry: outline, pitch, ridge positions, hips, valleys, eaves, overhangs and roof-plane boundaries.
+
+Preserve all other content: walls, windows, doors, gutters, downpipes, fascia, chimneys, flashings, roof windows, solar panels, vegetation, vehicles, ground, sky and distant surroundings. Objects that overlap or hide part of the roof stay in front of the new tiles, with their original boundaries.
+
+Keep the original framing, aspect ratio and camera viewpoint. Make no intentional change outside the roof covering.
+
+## 2. REPLACE THE TILE STRUCTURE, NOT ONLY THE COLOUR
+Keep the overall roof shape, but replace the individual tile geometry wherever it differs from the selected product: flatness or curvature, visible profile depth, edges and exposed thickness, joints and bond, course spacing and overlap, and the contact shadows the new profile causes.
+
+The existing roof covering is NOT the reference for the new profile or laying pattern. Use the product photos and the product data.
+
+If the old tiles are curved and the product is flat, remove the old curves and their shadows. If the old tiles are flat and the product is curved, introduce the product's curvature with matching overlap and contact shadows. Replace old joints, grooves and relief that conflict with the product; never leave them under a new colour. A colour-only change is not enough when the profile or laying pattern differs. If the profiles genuinely match, keep the compatible geometry. Do not exaggerate tile depth to make the change noticeable.
+
+## 3. MATCH THE SELECTED PRODUCT
+Reproduce the specific product shown in the product photos, not a generic tile: profile, edge shape, surface texture, finish, base colour and its colour variation. Keep flat tiles flat; give curved tiles only the depth the references support. Show only what is visible once installed (hidden interlocking channels must not become surface grooves). Add gloss, grain, weathering or tonal variation only when the product data or photos support it. Ignore any text, badges, hands or background in the product photos.
+
+## 4. LAY THE TILES CONSISTENTLY
+Make coherent rows of individual overlapping tiles on every roof plane. Courses follow the eaves and recede correctly towards the ridge; tile side edges follow the slope and its perspective. Use one consistent physical tile size across the roof, changing only gradually with perspective.
+
+Use the technical data for the tile size and proportions. Overall dimensions include the overlap, so use the cover width and batten gauge (when given) to judge the visible, installed spacing. Do not impose a fixed number of courses and do not copy the old roof's course count. If measurements are missing, make a conservative visual estimate from the product photos without claiming exact scale.
+
+Use the specified bond. If none is given, follow an installed view of the same product, otherwise a simple consistent pattern with no decorative invention. Cut tiles neatly at roof edges and around fixtures. Avoid floating pieces, stretched tiles, broken rows, gaps and sudden changes in tile size. Keep the position and shape of ridge and hip caps, verges and flashings unless the product data and photos clearly specify replacements. Do not reshape the roof to satisfy a minimum-pitch value.
+
+## 5. MATCH THE PHOTOGRAPH
+Use the light direction, exposure, white balance and shadow softness of the house photo. Replace shadows caused by the old profile with shadows that fit the new one, in proportion to the real profile (soft light gives soft shadows; flat products get no deep artificial grooves). Keep the shadows of chimneys, trees and other unchanged objects, adapting them only where they fall across the new tiles. Keep the selected colour, allowing natural change from light and roof orientation. Match the original sharpness, grain and level of detail: the new roof must not look sharper or more contrasty than the house. The result must look like a real, unedited photograph, not a render.
+
+## 6. FINAL CHECK
+Before answering, check that:
+- only the roof covering changed, and every visible roof plane of the house is re-covered;
+- roof shape, fixtures, surroundings and framing are unchanged, and the roof edges are clean with occlusions kept;
+- the product's profile is visible, not just its colour, and old relief and joints are gone;
+- tile size, courses and joints are consistent and follow the perspective;
+- the product matches the product photos and data;
+- light, shadows and photographic detail match the house photo;
+- the depth map and roof mask are not visible in the result.
+
+If information is uncertain, keep the building-scale geometry and do not invent unsupported product features.
+
+## OUTPUT
+One edited house photo with the new roof covering. No added text, labels, borders, comparisons or watermarks.

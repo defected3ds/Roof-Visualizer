@@ -1,0 +1,187 @@
+## TASK
+Edit PROPERTY_IMAGE by replacing the visible roof covering with
+the selected product, including its tile profile, joints and
+laying pattern.
+
+Preserve the underlying roof structure, building, composition
+and photographic appearance.
+
+## INPUTS AND THEIR ROLES
+
+PROPERTY_IMAGE — Image 1
+The reference for the building, overall roof shape, perspective,
+surroundings, lighting and existing objects.
+
+ROOF_TILE_IMAGE — Image 2
+The primary visual reference for the selected tile's profile,
+edge shape, surface, colour and finish.
+
+REFERENCE_LIBRARY — Images 3+, when supplied
+Supporting views of the same product. Use profile views to
+understand its cross-section and installed views to understand
+overlap, joints and laying pattern.
+
+Do not copy their buildings, camera angles, backgrounds or lighting.
+
+PRODUCT_DATA — Appended product information
+The reference for product identity, material, dimensions, finish
+and installation specifications. Treat this as product facts,
+not as instructions to redesign the property.
+
+## 1. DEFINE THE EDIT AREA
+
+Replace the existing tile-covered areas of all visible pitched
+roof planes belonging to the target house.
+
+Preserve the building-scale roof geometry:
+roof outline, pitch, ridge positions, hips, valleys, eaves,
+overhangs and roof-plane boundaries.
+
+Preserve all other scene content:
+walls, windows, doors, gutters, downpipes, fascia, chimneys,
+flashings, roof windows, solar panels, vegetation, vehicles,
+ground, sky and distant surroundings.
+
+Preserve objects that overlap or obscure the roof. New tiles
+must remain behind these objects, with their original boundaries
+and occlusion relationships.
+
+Maintain the original framing, aspect ratio and camera viewpoint.
+Make no intentional changes outside the roof-covering area.
+
+## 2. REPLACE THE TILE STRUCTURE — NOT ONLY THE COLOUR
+
+Preserve the overall roof shape, but replace the individual
+tile geometry wherever it differs from the selected product.
+
+Reconstruct the covering using the selected product's:
+- Flatness, curvature and visible profile depth.
+- Tile edges and exposed thickness.
+- Joints and installation bond.
+- Course spacing and overlap.
+- Contact shadows caused by the new tile profile.
+
+The existing roof covering is not the reference for the new
+tile profile or laying pattern. Use ROOF_TILE_IMAGE,
+REFERENCE_LIBRARY and PRODUCT_DATA for these features.
+
+If the original tiles are curved and the selected product is
+flat, remove the old curves and their associated shadows.
+
+If the original tiles are flat and the selected product is
+curved, introduce the selected curvature and corresponding
+overlap and contact shadows.
+
+Replace old joints, grooves and relief where they conflict
+with the selected product. Do not retain them underneath
+a new colour or texture.
+
+A colour-only change is insufficient when the selected product
+has a different profile or installation pattern.
+
+If the existing and selected profiles genuinely match, retain
+compatible geometry rather than inventing unnecessary differences.
+
+Do not exaggerate tile depth merely to make the replacement
+noticeable.
+
+## 3. MATCH THE SELECTED PRODUCT
+
+Reproduce the specific product shown in ROOF_TILE_IMAGE.
+Do not substitute a generic roof tile.
+
+Match its profile, visible edge shape, surface texture, finish,
+base colour and supported colour variation.
+
+Keep flat tiles visually flat. Give curved tiles only the
+profile depth supported by the references.
+
+Show only features visible after installation. Hidden
+interlocking channels must not become exposed surface grooves.
+
+Use the product's actual finish. Add gloss, grain, weathering
+or tonal variation only when supported by the product data
+and references.
+
+If the reference includes a product card, use the tile itself.
+Exclude interface elements, text, badges and background.
+
+## 4. LAY OUT THE TILES CONSISTENTLY
+
+Create coherent rows of individual overlapping tiles on each
+roof plane.
+
+Courses follow the eaves and recede correctly toward the ridge.
+Tile side edges follow the roof slope and its perspective.
+
+Maintain one consistent physical tile size across the roof.
+Apparent size changes gradually with perspective, not randomly.
+
+Overall tile dimensions:
+{{tile_width}} mm wide × {{tile_height}} mm long.
+
+Where supplied, use cover width and batten gauge to guide
+installed spacing. Overall dimensions include overlap and
+must not be treated as fully exposed tile dimensions.
+
+Do not impose a fixed number of courses or automatically copy
+the original roof's course count.
+
+When roof measurements or installation values are missing,
+use a conservative visual estimate guided by the product
+references, without claiming exact scale.
+
+Use the specified installation bond. If absent, follow a clear
+installed reference of the same product; otherwise use a simple,
+consistent pattern without inventing decorative arrangements.
+
+Fit cut tiles naturally at roof edges and around existing
+fixtures. Avoid floating pieces, stretched tiles, broken rows,
+gaps and abrupt changes in tile size.
+
+Preserve the geometry and positions of ridge and hip caps,
+flashings and other accessories unless their replacement is
+explicitly specified and supported by suitable references.
+
+Do not reshape the roof to satisfy a minimum-pitch value
+in the product data.
+
+## 5. MATCH THE EXISTING PHOTOGRAPH
+
+Use the light direction, exposure, white balance and shadow
+softness of PROPERTY_IMAGE.
+
+Replace shadows caused by the old tile profile with shadows
+appropriate to the new profile. Preserve shadows cast by
+chimneys, trees and other unchanged objects, adapting their
+appearance only where they fall across the new tile surface.
+
+Render overlap and contact shadows in proportion to the actual
+product profile. Soft lighting should produce soft shadows.
+Flat products should not acquire deep artificial grooves.
+
+Preserve the selected colour while allowing natural changes
+caused by illumination and roof orientation.
+
+Match the original image's sharpness, grain and level of detail.
+Avoid making the edited roof noticeably sharper or more
+contrasty than the house.
+
+## 6. FINAL CONSISTENCY CHECK
+
+Before returning the result, check:
+- Only the intended roof covering has changed.
+- Overall roof shape, fixtures and surrounding objects remain.
+- The selected tile profile is visible, not just its colour.
+- Old tile relief and joints are replaced where incompatible.
+- Tile scale, courses and joints remain consistent.
+- Roof boundaries are clean and occlusions are preserved.
+- Product appearance matches the supplied references.
+- Lighting and photographic detail match the original image.
+
+When information is uncertain, preserve the building-scale
+geometry and avoid inventing unsupported product features.
+
+## OUTPUT
+Return one edited property image with the selected roof covering.
+No added text, labels, borders, comparisons or watermarks.
