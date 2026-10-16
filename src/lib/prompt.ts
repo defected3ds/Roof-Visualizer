@@ -33,6 +33,31 @@ export interface ImageRoles {
   swatch: boolean;
 }
 
+/** First number in a value such as "262 mm" or "10.5 tiles per m²". */
+function firstNumber(value: string | undefined): number | null {
+  const m = value?.replace(',', '.').match(/\d+(\.\d+)?/);
+  return m ? Number(m[0]) : null;
+}
+
+/**
+ * Tile size in terms the model can use against the photo: tiles per metre, courses per metre, and how many courses
+ * a door, window or person spans. Built from the technical data (cover width, batten gauge or hanging length).
+ */
+export function scaleGuide(product: Product): string | null {
+  const spec = (re: RegExp) => product.specs.find((s) => re.test(s.label))?.value;
+  const cover = firstNumber(spec(/^cover width/i));
+  const gaugeMin = firstNumber(spec(/minimum batten gauge/i));
+  const gaugeMax = firstNumber(spec(/maximum batten gauge/i));
+  const gauge = gaugeMin && gaugeMax ? (gaugeMin + gaugeMax) / 2 : gaugeMin ?? gaugeMax ?? firstNumber(spec(/^hanging length/i));
+  if (!cover || !gauge || cover < 50 || gauge < 50 || cover > 1000 || gauge > 1000) return null;
+  const courses = (metres: number) => Math.max(1, Math.round((metres * 1000) / gauge));
+  return [
+    `SCALE GUIDE: each tile covers about ${Math.round(cover)} mm of roof width and each course is about ${Math.round(gauge)} mm high up the slope (${(1000 / cover).toFixed(1)} tiles per metre across, ${(1000 / gauge).toFixed(1)} courses per metre up).`,
+    `A door (2 m) is about ${courses(2)} courses high, a window (1.2 m) about ${courses(1.2)}, a person (1.75 m) about ${courses(1.75)}.`,
+    'Judge the real roof size from doors, windows, gutters, chimneys, cars or people and draw the tiles at this physical size.',
+  ].join(' ');
+}
+
 export function productBlock(settings: AiSettings, product: Product, category?: Category): string {
   const label = [product.brand, product.name].filter(Boolean).join(' ');
   const kind = category ? ` (${category.name})` : '';
@@ -45,6 +70,8 @@ export function productBlock(settings: AiSettings, product: Product, category?: 
     lines.push(
       `Technical data (use it for the correct tile size, proportions and colour): ${product.specs.map((s) => `${s.label}: ${s.value}`).join('; ')}.`,
     );
+    const guide = scaleGuide(product);
+    if (guide) lines.push(guide);
   }
   return lines.join('\n');
 }

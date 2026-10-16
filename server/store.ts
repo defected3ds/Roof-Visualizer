@@ -358,7 +358,13 @@ export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult &
   return serialized(async () => {
     const current = getAiSettings();
     const seen = new Set<string>();
-    const providers = (input.providers ?? current.providers).map((p) => cleanProvider(p, seen));
+    // A page that was opened before per-model prompts existed sends providers without a systemPrompt field: keep the
+    // saved one then. An explicit empty string clears it.
+    const providers = (input.providers ?? current.providers).map((p) => {
+      const saved = current.providers.find((c) => c.id === p.id);
+      const keep = !('systemPrompt' in p) && saved?.systemPrompt ? { ...p, systemPrompt: saved.systemPrompt } : p;
+      return cleanProvider(keep, seen);
+    });
     if (providers.length === 0) throw new Error('Keep at least one image model');
     const activeProvider = providers.some((p) => p.id === input.activeProvider) ? input.activeProvider! : providers[0].id;
     const clamp = (n: unknown, lo: number, hi: number, d: number) => Math.min(hi, Math.max(lo, Math.round(Number(n)) || d));
