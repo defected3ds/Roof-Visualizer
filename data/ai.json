@@ -5,7 +5,7 @@
     "specs": true,
     "productPhotos": true,
     "depthMap": false,
-    "roofMask": true
+    "roofMask": false
   },
   "maxProductPhotos": 2,
   "variants": 1,
