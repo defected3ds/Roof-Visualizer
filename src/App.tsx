@@ -23,7 +23,7 @@ import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components
 import { depthFor, depthWithin, type DepthMaps } from './lib/depth';
 import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
-import { TextsProvider, useT } from './lib/texts';
+import { TextsProvider, useT, useTextsReady } from './lib/texts';
 import type { Catalog, Category, GenerateResponse, Product } from './types';
 
 const VARIANTS = 3;
@@ -61,6 +61,7 @@ export default function App() {
 
 function RoofApp() {
   const t = useT();
+  const textsReady = useTextsReady();
   const [gate, setGate] = useState<Gate>('checking');
   const [accessCode, setAccessCode] = useState(storedCode);
   const [history, setHistory] = useState<string[]>([]);
@@ -257,11 +258,10 @@ function RoofApp() {
         <Header />
         {/* Desktop: photo on the left, text and buttons on the right. */}
         <div className="flex flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-        <img
-          src={t('start.image')}
-          alt=""
-          className="aspect-[4/3] w-full object-cover lg:sticky lg:top-16 lg:aspect-auto lg:h-[calc(100dvh-4rem)]"
-        />
+        {/* Wait for the admin's photo setting so the old default doesn't flash first. */}
+        <div className="aspect-[4/3] w-full bg-paper lg:sticky lg:top-16 lg:aspect-auto lg:h-[calc(100dvh-4rem)]">
+          {textsReady && <img src={t('start.image')} alt="" className="h-full w-full object-cover" />}
+        </div>
         <div className="flex flex-1 flex-col justify-between px-5 pb-8 pt-6 lg:mx-auto lg:w-full lg:max-w-xl lg:justify-center lg:gap-4 lg:px-12 lg:py-12">
           <div>
             <Tag>{t('start.tag')}</Tag>
