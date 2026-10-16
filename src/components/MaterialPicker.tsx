@@ -14,21 +14,21 @@ export function MaterialPicker({ selected, onSelect, disabled }: Props) {
   const items = useMemo(() => (filter === 'All' ? MATERIALS : MATERIALS.filter((m) => m.category === filter)), [filter]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line px-3">
         {(['All', ...CATEGORIES] as const).map((c) => (
           <button
             key={c}
             onClick={() => setFilter(c)}
-            className={`shrink-0 border-b-2 px-3 pb-2 pt-1 text-[15px] transition ${
-              filter === c ? 'border-white font-semibold text-white' : 'border-transparent text-mist hover:text-white'
+            className={`shrink-0 border-b-[3px] px-3 pb-2.5 pt-1 text-[15px] transition ${
+              filter === c ? 'border-brand font-semibold text-ink' : 'border-transparent text-muted hover:text-ink'
             }`}
           >
             {c}
           </button>
         ))}
       </div>
-      <div className="no-scrollbar flex snap-x gap-3 overflow-x-auto px-4 py-1">
+      <div className="no-scrollbar flex snap-x gap-3 overflow-x-auto px-4 pb-1">
         {items.map((m) => {
           const active = m.id === selected.id;
           return (
@@ -36,15 +36,14 @@ export function MaterialPicker({ selected, onSelect, disabled }: Props) {
               key={m.id}
               disabled={disabled}
               onClick={() => onSelect(m)}
-              className={`relative aspect-[4/5] w-32 shrink-0 snap-start overflow-hidden outline-offset-2 transition disabled:opacity-60 ${
-                active ? 'outline-2 outline-white' : 'outline-0'
+              className={`flex w-32 shrink-0 snap-start flex-col overflow-hidden rounded-wb border bg-white text-left transition disabled:opacity-60 ${
+                active ? 'border-brand shadow-[0_0_0_1px_var(--color-brand)]' : 'border-line hover:shadow-md'
               }`}
             >
-              <img src={renderSwatch(m)} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink via-ink/70 to-transparent px-2 pb-2.5 pt-8 text-left text-[13px] leading-tight text-white">
-                <span className={active ? 'font-semibold' : ''}>{m.name}</span>
+              <img src={renderSwatch(m)} alt="" className="aspect-square w-full object-cover" />
+              <span className={`min-h-[3.25rem] px-2.5 py-2 text-[13px] leading-snug ${active ? 'font-semibold text-brand' : 'text-ink'}`}>
+                {m.name}
               </span>
-              {active && <span className="absolute inset-x-0 top-0 h-1 bg-brand" />}
             </button>
           );
         })}

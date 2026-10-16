@@ -196,24 +196,27 @@ export default function App() {
         <div className="flex flex-1 flex-col justify-between px-5 pb-8 pt-8">
           <div>
             <Tag>Roof Visualizer</Tag>
-            <h1 className="mt-4 text-[40px] font-light leading-[1.1]">See your house with a new roof</h1>
-            <p className="mt-5 text-lg font-light leading-relaxed text-mist">
+            <h1 className="mt-4 text-[34px] font-bold leading-tight">See your house with a new roof</h1>
+            <p className="mt-4 text-[17px] leading-relaxed text-muted">
               Take a photo of a house, choose clay tiles, slate, shingles, shake or metal, and see the new roof in seconds,
               while everything else stays as it is.
             </p>
-            <div className="mt-8 grid grid-cols-4 gap-1">
+            <div className="mt-8 grid grid-cols-4 gap-2">
               {MATERIALS.filter((_, i) => i % 4 === 1).map((m) => (
-                <img key={m.id} src={renderSwatch(m, 160)} alt={m.name} className="aspect-square object-cover" />
+                <figure key={m.id} className="overflow-hidden rounded-wb border border-line">
+                  <img src={renderSwatch(m, 160)} alt="" className="aspect-square w-full object-cover" />
+                  <figcaption className="px-1.5 py-1 text-[11px] text-muted">{m.category}</figcaption>
+                </figure>
               ))}
             </div>
-            <ol className="mt-8 divide-y divide-line border-y border-line">
+            <ol className="mt-8 divide-y divide-dotted divide-line border-y border-line">
               {[
                 'Photograph the house from the street, with the roof clearly visible.',
                 'Choose a roofing material.',
                 'Generate, swipe through the results and accept the one you like.',
               ].map((text, i) => (
-                <li key={i} className="flex gap-4 py-3.5 text-[15px] text-mist">
-                  <span className="w-5 shrink-0 font-semibold text-white">{i + 1}</span>
+                <li key={i} className="flex gap-4 py-3.5 text-[15px] text-ink">
+                  <span className="w-5 shrink-0 font-bold text-brand">{i + 1}</span>
                   {text}
                 </li>
               ))}
@@ -244,7 +247,7 @@ export default function App() {
               setHistory([]);
               setResults([]);
             }}
-            className="-ml-2 p-2 text-ink"
+            className="-ml-2 p-2 text-brand"
             aria-label="Back"
           >
             <ArrowLeft size={24} />
@@ -254,7 +257,7 @@ export default function App() {
           <button
             onClick={() => shareImage(current, `new-roof-${material.id}`)}
             disabled={busy}
-            className="-mr-2 p-2 text-ink disabled:opacity-30"
+            className="-mr-2 p-2 text-brand disabled:opacity-30"
             aria-label="Share"
           >
             <Share size={22} />
@@ -263,8 +266,8 @@ export default function App() {
       />
 
       <div className="flex items-baseline justify-between px-5 pb-3 pt-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-mist">New roof</p>
-        <p className="truncate pl-4 text-sm text-white">{material.name}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted">New roof</p>
+        <p className="truncate pl-4 text-sm font-semibold text-ink">{material.name}</p>
       </div>
       <div className="flex flex-1 items-center">
         <Stage
@@ -306,7 +309,7 @@ export default function App() {
         </div>
       </div>
 
-      <section className="bg-panel pb-6 pt-3">
+      <section className="border-t border-line bg-paper pb-6 pt-3">
         <MaterialPicker selected={material} onSelect={setMaterial} disabled={busy} />
         <div className="mt-5 grid grid-cols-2 gap-3 px-5">
           <SecondaryButton onClick={accept} disabled={busy || results.length === 0}>
@@ -319,7 +322,7 @@ export default function App() {
       </section>
 
       {toast && (
-        <div className="fixed inset-x-4 bottom-28 z-20 mx-auto flex max-w-lg items-start gap-3 border-l-4 border-brand bg-white p-4 text-ink shadow-2xl">
+        <div className="fixed inset-x-4 bottom-28 z-20 mx-auto flex max-w-lg items-start gap-3 rounded-wb border-l-4 border-brand bg-white p-4 text-ink shadow-2xl">
           <Info className="mt-0.5 shrink-0 text-brand" size={20} />
           <p className="flex-1 text-[15px] leading-snug">{toast}</p>
           <button onClick={() => setToast(null)} aria-label="Dismiss" className="text-muted">
@@ -329,7 +332,7 @@ export default function App() {
       )}
 
       {fullscreen && (
-        <button className="fixed inset-0 z-30 flex items-center justify-center bg-ink" onClick={() => setFullscreen(false)}>
+        <button className="fixed inset-0 z-30 flex items-center justify-center bg-black" onClick={() => setFullscreen(false)}>
           <img src={current} alt="Full screen" className="max-h-full max-w-full object-contain" />
           <X className="absolute right-4 top-4 text-white" size={28} />
         </button>
@@ -365,13 +368,13 @@ function LoginScreen({ onUnlock }: { onUnlock: (code: string) => void }) {
       <form onSubmit={submit} className="flex flex-1 flex-col justify-between px-5 pb-8 pt-8">
         <div>
           <Tag>Roof Visualizer</Tag>
-          <h1 className="mt-4 text-[36px] font-light leading-[1.1]">Sign in to continue</h1>
-          <p className="mt-4 font-light leading-relaxed text-mist">Enter the access code you received from wienerberger.</p>
-          <label className="mt-10 block text-xs font-semibold uppercase tracking-[0.12em] text-mist" htmlFor="code">
+          <h1 className="mt-4 text-[32px] font-bold leading-tight">Sign in to continue</h1>
+          <p className="mt-3 leading-relaxed text-muted">Enter the access code you received from wienerberger.</p>
+          <label className="mt-10 block text-sm font-semibold text-ink" htmlFor="code">
             Access code
           </label>
-          <div className="mt-2 flex items-center gap-3 border-b-2 border-white pb-2">
-            <Lock size={18} className="text-mist" />
+          <div className="mt-2 flex items-center gap-3 rounded-wb border border-line bg-white px-3 py-3 focus-within:border-brand">
+            <Lock size={18} className="text-muted" />
             <input
               id="code"
               autoFocus
@@ -379,11 +382,11 @@ function LoginScreen({ onUnlock }: { onUnlock: (code: string) => void }) {
               autoComplete="current-password"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="flex-1 bg-transparent text-lg text-white outline-none placeholder:text-muted"
+              className="flex-1 bg-transparent text-lg text-ink outline-none placeholder:text-muted"
               placeholder="••••••••"
             />
           </div>
-          {error && <p className="mt-3 text-sm text-[#ef987a]">{error}</p>}
+          {error && <p className="mt-3 text-sm font-semibold text-brand">{error}</p>}
         </div>
         <PrimaryButton type="submit" disabled={checking || !code.trim()}>
           {checking ? 'Checking…' : 'Sign in'} <ArrowRight size={20} />
@@ -394,14 +397,17 @@ function LoginScreen({ onUnlock }: { onUnlock: (code: string) => void }) {
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
-  return <main className="mx-auto flex min-h-dvh max-w-xl flex-col bg-ink text-white">{children}</main>;
+  return <main className="mx-auto flex min-h-dvh max-w-xl flex-col bg-white text-ink">{children}</main>;
 }
 
 function Header({ left, right }: { left?: React.ReactNode; right?: React.ReactNode }) {
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center gap-3 bg-white px-5">
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-line bg-white px-5">
       {left}
-      <img src="/wienerberger-logo.svg" alt="wienerberger" className="h-[18px] w-auto" />
+      <span className="flex items-center gap-1.5" aria-label="wienerberger">
+        <img src="/w-symbol.png" alt="" className="h-7 w-7" />
+        <img src="/wienerberger-logo.svg" alt="wienerberger" className="h-[17px] w-auto" />
+      </span>
       <span className="flex-1" />
       {right}
     </header>
@@ -409,7 +415,7 @@ function Header({ left, right }: { left?: React.ReactNode; right?: React.ReactNo
 }
 
 function Tag({ children }: { children: React.ReactNode }) {
-  return <span className="inline-block bg-brand px-2 py-1 text-sm font-semibold text-white">{children}</span>;
+  return <span className="inline-block rounded-wb bg-brand px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">{children}</span>;
 }
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
@@ -419,7 +425,7 @@ function PrimaryButton({ className = '', ...props }: ButtonProps) {
     <button
       type="button"
       {...props}
-      className={`flex w-full items-center justify-center gap-2 bg-brand py-4 text-[17px] font-semibold text-white transition hover:bg-brand-dark disabled:bg-line disabled:text-muted ${className}`}
+      className={`flex w-full items-center justify-center gap-2 rounded-wb bg-brand py-4 text-[15px] font-bold uppercase tracking-wide text-white transition hover:bg-brand-dark disabled:bg-line disabled:text-muted ${className}`}
     />
   );
 }
@@ -429,7 +435,7 @@ function SecondaryButton({ className = '', ...props }: ButtonProps) {
     <button
       type="button"
       {...props}
-      className={`flex w-full items-center justify-center gap-2 border border-white py-4 text-[17px] font-semibold text-white transition hover:bg-white hover:text-ink disabled:border-line disabled:text-muted disabled:hover:bg-transparent ${className}`}
+      className={`flex w-full items-center justify-center gap-2 rounded-wb border-2 border-brand bg-white py-[14px] text-[15px] font-bold uppercase tracking-wide text-brand transition hover:bg-brand hover:text-white disabled:border-line disabled:text-muted disabled:hover:bg-white ${className}`}
     />
   );
 }
@@ -453,8 +459,8 @@ function ToolButton({
       disabled={disabled}
       aria-label={label}
       title={label}
-      className={`flex h-11 w-11 items-center justify-center border transition disabled:opacity-30 ${
-        active ? 'border-white bg-white text-ink' : 'border-line text-white hover:border-white'
+      className={`flex h-11 w-11 items-center justify-center rounded-wb border transition disabled:opacity-30 ${
+        active ? 'border-brand bg-brand text-white' : 'border-line bg-white text-brand hover:border-brand'
       }`}
     >
       {children}

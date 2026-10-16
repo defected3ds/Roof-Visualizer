@@ -30,7 +30,7 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
   const showing = results.length > 0;
 
   return (
-    <div className="relative w-full overflow-hidden bg-[#1b1820]">
+    <div className="relative w-full overflow-hidden bg-paper">
       {showing ? (
         <div ref={scroller} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
           {results.map((src, i) => (
@@ -45,7 +45,7 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
                     style={{ clipPath: `inset(0 0 0 ${split}%)` }}
                   />
                   <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white shadow" style={{ left: `${split}%` }} />
-                  <span className="absolute left-0 top-3 bg-white px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-ink">Before</span>
+                  <span className="absolute left-0 top-3 bg-ink px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-white">Before</span>
                   <span className="absolute right-0 top-3 bg-brand px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-white">After</span>
                   <input
                     type="range"
@@ -104,7 +104,7 @@ function GeneratingOverlay({ startedAt, edgeMaps }: { startedAt: number | null; 
           style={{ opacity: stage === i ? 1 : 0 }}
         />
       ))}
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-ink/50">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/45">
         <div className="relative h-16 w-16">
           <svg viewBox="0 0 64 64" className="h-full w-full -rotate-90">
             <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="3" />
@@ -121,7 +121,7 @@ function GeneratingOverlay({ startedAt, edgeMaps }: { startedAt: number | null; 
           </svg>
           <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-white">{elapsed.toFixed(1)}s</span>
         </div>
-        <p className="text-xl font-light text-white drop-shadow">Generating images</p>
+        <p className="text-lg font-semibold text-white drop-shadow">Generating images</p>
       </div>
     </div>
   );
