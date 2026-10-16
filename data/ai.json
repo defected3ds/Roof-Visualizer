@@ -15,7 +15,7 @@
     "keyEnv": "FAL_API_KEY",
     "prompt": "roof"
   },
-  "activeProvider": "openai-gpt-image-2-5-sunburst",
+  "activeProvider": "gemini",
   "providers": [
     {
       "id": "gemini",
@@ -42,7 +42,7 @@
       "id": "fal-krea-v3-edit",
       "label": "fal.ai – Krea v3 Edit",
       "type": "fal",
-      "model": "krea/v3/edit",
+      "model": "fal-ai/krea/v3/edit",
       "keyEnv": "FAL_API_KEY"
     }
   ]
