@@ -21,6 +21,15 @@ import { renderSwatch } from './lib/swatch';
 import type { GenerateResponse, Material } from './types';
 
 const VARIANTS = 3;
+const CODE_KEY = 'roof-visualizer:access-code';
+
+function storedCode(): string {
+  try {
+    return localStorage.getItem(CODE_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
 
 export default function App() {
   const [history, setHistory] = useState<string[]>([]);
@@ -35,6 +44,8 @@ export default function App() {
   const [fullscreen, setFullscreen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [provider, setProvider] = useState<string | null>(null);
+  const [accessCode, setAccessCode] = useState(storedCode);
+  const [askCode, setAskCode] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const tipShown = useRef(false);
@@ -69,6 +80,14 @@ export default function App() {
     }
   }
 
+  function saveCode(code: string) {
+    setAccessCode(code);
+    setAskCode(false);
+    try {
+      localStorage.setItem(CODE_KEY, code);
+    } catch {}
+  }
+
   async function generate() {
     if (!base || generating) return;
     setGenerating(true);
@@ -78,7 +97,7 @@ export default function App() {
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Access-Code': accessCode },
         body: JSON.stringify({
           image: base,
           swatch: renderSwatch(material, 384),
@@ -87,6 +106,10 @@ export default function App() {
         }),
       });
       const data = (await res.json()) as GenerateResponse & { error?: string };
+      if (res.status === 401) {
+        setAskCode(true);
+        return;
+      }
       if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
       setResults(data.images);
       setActive(0);
@@ -275,6 +298,8 @@ export default function App() {
         </div>
       )}
 
+      {askCode && <AccessCodeDialog initial={accessCode} onSave={saveCode} onCancel={() => setAskCode(false)} />}
+
       {fullscreen && (
         <button className="fixed inset-0 z-30 flex items-center justify-center bg-black" onClick={() => setFullscreen(false)}>
           <img src={current} alt="Full screen" className="max-h-full max-w-full object-contain" />
@@ -310,5 +335,41 @@ function ToolButton({
     >
       {children}
     </button>
+  );
+}
+
+function AccessCodeDialog({ initial, onSave, onCancel }: { initial: string; onSave: (code: string) => void; onCancel: () => void }) {
+  const [value, setValue] = useState(initial);
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-6">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSave(value.trim());
+        }}
+        className="w-full max-w-sm space-y-4 rounded-3xl bg-neutral-800 p-6"
+      >
+        <h2 className="text-lg font-semibold">Enter access code</h2>
+        <p className="text-sm text-white/70">
+          {initial ? 'That code was not accepted. ' : ''}Ask the owner of this app for the access code.
+        </p>
+        <input
+          autoFocus
+          type="password"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="w-full rounded-xl bg-neutral-900 px-4 py-3 text-white outline-none ring-sky-300 focus:ring-2"
+          placeholder="Access code"
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <button type="button" onClick={onCancel} className="rounded-xl bg-white/10 py-3 font-medium">
+            Cancel
+          </button>
+          <button type="submit" className="rounded-xl bg-sky-200 py-3 font-semibold text-slate-900">
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

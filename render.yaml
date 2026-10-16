@@ -1,0 +1,18 @@
+# One-click hosting on Render.com: see DEPLOY.md.
+services:
+  - type: web
+    name: roof-visualizer
+    runtime: node
+    plan: free
+    branch: claude/clever-mccarthy-2z7c18
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Render asks for these two values during setup.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: APP_PASSWORD
+        sync: false

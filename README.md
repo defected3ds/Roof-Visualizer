@@ -16,6 +16,11 @@ With no key the app runs in **demo mode**: the whole UI works but "results" are 
 
 Production: `npm run build && npm start`.
 
+**Put it online:** see [DEPLOY.md](DEPLOY.md) (one-click Render.com setup with an access code).
+
+Optional env vars for a public deployment: `APP_PASSWORD` (access code needed to generate) and
+`RATE_LIMIT_PER_HOUR` (per visitor IP, default 20).
+
 ## How it works
 
 ```
