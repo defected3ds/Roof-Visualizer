@@ -348,6 +348,7 @@ export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult &
       },
       maxProductPhotos: clamp(input.maxProductPhotos ?? current.maxProductPhotos, 1, 3, 3),
       variants: clamp(input.variants ?? current.variants, 1, 4, 3),
+      showEdgeMaps: Boolean(input.showEdgeMaps ?? current.showEdgeMaps),
       activeProvider,
       providers,
     };

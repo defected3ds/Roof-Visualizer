@@ -76,6 +76,7 @@ function RoofApp() {
   const [edgeMaps, setEdgeMaps] = useState<string[]>([]);
   // Photo analysis (depth map, roof mask) for the current photo; which ones run is set in /admin > AI settings.
   const [analysis, setAnalysis] = useState({ depth: true, mask: true });
+  const [showEdgeMaps, setShowEdgeMaps] = useState(true);
   const [analysing, setAnalysing] = useState<string | null>(null);
   const [waitingForAnalysis, setWaitingForAnalysis] = useState(false);
   const [compare, setCompare] = useState(false);
@@ -94,6 +95,7 @@ function RoofApp() {
         const health = await (await fetch('/api/health')).json();
         setProvider(health.provider);
         if (health.analysis) setAnalysis(health.analysis);
+        if (typeof health.edgeMaps === 'boolean') setShowEdgeMaps(health.edgeMaps);
         if (!health.locked) return setGate('open');
         const saved = storedCode();
         setGate(saved && (await checkCode(saved)) ? 'open' : 'locked');
@@ -162,10 +164,10 @@ function RoofApp() {
     setGenerating(true);
     setStartedAt(Date.now());
     setCompare(false);
-    // Previews for the loading animation: depth maps, the detected roof, then edge maps. Until the analysis is
-    // done the overlay says "Analysing 3D shape".
+    // Previews for the loading animation: depth maps, the detected roof, then edge maps (if switched on in
+    // /admin > AI settings). Until the analysis is done the overlay says "Analysing 3D shape".
     setEdgeMaps([]);
-    const edges = buildEdgeMaps(base).catch(() => [] as string[]);
+    const edges = showEdgeMaps ? buildEdgeMaps(base).catch(() => [] as string[]) : Promise.resolve([] as string[]);
     analyse(base).then(async ([d, m]) => setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : []), ...(await edges)]));
     // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.
     setWaitingForAnalysis(true);

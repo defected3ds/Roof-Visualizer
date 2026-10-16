@@ -47,6 +47,8 @@ the same effect you see in other roof visualizer apps.
   live preview of it for any product).
 - **What the AI receives:** switches for product description, technical data, product photos (1–3), depth map and
   roof mask, and the number of results per generation.
+- **While generating:** switch the line / edge maps on the loading screen on or off (display only, never sent to
+  the AI).
 - **Image models:** any number of entries of these API types, one of them active:
 
 | API type | Key variable | Model example | Images accepted |

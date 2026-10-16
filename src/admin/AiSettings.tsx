@@ -227,6 +227,18 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
         )}
       </div>
 
+      {/* ---- Loading screen ---- */}
+      <div>
+        <h2 className="border-b border-line pb-2 text-lg font-bold">While generating</h2>
+        <p className="mt-2 text-sm text-muted">
+          What customers see while they wait. Depth map and roof mask are shown when they are sent to the AI. Line and
+          edge maps are for display only and are never sent to the AI.
+        </p>
+        <div className="mt-4">
+          <Toggle label="Show line and edge maps of the photo" checked={draft.showEdgeMaps} onChange={(v) => set({ showEdgeMaps: v })} />
+        </div>
+      </div>
+
       <FinalPromptPreview draft={draft} catalog={catalog} limit={activeLimit} />
 
       {error && <p className="text-sm font-semibold text-brand">{error}</p>}

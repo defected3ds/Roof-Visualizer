@@ -97,6 +97,8 @@ async function startServer() {
       locked: Boolean(accessCode),
       // Which photo analyses the app should run (they're only useful when the model receives them).
       analysis: { depth: usesImages && ai.include.depthMap, mask: usesImages && ai.include.roofMask },
+      // Line / edge maps on the loading screen (display only).
+      edgeMaps: ai.showEdgeMaps,
     });
   });
 

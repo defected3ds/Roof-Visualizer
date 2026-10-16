@@ -88,6 +88,8 @@ export interface AiSettings {
   maxProductPhotos: number;
   /** Results per generation (1–4). */
   variants: number;
+  /** Show line and edge maps of the photo while generating (display only, never sent to the AI). */
+  showEdgeMaps: boolean;
   activeProvider: string;
   providers: ProviderConfig[];
 }
