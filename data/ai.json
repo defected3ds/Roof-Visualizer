@@ -16,7 +16,7 @@
     "prompt": "roof"
   },
   "depthEstimation": {
-    "tool": "marigold",
+    "tool": "midas",
     "keyEnv": "FAL_API_KEY",
     "quality": "balanced"
   },
