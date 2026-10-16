@@ -35,7 +35,7 @@ the same effect you see in other roof visualizer apps.
 
 | Provider | Env | Model | Notes |
 |---|---|---|---|
-| Gemini (default) | `GEMINI_API_KEY` | `gemini-3.1-flash-image`, fallback `gemini-2.5-flash-image` | Uses the swatch image as a texture reference |
+| Gemini (default) | `GEMINI_API_KEY` | Nano Banana 2.1 (`gemini-nano-banana-2.1`), fallback `gemini-3.1-flash-image` / `gemini-2.5-flash-image` | Uses the swatch image as a texture reference |
 | Replicate | `REPLICATE_API_TOKEN` | `black-forest-labs/flux-kontext-pro` | Instruction-based editing; text prompt only |
 | Demo | none | none | Echoes the photo |
 

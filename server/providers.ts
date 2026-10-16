@@ -39,7 +39,8 @@ function splitDataUrl(dataUrl: string) {
 // Gemini image editing (default when GEMINI_API_KEY is set)
 // ---------------------------------------------------------------------------
 
-const DEFAULT_GEMINI_MODELS = ['gemini-3.1-flash-image', 'gemini-2.5-flash-image'];
+// Nano Banana 2.1 first; older image models only if the key has no access to it.
+const DEFAULT_GEMINI_MODELS = ['gemini-nano-banana-2.1', 'gemini-3.1-flash-image', 'gemini-2.5-flash-image'];
 
 function geminiProvider(apiKey: string): Provider {
   const ai = new GoogleGenAI({ apiKey });
@@ -59,11 +60,13 @@ function geminiProvider(apiKey: string): Provider {
           contents: [{ role: 'user', parts }],
           config: { responseModalities: ['IMAGE', 'TEXT'] },
         });
+        if (workingModel !== model) console.log(`[gemini] using model ${model}`);
         workingModel = model;
         const out = res.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
         return out?.inlineData ? `data:${out.inlineData.mimeType || 'image/png'};base64,${out.inlineData.data}` : null;
       } catch (err: any) {
         lastErr = err;
+        console.warn(`[gemini] model ${model} failed: ${err?.message}`);
         // Fall through to the next model only when this one doesn't exist for the key.
         if (!/not found|404|not supported/i.test(String(err?.message))) throw err;
       }
