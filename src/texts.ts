@@ -66,6 +66,13 @@ export const TEXT_GROUPS: { title: string; fields: TextField[] }[] = [
       },
       { key: 'message.error', label: 'Generation failed', long: true, value: 'Something went wrong. Please try again.' },
       { key: 'message.limit', label: 'Too many generations', long: true, value: 'You have reached the limit for now. Please try again later.' },
+      {
+        key: 'message.unavailable',
+        label: 'AI service not available',
+        long: true,
+        value: 'The roof generator is not available at the moment. Please try again later.',
+      },
+      { key: 'message.busy', label: 'AI service busy', long: true, value: 'The roof generator is very busy right now. Please try again in a minute.' },
     ],
   },
 ];

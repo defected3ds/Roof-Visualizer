@@ -159,16 +159,24 @@ async function startServer() {
         category: getCategory(product.category),
         references: photos.length ? photos : swatch,
         photoReferences: photos.length > 0,
+        depth: body.depth?.startsWith('data:image/') ? body.depth : undefined,
         count,
       });
       if (images.length === 0) {
         return res.status(502).json({ error: 'The model returned no images. Try again or pick another photo.' });
       }
-      console.log(`[generate] ${provider.name} "${product.name}" (${photos.length} product photos) -> ${images.length} images in ${Date.now() - started}ms`);
+      console.log(`[generate] ${provider.name} "${product.name}" (${photos.length} product photos${body.depth ? ', depth map' : ''}) -> ${images.length} images in ${Date.now() - started}ms`);
       res.json({ images, provider: provider.name });
     } catch (err: any) {
       console.error('[generate] failed:', err);
-      res.status(500).json({ error: err?.message || 'Generation failed' });
+      // Customers get a plain message; the full error stays in the server log.
+      const message = String(err?.message ?? '');
+      const code = /API key|UNAUTHENTICATED|PERMISSION_DENIED|ACCOUNT_STATE_INVALID|\b401\b|\b403\b/.test(message)
+        ? 'unavailable'
+        : /RESOURCE_EXHAUSTED|\b429\b|quota/i.test(message)
+          ? 'busy'
+          : 'error';
+      res.status(code === 'error' ? 500 : 503).json({ code, error: message });
     }
   });
 

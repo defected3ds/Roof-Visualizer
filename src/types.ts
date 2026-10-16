@@ -46,6 +46,8 @@ export interface GenerateBody {
   productId: string;
   /** Drawn texture of the product as a data URL, used when the product has no photos. */
   swatch?: string;
+  /** Depth map of the house photo as a data URL (see src/lib/depth.ts). */
+  depth?: string;
   count: number;
 }
 

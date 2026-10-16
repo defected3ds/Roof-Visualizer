@@ -32,7 +32,11 @@ photo ─► browser: EXIF-rotate + resize to ≤1536px, render material swatch
       ─► 3 images ─► swipe / compare / accept (accepted image becomes the new base)
 ```
 
-While waiting, the app shows line / edge / soft-edge maps of the photo (computed in the browser with
+**Depth:** as soon as a photo is picked, the browser estimates a depth map with Depth Anything V2 (small) via
+transformers.js (`src/lib/depth.ts`; library and model load from public CDNs and are cached). The grey depth map is
+sent to the model with the photo so it understands the roof planes and pitch; generation waits for it at most 12 s.
+
+While waiting, the app shows the depth maps and line / edge / soft-edge maps of the photo (computed in the browser with
 Sobel + non-max suppression). These are the same kinds of structure maps that ControlNet pipelines use, and
 the same effect you see in other roof visualizer apps.
 

@@ -18,6 +18,7 @@ import {
 import { MaterialPicker } from './components/MaterialPicker';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
+import { depthFor, depthWithin } from './lib/depth';
 import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT } from './lib/texts';
@@ -112,6 +113,11 @@ function RoofApp() {
       .catch((err) => setToast(err.message));
   }, [gate, accessCode]);
 
+  // Start depth estimation as soon as there is a photo, while the customer picks a product.
+  useEffect(() => {
+    if (base) depthFor(base);
+  }, [base]);
+
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 5000);
@@ -144,7 +150,13 @@ function RoofApp() {
     setGenerating(true);
     setStartedAt(Date.now());
     setCompare(false);
-    buildEdgeMaps(base).then(setEdgeMaps).catch(() => setEdgeMaps([]));
+    // Structure previews for the loading animation: depth maps (if ready) first, then edge maps.
+    setEdgeMaps([]);
+    const edges = buildEdgeMaps(base).catch(() => [] as string[]);
+    depthFor(base).then(async (d) => setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(await edges)]));
+    edges.then((e) => setEdgeMaps((cur) => (cur.length ? cur : e)));
+    // The depth map helps the AI understand the roof's 3D shape; don't wait long for slow phones.
+    const depth = await depthWithin(base, 12000);
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -153,6 +165,7 @@ function RoofApp() {
           image: base,
           productId: product.id,
           swatch: product.images.length ? undefined : renderSwatch(product, 384),
+          depth: depth?.gray,
           count: VARIANTS,
         }),
       });
@@ -164,7 +177,12 @@ function RoofApp() {
         return;
       }
       if (data.code === 'limit') throw new Error(t('message.limit'));
-      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+      if (data.code === 'unavailable') throw new Error(t('message.unavailable'));
+      if (data.code === 'busy') throw new Error(t('message.busy'));
+      if (!res.ok) {
+        console.error('Generation failed:', data.error);
+        throw new Error(t('message.error'));
+      }
       setResults(data.images);
       setActive(0);
       if (data.provider === 'demo') {

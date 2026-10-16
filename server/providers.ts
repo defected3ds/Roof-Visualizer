@@ -10,6 +10,8 @@ export interface GenerateRequest {
   references: string[];
   /** True when the references are real product photos rather than a drawn texture. */
   photoReferences: boolean;
+  /** Depth map of the house photo (brighter = closer), sent right after the photo to convey 3D shape. */
+  depth?: string;
   count: number;
 }
 
@@ -39,8 +41,16 @@ export function buildPrompt(req: GenerateRequest, variant: number): string {
     'Lay the new material in correct perspective following each roof plane, with realistic scale, course lines, ridge caps, shadows and weathering matching the photo light.',
     'The result must look like a real, unedited photograph, not a render.',
   ];
+  let next = 2;
+  if (req.depth) {
+    lines.push(
+      `Image ${next} is a depth map of the house photo (brighter = closer to the camera). Use it only to understand the 3D shape: which surfaces are roof, the orientation and pitch of each roof plane, and where ridges, hips, valleys and eaves are. Lay the tile courses so they follow those planes in perspective. Never draw the depth map into the result.`,
+    );
+    next += 1;
+  }
   if (req.references.length > 0) {
-    const which = req.references.length === 1 ? 'The second image is' : `Images 2 to ${req.references.length + 1} are`;
+    const last = next + req.references.length - 1;
+    const which = req.references.length === 1 ? `Image ${next} is` : `Images ${next} to ${last} are`;
     lines.push(
       req.photoReferences
         ? `${which} reference photos of this exact product: reproduce its shape and profile, colour and colour variation, surface finish and size as faithfully as possible. Use them only as a material reference, never copy their background or composition.`
@@ -73,6 +83,7 @@ function geminiProvider(apiKey: string): Provider {
 
   async function once(req: GenerateRequest, variant: number): Promise<string | null> {
     const parts: any[] = [{ inlineData: splitDataUrl(req.image) }];
+    if (req.depth) parts.push({ inlineData: splitDataUrl(req.depth) });
     for (const ref of req.references) parts.push({ inlineData: splitDataUrl(ref) });
     parts.push({ text: buildPrompt(req, variant) });
 
@@ -160,7 +171,7 @@ function replicateProvider(token: string): Provider {
         Array.from({ length: req.count }, (_, i) =>
           predict({
             // FLUX Kontext takes a single image, so the product is described in text only.
-            prompt: buildPrompt({ ...req, references: [] }, i),
+            prompt: buildPrompt({ ...req, references: [], depth: undefined }, i),
             input_image: imageUrl,
             aspect_ratio: 'match_input_image',
             output_format: 'jpg',

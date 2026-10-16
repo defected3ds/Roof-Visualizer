@@ -19,7 +19,7 @@ export function MaterialPicker({ categories, products, selected, onSelect, disab
 
   return (
     <div className="space-y-4">
-      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line px-3">
+      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line px-3 [mask-image:linear-gradient(to_right,black_88%,transparent)]">
         {[{ id: 'all', name: t('editor.all') }, ...tabs].map((c) => (
           <button
             key={c.id}
@@ -40,14 +40,16 @@ export function MaterialPicker({ categories, products, selected, onSelect, disab
               key={p.id}
               disabled={disabled}
               onClick={() => onSelect(p)}
-              className={`flex w-32 shrink-0 snap-start flex-col overflow-hidden rounded-wb border bg-white text-left transition disabled:opacity-60 ${
+              title={[p.brand, p.name].filter(Boolean).join(' ')}
+              className={`flex w-36 shrink-0 snap-start flex-col overflow-hidden rounded-wb border bg-white text-left transition disabled:opacity-60 ${
                 active ? 'border-brand shadow-[0_0_0_1px_var(--color-brand)]' : 'border-line hover:shadow-md'
               }`}
             >
               <img src={productThumb(p)} alt="" loading="lazy" className="aspect-square w-full object-cover" />
-              <span className="min-h-[3.25rem] px-2.5 py-2 text-[13px] leading-snug">
-                {p.brand && <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted">{p.brand}</span>}
-                <span className={active ? 'font-semibold text-brand' : 'text-ink'}>{p.name}</span>
+              {/* Fixed height: brand line + up to three name lines, so every card is the same size. */}
+              <span className="flex h-[5.25rem] flex-col px-2.5 py-2 text-[13px] leading-[1.15rem]">
+                <span className="block h-4 truncate text-[11px] font-semibold uppercase leading-4 tracking-wide text-muted">{p.brand}</span>
+                <span className={`line-clamp-3 break-words ${active ? 'font-semibold text-brand' : 'text-ink'}`}>{p.name}</span>
               </span>
             </button>
           );
