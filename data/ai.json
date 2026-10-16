@@ -45,5 +45,10 @@
       "model": "krea/v3/edit",
       "keyEnv": "FAL_API_KEY"
     }
-  ]
+  ],
+  "depthEstimation": {
+    "tool": "marigold",
+    "keyEnv": "FAL_API_KEY",
+    "quality": "balanced"
+  }
 }

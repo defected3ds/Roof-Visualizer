@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { imageLimit as imageLimitFor } from '../src/lib/models';
 import { DEFAULT_SYSTEM_PROMPT } from '../src/lib/prompt';
-import type { AiSettings, ProviderConfig, SegmentationSettings } from '../src/types';
+import type { AiSettings, DepthSettings, ProviderConfig, SegmentationSettings } from '../src/types';
 
 /** What every image model receives: the ordered images (house photo first) and one prompt per variant. */
 export interface ModelInput {
@@ -32,6 +32,55 @@ export function hasKey(cfg: ProviderConfig): boolean {
 function defaultSegmentation(): SegmentationSettings {
   const keyEnv = process.env.FAL_API_KEY || !process.env.FAL_KEY ? 'FAL_API_KEY' : 'FAL_KEY';
   return { tool: process.env[keyEnv] ? 'sam3' : 'clipseg', keyEnv, prompt: 'roof' };
+}
+
+function defaultDepth(): DepthSettings {
+  return { tool: 'browser', keyEnv: process.env.FAL_API_KEY || !process.env.FAL_KEY ? 'FAL_API_KEY' : 'FAL_KEY', quality: 'balanced' };
+}
+
+export function hasDepthKey(d: DepthSettings): boolean {
+  return validKeyEnv(d.keyEnv) && Boolean(process.env[d.keyEnv]);
+}
+
+/** Marigold presets: denoising steps, ensemble size (predictions averaged) and processing resolution. */
+const MARIGOLD_QUALITY = {
+  fast: { num_inference_steps: 5, ensemble_size: 3, processing_res: 768 },
+  balanced: { num_inference_steps: 10, ensemble_size: 5, processing_res: 768 },
+  best: { num_inference_steps: 10, ensemble_size: 10, processing_res: 1024 },
+};
+
+/**
+ * Depth map with Marigold on fal.ai (fal-ai/imageutils/marigold-depth), through the queue API. Returns the
+ * grey depth image as a data URL; the browser orients and sharpens it.
+ */
+export async function estimateDepth(d: DepthSettings, image: string): Promise<string> {
+  const apiKey = process.env[d.keyEnv];
+  if (!apiKey) throw new Error(`${d.keyEnv} is not set`);
+  const headers = { Authorization: `Key ${apiKey}` };
+  const res = await fetch(`${FAL_QUEUE}/fal-ai/imageutils/marigold-depth`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image_url: image, ...MARIGOLD_QUALITY[d.quality] }),
+  });
+  if (!res.ok) throw new Error(`fal.ai Marigold ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const job = await res.json();
+  await poll(
+    async () => {
+      const st = await (await fetch(job.status_url, { headers })).json();
+      if (st.status === 'COMPLETED') {
+        if (st.error) throw new Error(`fal.ai Marigold failed: ${st.error}`);
+        return true;
+      }
+      return undefined;
+    },
+    'fal.ai Marigold',
+    1000,
+    120_000,
+  );
+  const out = await (await fetch(job.response_url, { headers })).json();
+  const url: string | undefined = out.image?.url;
+  if (!url) throw new Error(`Marigold returned no image: ${JSON.stringify(out).slice(0, 300)}`);
+  return url.startsWith('data:') ? url : urlToDataUrl(url);
 }
 
 export function hasSegmentationKey(seg: SegmentationSettings): boolean {
@@ -87,6 +136,7 @@ export function defaultAiSettings(): AiSettings {
     variants: 3,
     showEdgeMaps: true,
     segmentation: defaultSegmentation(),
+    depthEstimation: defaultDepth(),
     activeProvider: active.id,
     providers,
   };

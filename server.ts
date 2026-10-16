@@ -23,7 +23,7 @@ import {
   SITE_URL_PREFIX,
   syncFromGitHub,
 } from './server/store';
-import { createProvider, hasKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
+import { createProvider, estimateDepth, hasDepthKey, hasKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
 import { buildModelPrompt, type ImageRoles } from './src/lib/prompt';
 import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
@@ -103,6 +103,8 @@ async function startServer() {
       analysis: { depth: usesImages && ai.include.depthMap, mask: usesImages && ai.include.roofMask },
       // Roof mask tool: SAM 3 on the server (needs its fal.ai key), else CLIPSeg in the browser.
       maskTool: ai.segmentation.tool === 'sam3' && hasSegmentationKey(ai.segmentation) ? 'sam3' : 'clipseg',
+      // Depth map tool: Marigold on the server (needs its fal.ai key), else Depth Anything in the browser.
+      depthTool: ai.depthEstimation.tool === 'marigold' && hasDepthKey(ai.depthEstimation) ? 'marigold' : 'browser',
       // Line / edge maps on the loading screen (display only).
       edgeMaps: ai.showEdgeMaps,
     });
@@ -163,6 +165,19 @@ async function startServer() {
       res.status(400).json({ error: err.message });
     }
   });
+  // "Test Marigold" in AI settings: one depth map with the settings being edited.
+  admin.post('/test-depth', async (req, res) => {
+    const { image, depthEstimation } = (req.body ?? {}) as { image?: string; depthEstimation?: Partial<AiSettings['depthEstimation']> };
+    if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
+    const d = { ...getAiSettings().depthEstimation, ...depthEstimation, tool: 'marigold' as const };
+    if (!hasDepthKey(d)) return res.status(400).json({ error: `The key ${d.keyEnv} is not set on the server (Render → Environment).` });
+    const started = Date.now();
+    try {
+      res.json({ image: await estimateDepth(d, image), ms: Date.now() - started });
+    } catch (err: any) {
+      res.status(502).json({ error: String(err?.message ?? err).slice(0, 400) });
+    }
+  });
   // "Test SAM 3" in AI settings: runs the roof mask on a photo with the settings being edited.
   admin.post('/test-roof-mask', async (req, res) => {
     const { image, segmentation } = (req.body ?? {}) as { image?: string; segmentation?: Partial<AiSettings['segmentation']> };
@@ -183,6 +198,7 @@ async function startServer() {
       settings,
       keyStatus: Object.fromEntries(settings.providers.map((p) => [p.id, hasKey(p)])),
       segmentationKey: hasSegmentationKey(settings.segmentation),
+      depthKey: hasDepthKey(settings.depthEstimation),
       types: PROVIDER_TYPES,
     });
   });
@@ -193,6 +209,7 @@ async function startServer() {
         ...result,
         keyStatus: Object.fromEntries(result.settings.providers.map((p) => [p.id, hasKey(p)])),
         segmentationKey: hasSegmentationKey(result.settings.segmentation),
+        depthKey: hasDepthKey(result.settings.depthEstimation),
       });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -207,6 +224,29 @@ async function startServer() {
     const clean = (v: unknown, n: number) => String(v ?? '').replace(/[\r\n]+/g, ' ').slice(0, n);
     console.warn(`[client] ${clean(kind, 40)} failed: ${clean(message, 300)} | ${clean(agent, 200)}`);
     res.status(204).end();
+  });
+
+  // Depth map with Marigold (fal.ai). The browser falls back to its own model when this fails.
+  app.post('/api/depth-map', async (req, res) => {
+    if (!hasAccess(req)) {
+      return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
+    }
+    if (rateLimited(`depth:${req.ip ?? 'unknown'}`, MASK_LIMIT)) {
+      return res.status(429).json({ code: 'limit', error: 'Too many depth maps. Try again later.' });
+    }
+    const image = (req.body as { image?: string }).image;
+    if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
+    const d = getAiSettings().depthEstimation;
+    if (d.tool !== 'marigold' || !hasDepthKey(d)) return res.status(503).json({ code: 'unavailable', error: 'Marigold is off' });
+    try {
+      const started = Date.now();
+      const depth = await estimateDepth(d, image);
+      console.log(`[depth-map] Marigold ${d.quality} in ${Date.now() - started} ms`);
+      res.json({ image: depth });
+    } catch (err) {
+      console.error('[depth-map] failed:', err);
+      res.status(502).json({ code: 'unavailable', error: 'Depth map failed' });
+    }
   });
 
   // Roof mask with SAM 3 (fal.ai). The browser falls back to CLIPSeg when this fails.

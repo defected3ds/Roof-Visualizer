@@ -185,19 +185,106 @@ function stretch(values: Float32Array): void {
   for (let i = 0; i < values.length; i++) values[i] = Math.min(1, Math.max(0, (values[i] - lo) / (hi - lo)));
 }
 
+/** A depth map from either source: grey values 0..255, brighter = closer, at the source's own resolution. */
+interface RawDepth {
+  width: number;
+  height: number;
+  data: Uint8ClampedArray;
+}
+
+/** Set from /api/health: which tool makes the depth map, and the access code for /api/depth-map. */
+const config = { tool: 'browser' as 'browser' | 'marigold', accessCode: '' };
+export function configureDepth(next: Partial<typeof config>) {
+  Object.assign(config, next);
+}
+
+/** Depth Anything V2 small in the browser. */
+async function browserDepth(img: HTMLImageElement): Promise<RawDepth> {
+  const scale = Math.min(1, INPUT_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.naturalWidth * scale);
+  canvas.height = Math.round(img.naturalHeight * scale);
+  canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const { depth } = await estimate(canvas.toDataURL('image/jpeg', 0.9));
+  const data = new Uint8ClampedArray(depth.width * depth.height);
+  for (let i = 0; i < data.length; i++) data[i] = depth.data[i * depth.channels];
+  return { width: depth.width, height: depth.height, data };
+}
+
+/** Marigold on fal.ai through the server. Its map may come out the other way round, so the orientation is checked. */
+async function serverDepth(img: HTMLImageElement): Promise<RawDepth> {
+  const scale = Math.min(1, 1024 / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.naturalWidth * scale);
+  canvas.height = Math.round(img.naturalHeight * scale);
+  canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const res = await fetch('/api/depth-map', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Access-Code': config.accessCode },
+    body: JSON.stringify({ image: canvas.toDataURL('image/jpeg', 0.9) }),
+  });
+  if (!res.ok) throw new Error(`depth map ${res.status}`);
+  const { image } = (await res.json()) as { image: string };
+  return orient(await grayFromImage(image));
+}
+
+async function grayFromImage(src: string): Promise<RawDepth> {
+  const img = await loadImage(src);
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+  const ctx = c.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(img, 0, 0);
+  const px = ctx.getImageData(0, 0, c.width, c.height).data;
+  const data = new Uint8ClampedArray(c.width * c.height);
+  for (let i = 0; i < data.length; i++) data[i] = px[i * 4];
+  return { width: c.width, height: c.height, data };
+}
+
+/**
+ * Makes "brighter = closer". Photos of houses have the ground (near) at the bottom and the sky or distant
+ * hills (far) at the top, so if the top is brighter than the bottom the map is inverted.
+ */
+function orient(map: RawDepth): RawDepth {
+  const band = Math.max(1, Math.round(map.height * 0.15));
+  const mean = (y0: number, y1: number) => {
+    let sum = 0;
+    for (let y = y0; y < y1; y++) for (let x = 0; x < map.width; x++) sum += map.data[y * map.width + x];
+    return sum / ((y1 - y0) * map.width);
+  };
+  if (mean(0, band) > mean(map.height - band, map.height)) for (let i = 0; i < map.data.length; i++) map.data[i] = 255 - map.data[i];
+  return map;
+}
+
+/** For the admin test: a depth map from the server as the app would use it (oriented so brighter = closer). */
+export async function orientedPreview(src: string): Promise<string> {
+  const map = orient(await grayFromImage(src));
+  const c = document.createElement('canvas');
+  c.width = map.width;
+  c.height = map.height;
+  const ctx = c.getContext('2d')!;
+  const data = ctx.createImageData(map.width, map.height);
+  for (let i = 0; i < map.data.length; i++) data.data.set([map.data[i], map.data[i], map.data[i], 255], i * 4);
+  ctx.putImageData(data, 0, 0);
+  return c.toDataURL('image/jpeg', 0.9);
+}
+
 async function run(photo: string): Promise<DepthMaps | null> {
   try {
     const img = await loadImage(photo);
-    const scale = Math.min(1, INPUT_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    const { depth } = await estimate(canvas.toDataURL('image/jpeg', 0.9));
+    let depth: RawDepth | null = null;
+    if (config.tool === 'marigold') {
+      try {
+        depth = await serverDepth(img);
+      } catch (err) {
+        console.warn('Marigold depth map unavailable, using the browser model:', err);
+        reportProblem('depth (Marigold)', err);
+      }
+    }
+    depth ??= await browserDepth(img);
 
     // Final size: the photo's proportions, up to OUTPUT_SIDE. The model's map is coarse (its output is built from
-    // 14 px patches), so it is scaled up and then sharpened along the photo's edges.
+    // 14 px patches), so it is scaled up and then sharpened along the photo's strongest edges.
     const outScale = Math.min(1, OUTPUT_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.round(img.naturalWidth * outScale);
     const h = Math.round(img.naturalHeight * outScale);
@@ -206,10 +293,7 @@ async function run(photo: string): Promise<DepthMaps | null> {
     raw.height = depth.height;
     const rawCtx = raw.getContext('2d')!;
     const rawData = rawCtx.createImageData(depth.width, depth.height);
-    for (let i = 0; i < depth.width * depth.height; i++) {
-      const v = depth.data[i * depth.channels];
-      rawData.data.set([v, v, v, 255], i * 4);
-    }
+    for (let i = 0; i < depth.data.length; i++) rawData.data.set([depth.data[i], depth.data[i], depth.data[i], 255], i * 4);
     rawCtx.putImageData(rawData, 0, 0);
 
     const work = document.createElement('canvas');
@@ -253,10 +337,11 @@ async function run(photo: string): Promise<DepthMaps | null> {
 
 /** Starts (or reuses) depth estimation for a photo. Resolves to null when the device can't run it. */
 export function depthFor(photo: string): Promise<DepthMaps | null> {
-  let job = cache.get(photo);
+  const key = `${config.tool}:${photo}`;
+  let job = cache.get(key);
   if (!job) {
     job = run(photo);
-    cache.set(photo, job);
+    cache.set(key, job);
   }
   return job;
 }

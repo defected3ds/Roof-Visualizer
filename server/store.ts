@@ -3,7 +3,7 @@ import path from 'path';
 import { commitFiles, githubConfig, readRepoFile, type FileChange } from './github';
 import { DEFAULT_TEXTS, IMAGE_TEXT_KEYS } from '../src/texts';
 import { defaultAiSettings, validKeyEnv, PROVIDER_TYPES } from './providers';
-import type { AiSettings, Category, Product, ProductInput, ProviderConfig, SegmentationSettings, Spec, Texts } from '../src/types';
+import type { AiSettings, Category, DepthSettings, Product, ProductInput, ProviderConfig, SegmentationSettings, Spec, Texts } from '../src/types';
 
 /**
  * Catalog data (categories, products, product photos, app texts) lives in data/ in the repo.
@@ -310,6 +310,7 @@ export function getAiSettings(): AiSettings {
     ...aiSettings,
     include: { ...defaults.include, ...aiSettings.include },
     segmentation: { ...defaults.segmentation, ...aiSettings.segmentation },
+    depthEstimation: { ...defaults.depthEstimation, ...aiSettings.depthEstimation },
     providers: aiSettings.providers?.length ? aiSettings.providers : defaults.providers,
   };
 }
@@ -331,6 +332,16 @@ function cleanProvider(p: Partial<ProviderConfig>, seen: Set<string>): ProviderC
   seen.add(id);
   const systemPrompt = String(p.systemPrompt ?? '').trim().slice(0, 30000);
   return { id, label, type, model, keyEnv, ...(systemPrompt ? { systemPrompt } : {}) };
+}
+
+function cleanDepth(d: DepthSettings): DepthSettings {
+  const tool = d.tool === 'marigold' ? 'marigold' : 'browser';
+  const keyEnv = String(d.keyEnv ?? '').trim().toUpperCase() || 'FAL_API_KEY';
+  if (tool === 'marigold' && !validKeyEnv(keyEnv)) {
+    throw new Error('Depth map: the key variable must be a name like FAL_API_KEY (ending in KEY or TOKEN)');
+  }
+  const quality = d.quality === 'fast' || d.quality === 'best' ? d.quality : 'balanced';
+  return { tool, keyEnv, quality };
 }
 
 function cleanSegmentation(s: SegmentationSettings): SegmentationSettings {
@@ -364,6 +375,7 @@ export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult &
       variants: clamp(input.variants ?? current.variants, 1, 4, 3),
       showEdgeMaps: Boolean(input.showEdgeMaps ?? current.showEdgeMaps),
       segmentation: cleanSegmentation({ ...current.segmentation, ...input.segmentation }),
+      depthEstimation: cleanDepth({ ...current.depthEstimation, ...input.depthEstimation }),
       activeProvider,
       providers,
     };

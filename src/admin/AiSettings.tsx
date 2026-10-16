@@ -4,6 +4,7 @@ import { PrimaryButton, SecondaryButton } from '../components/ui';
 import { imageLimit, promptLimit, PROVIDER_TYPES } from '../lib/models';
 import { buildModelPrompt, DEFAULT_SYSTEM_PROMPT, type ImageRoles } from '../lib/prompt';
 import { productThumb } from '../lib/swatch';
+import { orientedPreview } from '../lib/depth';
 import { mergeMasks } from '../lib/roofmask';
 import type { AiSettings, AiSettingsView, Catalog, ProviderConfig, ProviderType } from '../types';
 import { api, fieldClass, type SaveResult } from './Admin';
@@ -233,6 +234,9 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
       {/* ---- Roof mask tool ---- */}
       <RoofMaskTool draft={draft} loaded={loaded} set={set} password={password} />
 
+      {/* ---- Depth map tool ---- */}
+      <DepthTool draft={draft} loaded={loaded} set={set} password={password} />
+
       {/* ---- Loading screen ---- */}
       <div>
         <h2 className="border-b border-line pb-2 text-lg font-bold">While generating</h2>
@@ -416,6 +420,118 @@ function TestModel({ password, provider, catalog }: { password: string; provider
       )}
       {state.error && <p className="mt-2 break-words text-xs font-semibold text-brand">Not working: {state.error}</p>}
       {state.image && <img src={state.image} alt="Test result" className="mt-2 w-full max-w-md rounded-wb border border-line" />}
+    </div>
+  );
+}
+
+function DepthTool({
+  draft,
+  loaded,
+  set,
+  password,
+}: {
+  draft: AiSettings;
+  loaded: AiSettingsView;
+  set: (patch: Partial<AiSettings>) => void;
+  password: string;
+}) {
+  const d = draft.depthEstimation;
+  const setD = (patch: Partial<AiSettings['depthEstimation']>) => set({ depthEstimation: { ...d, ...patch } });
+  const keyKnown = loaded.settings.depthEstimation.keyEnv === d.keyEnv;
+  const keySet = keyKnown && loaded.depthKey;
+  return (
+    <div>
+      <h2 className="border-b border-line pb-2 text-lg font-bold">Depth map tool</h2>
+      <p className="mt-2 text-sm text-muted">
+        How the 3D shape of the photo is read. Marigold gives a finer depth map; if it fails, the app uses the browser model automatically.
+      </p>
+      <div className="mt-4 space-y-3">
+        {(
+          [
+            ['marigold', 'Marigold on fal.ai', 'Finer depth map, made on the server. fal.ai bills $0.000575 per compute second (see the test for the time).'],
+            ['browser', 'Depth Anything V2 in the browser', 'Free, runs on the visitor’s device. Coarse map.'],
+          ] as const
+        ).map(([tool, label, help]) => (
+          <label
+            key={tool}
+            className={`flex cursor-pointer gap-3 rounded-wb border p-4 ${d.tool === tool ? 'border-brand shadow-[0_0_0_1px_var(--color-brand)]' : 'border-line'}`}
+          >
+            <input type="radio" name="depth-tool" checked={d.tool === tool} onChange={() => setD({ tool })} className="mt-1 accent-[var(--color-brand)]" />
+            <span>
+              <span className="block font-semibold">{label}</span>
+              <span className="block text-sm text-muted">{help}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      {d.tool === 'marigold' && (
+        <>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-semibold">
+              API key variable (in Render → Environment)
+              <input value={d.keyEnv} onChange={(e) => setD({ keyEnv: e.target.value.toUpperCase() })} className={`${fieldClass} font-mono`} />
+              {keySet ? (
+                <span className="mt-1 flex items-center gap-1 text-xs font-semibold text-ink">
+                  <Check size={14} /> Key {d.keyEnv} is set
+                </span>
+              ) : (
+                <span className="mt-1 flex items-center gap-1 text-xs font-semibold text-brand">
+                  <TriangleAlert size={14} /> {keyKnown ? `Key ${d.keyEnv} missing on the server: the browser model is used` : 'Save to check the key'}
+                </span>
+              )}
+            </label>
+            <label className="block text-sm font-semibold">
+              Quality
+              <select value={d.quality} onChange={(e) => setD({ quality: e.target.value as typeof d.quality })} className={fieldClass}>
+                <option value="fast">Fast (5 steps, 3 predictions)</option>
+                <option value="balanced">Balanced (10 steps, 5 predictions)</option>
+                <option value="best">Best (10 steps, 10 predictions, larger)</option>
+              </select>
+              <span className="mt-1 block text-xs font-normal text-muted">More steps and predictions: finer, slower, a little more expensive.</span>
+            </label>
+          </div>
+          <TestDepth password={password} depthEstimation={d} />
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Runs Marigold on the start photo: shows the depth map, the time and what it cost. */
+function TestDepth({ password, depthEstimation }: { password: string; depthEstimation: AiSettings['depthEstimation'] }) {
+  const [state, setState] = useState<{ busy?: boolean; image?: string; info?: string; error?: string }>({});
+  async function test() {
+    setState({ busy: true });
+    try {
+      const texts = await (await fetch('/api/texts')).json().catch(() => ({}));
+      const photo = await toDataUrl(texts['start.image'] || '/hero.jpg');
+      const res = await api<{ image: string; ms: number }>(password, 'POST', '/api/admin/test-depth', { image: photo, depthEstimation });
+      const seconds = res.ms / 1000;
+      setState({
+        image: await orientedPreview(res.image),
+        info: `Works: ${seconds.toFixed(1)} s, about $${(seconds * 0.000575).toFixed(4)} for this photo.`,
+      });
+    } catch (err: any) {
+      setState({ error: err.message });
+    }
+  }
+  return (
+    <div className="mt-4">
+      <SecondaryButton onClick={test} disabled={state.busy} className="sm:w-72">
+        {state.busy ? 'Testing… (up to 1 min)' : 'Test Marigold on the start photo'}
+      </SecondaryButton>
+      {state.info && (
+        <p className="mt-2 flex items-center gap-1 text-sm font-semibold text-ink">
+          <Check size={14} /> {state.info}
+        </p>
+      )}
+      {state.error && <p className="mt-2 break-words text-sm font-semibold text-brand">Not working: {state.error}</p>}
+      {state.image && (
+        <>
+          <img src={state.image} alt="Depth map" className="mt-3 w-full max-w-md rounded-wb border border-line" />
+          <p className="mt-1 text-xs text-muted">Brighter = closer to the camera, as the AI is told.</p>
+        </>
+      )}
     </div>
   );
 }

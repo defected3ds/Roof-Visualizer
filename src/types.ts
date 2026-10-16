@@ -94,8 +94,20 @@ export interface AiSettings {
   showEdgeMaps: boolean;
   /** How the roof mask is made. */
   segmentation: SegmentationSettings;
+  /** How the depth map is made. */
+  depthEstimation: DepthSettings;
   activeProvider: string;
   providers: ProviderConfig[];
+}
+
+/** How the depth map is made. */
+export interface DepthSettings {
+  /** browser = Depth Anything V2 small on the visitor's device (free, coarse); marigold = Marigold on fal.ai (server, paid). */
+  tool: 'browser' | 'marigold';
+  /** Env variable with the fal.ai key, e.g. FAL_API_KEY. */
+  keyEnv: string;
+  /** Marigold speed / quality preset. */
+  quality: 'fast' | 'balanced' | 'best';
 }
 
 export interface SegmentationSettings {
@@ -113,4 +125,6 @@ export interface AiSettingsView {
   keyStatus: Record<string, boolean>;
   /** Whether the roof mask tool's key is set on the server. */
   segmentationKey: boolean;
+  /** Whether the depth map tool's key is set on the server. */
+  depthKey: boolean;
 }

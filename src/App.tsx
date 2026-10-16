@@ -13,13 +13,14 @@ import {
   RefreshCw,
   Share,
   Undo2,
+  Upload,
   X,
 } from 'lucide-react';
 import { MaterialPicker } from './components/MaterialPicker';
 import { History, type HistoryItem } from './components/History';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
-import { depthFor, depthWithin } from './lib/depth';
+import { configureDepth, depthFor, depthWithin } from './lib/depth';
 import { configureRoofMask, roofMaskFor, roofMaskWithin } from './lib/roofmask';
 import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
@@ -62,6 +63,19 @@ export default function App() {
 /** How many earlier generations are kept for the history strip (each holds full-size images in memory). */
 const HISTORY_LIMIT = 10;
 
+/** Phones, tablets and anything with a touch screen can take a photo; a computer with a mouse just uploads one. */
+function useCanTakePhoto() {
+  const query = '(pointer: coarse), (max-width: 1023px)';
+  const [value, setValue] = useState(() => (typeof window !== 'undefined' ? window.matchMedia(query).matches : true));
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const update = () => setValue(mq.matches);
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return value;
+}
+
 function RoofApp() {
   const t = useT();
   const textsReady = useTextsReady();
@@ -97,6 +111,7 @@ function RoofApp() {
   const tipShown = useRef(false);
 
   const base = history[cursor];
+  const canTakePhoto = useCanTakePhoto();
 
   /** Reads the current settings from the server (also before every generation, so admin changes apply at once). */
   async function loadSettings() {
@@ -104,8 +119,9 @@ function RoofApp() {
     setProvider(health.provider);
     if (health.analysis) setAnalysis(health.analysis);
     configureRoofMask({ tool: health.maskTool === 'sam3' ? 'sam3' : 'clipseg' });
+    configureDepth({ tool: health.depthTool === 'marigold' ? 'marigold' : 'browser' });
     if (typeof health.edgeMaps === 'boolean') setShowEdgeMaps(health.edgeMaps);
-    return health as { locked: boolean; edgeMaps?: boolean; analysis?: typeof analysis };
+    return health as { locked: boolean; edgeMaps?: boolean; analysis?: typeof analysis; depthTool?: string };
   }
 
   useEffect(() => {
@@ -138,7 +154,10 @@ function RoofApp() {
       .catch((err) => setToast(err.message));
   }, [gate, accessCode]);
 
-  useEffect(() => configureRoofMask({ accessCode }), [accessCode]);
+  useEffect(() => {
+    configureRoofMask({ accessCode });
+    configureDepth({ accessCode });
+  }, [accessCode]);
 
   // Analyse the photo (depth map, then roof mask) as soon as there is one, while the customer picks a product.
   const analyse = (photo: string) =>
@@ -198,7 +217,7 @@ function RoofApp() {
     setWaitingForAnalysis(true);
     const use = live?.analysis ?? analysis;
     const [depthMaps, roofMask] = await Promise.all([
-      use.depth ? depthWithin(base, 20000) : null,
+      use.depth ? depthWithin(base, live?.depthTool === 'marigold' ? 60000 : 20000) : null,
       use.mask ? roofMaskWithin(base, 20000) : null,
     ]);
     setWaitingForAnalysis(false);
@@ -330,16 +349,22 @@ function RoofApp() {
             </ol>
           </div>
           <div className="mt-8 space-y-3">
-            <PrimaryButton onClick={() => cameraInput.current?.click()}>
-              <Camera size={20} /> {t('start.camera')}
-            </PrimaryButton>
-            <SecondaryButton onClick={() => fileInput.current?.click()}>
-              <ImageIcon size={20} /> {t('start.gallery')}
-            </SecondaryButton>
+            {canTakePhoto ? (
+              <>
+                <PrimaryButton onClick={() => cameraInput.current?.click()}>
+                  <Camera size={20} /> {t('start.camera')}
+                </PrimaryButton>
+                <SecondaryButton onClick={() => fileInput.current?.click()}>
+                  <ImageIcon size={20} /> {t('start.gallery')}
+                </SecondaryButton>
+              </>
+            ) : (
+              // A computer has no camera to speak of: just upload a photo.
+              <PrimaryButton onClick={() => fileInput.current?.click()}>
+                <Upload size={20} /> {t('start.upload')}
+              </PrimaryButton>
+            )}
             {provider === 'demo' && <p className="pt-1 text-center text-xs text-muted">Demo mode: no AI key configured on the server.</p>}
-            <a href="/admin" className="block pt-2 text-center text-xs text-muted underline-offset-2 hover:underline">
-              Manage products
-            </a>
           </div>
         </div>
         </div>

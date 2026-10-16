@@ -29,7 +29,8 @@ export const TEXT_GROUPS: { title: string; fields: TextField[] }[] = [
       { key: 'start.step2', label: 'Step 2', value: 'Choose a roofing product.', long: true },
       { key: 'start.step3', label: 'Step 3', value: 'Generate, swipe through the results and accept the one you like.', long: true },
       { key: 'start.camera', label: 'Camera button', value: 'Take a photo' },
-      { key: 'start.gallery', label: 'Gallery button', value: 'Choose from gallery' },
+      { key: 'start.gallery', label: 'Gallery button (phones and tablets)', value: 'Choose from gallery' },
+      { key: 'start.upload', label: 'Upload button (computers)', value: 'Upload your photo' },
     ],
   },
   {

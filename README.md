@@ -85,6 +85,12 @@ active model is chosen as before (`AI_PROVIDER`, else the first model with a key
 
 Both live in `src/lib/roofmask.ts`.
 
+**Depth map** (Admin > AI settings > Depth map tool):
+- **Marigold on fal.ai** (`fal-ai/imageutils/marigold-depth`, `POST /api/depth-map`, fal.ai bills $0.000575 per compute
+  second): a finer map made on the server. Presets fast / balanced / best set steps, predictions and resolution.
+  The map is oriented automatically (brighter = closer) and sharpened in the browser like the other one.
+- **Depth Anything V2 small** in the browser (free, coarse), also used when Marigold fails. `src/lib/depth.ts`.
+
 ## Products
 
 Everything is managed in the app at **`/admin`** (protected by `ADMIN_PASSWORD`) and stored in `data/`:
