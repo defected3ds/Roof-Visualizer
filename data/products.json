@@ -2,9 +2,10 @@
   {
     "id": "barrel-terracotta",
     "name": "Barrel – Terracotta",
-    "category": "Tile",
+    "category": "tile",
     "brand": "",
     "description": "Classic orange-red terracotta Spanish barrel (S-profile) clay roof tiles.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "barrel",
@@ -18,9 +19,10 @@
   {
     "id": "barrel-aged",
     "name": "Barrel – Aged Mission",
-    "category": "Tile",
+    "category": "tile",
     "brand": "",
     "description": "Aged, weathered mission-style Spanish barrel clay roof tiles in dark red-brown with darker blended flashing.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "barrel",
@@ -34,9 +36,10 @@
   {
     "id": "barrel-charcoal",
     "name": "Barrel – Charcoal",
-    "category": "Tile",
+    "category": "tile",
     "brand": "",
     "description": "Charcoal-black glazed Spanish barrel (S-profile) roof tiles with a subtle sheen.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "barrel",
@@ -50,9 +53,10 @@
   {
     "id": "flat-red",
     "name": "Flat Tile – Brick Red",
-    "category": "Tile",
+    "category": "tile",
     "brand": "",
     "description": "Flat interlocking brick-red clay roof tiles in neat straight courses (European style).",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "flat-tile",
@@ -66,9 +70,10 @@
   {
     "id": "flat-anthracite",
     "name": "Flat Tile – Anthracite",
-    "category": "Tile",
+    "category": "tile",
     "brand": "",
     "description": "Modern matte anthracite-grey flat concrete roof tiles in clean straight courses.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "flat-tile",
@@ -82,9 +87,10 @@
   {
     "id": "shingle-charcoal",
     "name": "Architectural – Charcoal",
-    "category": "Shingles",
+    "category": "shingles",
     "brand": "",
     "description": "Dimensional architectural asphalt shingles in blended charcoal grey.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "shingle",
@@ -98,9 +104,10 @@
   {
     "id": "shingle-weathered",
     "name": "Architectural – Weathered Wood",
-    "category": "Shingles",
+    "category": "shingles",
     "brand": "",
     "description": "Dimensional architectural asphalt shingles in a weathered-wood brown-grey blend.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "shingle",
@@ -114,9 +121,10 @@
   {
     "id": "shingle-brown",
     "name": "Architectural – Autumn Brown",
-    "category": "Shingles",
+    "category": "shingles",
     "brand": "",
     "description": "Dimensional architectural asphalt shingles in warm autumn brown blend.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "shingle",
@@ -130,9 +138,10 @@
   {
     "id": "slate-natural",
     "name": "Natural Slate – Grey",
-    "category": "Slate",
+    "category": "slate",
     "brand": "",
     "description": "Natural split blue-grey slate roof tiles with slightly irregular edges and subtle colour variation.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "slate",
@@ -146,9 +155,10 @@
   {
     "id": "slate-black",
     "name": "Natural Slate – Black",
-    "category": "Slate",
+    "category": "slate",
     "brand": "",
     "description": "Natural black slate roof tiles with a fine riven texture and soft sheen.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "slate",
@@ -162,9 +172,10 @@
   {
     "id": "slate-multi",
     "name": "Slate – Multi Blend",
-    "category": "Slate",
+    "category": "slate",
     "brand": "",
     "description": "Mixed slate roof in a blend of grey, purple and rust-toned natural slates.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "slate",
@@ -178,9 +189,10 @@
   {
     "id": "shake-cedar",
     "name": "Cedar Shake – Natural",
-    "category": "Shake",
+    "category": "shake",
     "brand": "",
     "description": "New natural red cedar wood shake roof with hand-split texture and varied plank widths.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "shake",
@@ -194,9 +206,10 @@
   {
     "id": "shake-aged",
     "name": "Cedar Shake – Silver Aged",
-    "category": "Shake",
+    "category": "shake",
     "brand": "",
     "description": "Weathered silver-grey aged cedar wood shake roof with hand-split texture.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "shake",
@@ -210,9 +223,10 @@
   {
     "id": "metal-black",
     "name": "Standing Seam – Matte Black",
-    "category": "Metal",
+    "category": "metal",
     "brand": "",
     "description": "Matte black standing seam metal roof with vertical raised seams.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "seam",
@@ -226,9 +240,10 @@
   {
     "id": "metal-zinc",
     "name": "Standing Seam – Zinc Grey",
-    "category": "Metal",
+    "category": "metal",
     "brand": "",
     "description": "Pre-weathered zinc grey standing seam metal roof with vertical raised seams.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "seam",
@@ -242,9 +257,10 @@
   {
     "id": "metal-green",
     "name": "Standing Seam – Forest Green",
-    "category": "Metal",
+    "category": "metal",
     "brand": "",
     "description": "Forest green painted standing seam metal roof with vertical raised seams.",
+    "specs": [],
     "images": [],
     "swatch": {
       "pattern": "seam",

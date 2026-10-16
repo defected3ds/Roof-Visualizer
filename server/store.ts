@@ -1,0 +1,223 @@
+import fs from 'fs';
+import path from 'path';
+import { commitFiles, githubConfig, type FileChange } from './github';
+import { DEFAULT_TEXTS } from '../src/texts';
+import type { Category, Product, ProductInput, Spec, Texts } from '../src/types';
+
+/**
+ * Catalog data (categories, products, product photos, app texts) lives in data/ in the repo.
+ * Admin changes are written to disk and, with GITHUB_TOKEN, committed back to the repo.
+ */
+const ROOT = process.cwd();
+const FILES = {
+  categories: 'data/categories.json',
+  products: 'data/products.json',
+  texts: 'data/texts.json',
+};
+const IMAGE_DIR = 'data/product-images';
+const MAX_IMAGES = 6;
+const MAX_SPECS = 40;
+/** Product photos sent to the model with each generation. */
+export const MAX_REFERENCES = 3;
+
+export const IMAGE_URL_PREFIX = '/product-images/';
+export const imageDir = path.join(ROOT, IMAGE_DIR);
+
+function readJson<T>(rel: string, fallback: T): T {
+  const file = path.join(ROOT, rel);
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : fallback;
+}
+
+let categories: Category[] = readJson(FILES.categories, []);
+// Older catalogs stored the category name ("Tile") instead of its id ("tile").
+const categoryId = (value: string) => categories.find((c) => c.id === value || c.name.toLowerCase() === value?.toLowerCase())?.id ?? value;
+let products: Product[] = readJson<Product[]>(FILES.products, []).map((p) => ({
+  ...p,
+  category: categoryId(p.category),
+  specs: p.specs ?? [],
+}));
+let texts: Texts = readJson(FILES.texts, {});
+
+// Saves run one after another so concurrent edits can't interleave commits.
+let queue: Promise<unknown> = Promise.resolve();
+function serialized<T>(run: () => Promise<T>): Promise<T> {
+  const job = queue.then(run, run);
+  queue = job.catch(() => {});
+  return job;
+}
+
+export const listCategories = () => categories;
+export const listProducts = () => products;
+export const getTexts = () => texts;
+export const getProduct = (id: string) => products.find((p) => p.id === id);
+export const getCategory = (id: string) => categories.find((c) => c.id === id);
+
+function slug(text: string) {
+  return (
+    text
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) || 'item'
+  );
+}
+
+function urlToRepoPath(url: string) {
+  return path.posix.join(IMAGE_DIR, url.slice(IMAGE_URL_PREFIX.length));
+}
+
+const json = (value: unknown) => Buffer.from(JSON.stringify(value, null, 2) + '\n');
+
+/** Product photos as data URLs, for sending to the model. */
+export function referenceImages(product: Product): string[] {
+  return product.images.slice(0, MAX_REFERENCES).flatMap((url) => {
+    const file = path.join(ROOT, urlToRepoPath(url));
+    if (!fs.existsSync(file)) return [];
+    const ext = path.extname(file).slice(1).toLowerCase();
+    const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+    return [`data:${mime};base64,${fs.readFileSync(file).toString('base64')}`];
+  });
+}
+
+export interface SaveResult {
+  /** True when the change was committed to GitHub and will survive a redeploy. */
+  synced: boolean;
+  warning?: string;
+}
+
+async function persist(changes: FileChange[], message: string): Promise<SaveResult> {
+  // Write locally first so the running app shows the change immediately.
+  for (const { path: rel, content } of changes) {
+    const abs = path.join(ROOT, rel);
+    if (content === null) fs.rmSync(abs, { force: true });
+    else {
+      fs.mkdirSync(path.dirname(abs), { recursive: true });
+      fs.writeFileSync(abs, content);
+    }
+  }
+  if (!githubConfig()) {
+    return {
+      synced: false,
+      warning: 'Saved on this server only. Add GITHUB_TOKEN so changes are kept after the app restarts or redeploys.',
+    };
+  }
+  try {
+    await commitFiles(changes, message);
+    return { synced: true };
+  } catch (err: any) {
+    console.error('[store] GitHub sync failed:', err);
+    return { synced: false, warning: `Saved, but copying to GitHub failed: ${err.message}` };
+  }
+}
+
+// ---- Products -------------------------------------------------------------------------------
+
+function cleanSpecs(specs: Spec[] | undefined): Spec[] {
+  const rows = (specs ?? [])
+    .map((s) => ({ label: String(s.label ?? '').trim(), value: String(s.value ?? '').trim() }))
+    .filter((s) => s.label || s.value);
+  if (rows.length > MAX_SPECS) throw new Error(`At most ${MAX_SPECS} technical data rows`);
+  return rows;
+}
+
+export function saveProduct(input: ProductInput): Promise<SaveResult & { product: Product }> {
+  return serialized(async () => {
+    if (!input.name?.trim()) throw new Error('Name is required');
+    if (!getCategory(input.category)) throw new Error('Choose a category');
+    if (!input.description?.trim()) throw new Error('Describe the product for the AI');
+    if ((input.images?.length ?? 0) > MAX_IMAGES) throw new Error(`At most ${MAX_IMAGES} photos per product`);
+    const existing = input.id ? getProduct(input.id) : undefined;
+    if (input.id && !existing) throw new Error('Product not found');
+
+    const id = existing?.id ?? `${slug(input.name)}-${Date.now().toString(36)}`;
+    const changes: FileChange[] = [];
+    const images: string[] = [];
+    input.images.forEach((img, i) => {
+      if (img.startsWith(IMAGE_URL_PREFIX)) {
+        if (existing?.images.includes(img)) images.push(img);
+        return;
+      }
+      const match = /^data:image\/(jpeg|png|webp);base64,(.+)$/s.exec(img);
+      if (!match) throw new Error('Photos must be JPEG, PNG or WebP');
+      const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
+      const url = `${IMAGE_URL_PREFIX}${id}/${Date.now().toString(36)}-${i}.${ext}`;
+      changes.push({ path: urlToRepoPath(url), content: Buffer.from(match[2], 'base64') });
+      images.push(url);
+    });
+    for (const old of existing?.images ?? []) {
+      if (!images.includes(old)) changes.push({ path: urlToRepoPath(old), content: null });
+    }
+
+    const product: Product = {
+      id,
+      name: input.name.trim(),
+      category: input.category,
+      brand: input.brand?.trim() ?? '',
+      description: input.description.trim(),
+      specs: cleanSpecs(input.specs),
+      images,
+      ...(existing?.swatch ? { swatch: existing.swatch } : {}),
+    };
+    const next = existing ? products.map((p) => (p.id === id ? product : p)) : [...products, product];
+    changes.push({ path: FILES.products, content: json(next) });
+    const result = await persist(changes, `${existing ? 'Update' : 'Add'} product "${product.name}"`);
+    products = next;
+    return { ...result, product };
+  });
+}
+
+export function deleteProduct(id: string): Promise<SaveResult> {
+  return serialized(async () => {
+    const existing = getProduct(id);
+    if (!existing) throw new Error('Product not found');
+    const next = products.filter((p) => p.id !== id);
+    const changes: FileChange[] = existing.images.map((url) => ({ path: urlToRepoPath(url), content: null }));
+    changes.push({ path: FILES.products, content: json(next) });
+    const result = await persist(changes, `Delete product "${existing.name}"`);
+    products = next;
+    return result;
+  });
+}
+
+// ---- Categories -----------------------------------------------------------------------------
+
+/** Replaces the whole category list (adds, renames, reorders, deletes in one save). */
+export function saveCategories(input: Partial<Category>[]): Promise<SaveResult & { categories: Category[] }> {
+  return serialized(async () => {
+    const seen = new Set<string>();
+    const next: Category[] = input.map((c) => {
+      const name = String(c.name ?? '').trim();
+      if (!name) throw new Error('Every category needs a name');
+      let id = c.id && getCategory(c.id) ? c.id : slug(name);
+      while (seen.has(id) || (!c.id && getCategory(id))) id = `${slug(name)}-${Math.random().toString(36).slice(2, 6)}`;
+      seen.add(id);
+      return { id, name, description: String(c.description ?? '').trim() };
+    });
+    if (next.length === 0) throw new Error('Keep at least one category');
+    const inUse = categories.filter((c) => !seen.has(c.id) && products.some((p) => p.category === c.id));
+    if (inUse.length) {
+      throw new Error(`"${inUse[0].name}" still has products. Move or delete them first.`);
+    }
+    const result = await persist([{ path: FILES.categories, content: json(next) }], 'Update categories');
+    categories = next;
+    return { ...result, categories };
+  });
+}
+
+// ---- App texts ------------------------------------------------------------------------------
+
+/** Stores only texts that differ from the defaults, so improved defaults still reach untouched fields. */
+export function saveTexts(input: Texts): Promise<SaveResult & { texts: Texts }> {
+  return serialized(async () => {
+    const next: Texts = {};
+    for (const [key, value] of Object.entries(input ?? {})) {
+      if (!(key in DEFAULT_TEXTS)) continue;
+      const text = String(value ?? '').trim();
+      if (text && text !== DEFAULT_TEXTS[key]) next[key] = text;
+    }
+    const result = await persist([{ path: FILES.texts, content: json(next) }], 'Update app texts');
+    texts = next;
+    return { ...result, texts };
+  });
+}

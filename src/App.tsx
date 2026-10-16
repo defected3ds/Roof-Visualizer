@@ -18,10 +18,10 @@ import {
 import { MaterialPicker } from './components/MaterialPicker';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
-import { CATEGORIES } from './materials';
 import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
-import type { GenerateResponse, Product } from './types';
+import { TextsProvider, useT } from './lib/texts';
+import type { Catalog, Category, GenerateResponse, Product } from './types';
 
 const VARIANTS = 3;
 const CODE_KEY = 'roof-visualizer:access-code';
@@ -49,11 +49,22 @@ async function checkCode(code: string): Promise<boolean> {
 type Gate = 'checking' | 'locked' | 'open';
 
 export default function App() {
+  return (
+    <TextsProvider>
+      <RoofApp />
+    </TextsProvider>
+  );
+}
+
+function RoofApp() {
+  const t = useT();
   const [gate, setGate] = useState<Gate>('checking');
   const [accessCode, setAccessCode] = useState(storedCode);
   const [history, setHistory] = useState<string[]>([]);
   const [cursor, setCursor] = useState(0);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [showDetails, setShowDetails] = useState(false);
   const [productId, setProductId] = useState<string | null>(null);
   const [results, setResults] = useState<string[]>([]);
   const [active, setActive] = useState(0);
@@ -86,7 +97,7 @@ export default function App() {
 
   useEffect(() => {
     if (gate !== 'open') return;
-    fetch('/api/products', { headers: { 'X-Access-Code': accessCode } })
+    fetch('/api/catalog', { headers: { 'X-Access-Code': accessCode } })
       .then(async (res) => {
         if (res.status === 401) {
           storeCode('');
@@ -94,7 +105,9 @@ export default function App() {
           return;
         }
         if (!res.ok) throw new Error('Could not load the product catalog');
-        setProducts(await res.json());
+        const catalog = (await res.json()) as Catalog;
+        setCategories(catalog.categories);
+        setProducts(catalog.products);
       })
       .catch((err) => setToast(err.message));
   }, [gate, accessCode]);
@@ -143,13 +156,14 @@ export default function App() {
           count: VARIANTS,
         }),
       });
-      const data = (await res.json()) as GenerateResponse & { error?: string };
+      const data = (await res.json()) as GenerateResponse & { error?: string; code?: string };
       if (res.status === 401) {
         // The access code was changed on the server: sign in again.
         storeCode('');
         setGate('locked');
         return;
       }
+      if (data.code === 'limit') throw new Error(t('message.limit'));
       if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
       setResults(data.images);
       setActive(0);
@@ -157,10 +171,10 @@ export default function App() {
         setToast('Demo mode: add GEMINI_API_KEY or REPLICATE_API_TOKEN on the server to generate real roofs.');
       } else if (data.images.length > 1 && !tipShown.current) {
         tipShown.current = true;
-        setToast('Each generation gives several results. Swipe to see the others.');
+        setToast(t('message.swipe'));
       }
     } catch (err: any) {
-      setToast(err.message || 'Something went wrong');
+      setToast(err.message || t('message.error'));
     } finally {
       setGenerating(false);
       setStartedAt(null);
@@ -183,7 +197,8 @@ export default function App() {
     setCursor((c) => Math.min(history.length - 1, Math.max(0, c + delta)));
   }
 
-  const product = products.find((p) => p.id === productId) ?? products.find((p) => p.category === 'Tile') ?? products[0];
+  const product = products.find((p) => p.id === productId) ?? products[0];
+  const categoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? '';
   const current = results[active] ?? base;
   const busy = generating;
 
@@ -213,26 +228,19 @@ export default function App() {
         <Header />
         <div className="flex flex-1 flex-col justify-between px-5 pb-8 pt-8">
           <div>
-            <Tag>Roof Visualizer</Tag>
-            <h1 className="mt-4 text-[34px] font-bold leading-tight">See your house with a new roof</h1>
-            <p className="mt-4 text-[17px] leading-relaxed text-muted">
-              Take a photo of a house, choose clay tiles, slate, shingles, shake or metal, and see the new roof in seconds,
-              while everything else stays as it is.
-            </p>
+            <Tag>{t('start.tag')}</Tag>
+            <h1 className="mt-4 text-[34px] font-bold leading-tight">{t('start.title')}</h1>
+            <p className="mt-4 whitespace-pre-line text-[17px] leading-relaxed text-muted">{t('start.intro')}</p>
             <div className="mt-8 grid grid-cols-4 gap-2">
-              {CATEGORIES.flatMap((c) => products.find((p) => p.category === c) ?? []).slice(0, 4).map((p) => (
+              {categories.flatMap((c) => products.find((p) => p.category === c.id) ?? []).slice(0, 4).map((p) => (
                 <figure key={p.id} className="overflow-hidden rounded-wb border border-line">
                   <img src={productThumb(p, 160)} alt="" className="aspect-square w-full object-cover" />
-                  <figcaption className="px-1.5 py-1 text-[11px] text-muted">{p.category}</figcaption>
+                  <figcaption className="truncate px-1.5 py-1 text-[11px] text-muted">{categoryName(p.category)}</figcaption>
                 </figure>
               ))}
             </div>
             <ol className="mt-8 divide-y divide-dotted divide-line border-y border-line">
-              {[
-                'Photograph the house from the street, with the roof clearly visible.',
-                'Choose a roofing material.',
-                'Generate, swipe through the results and accept the one you like.',
-              ].map((text, i) => (
+              {[t('start.step1'), t('start.step2'), t('start.step3')].map((text, i) => (
                 <li key={i} className="flex gap-4 py-3.5 text-[15px] text-ink">
                   <span className="w-5 shrink-0 font-bold text-brand">{i + 1}</span>
                   {text}
@@ -242,10 +250,10 @@ export default function App() {
           </div>
           <div className="mt-8 space-y-3">
             <PrimaryButton onClick={() => cameraInput.current?.click()}>
-              <Camera size={20} /> Take a photo
+              <Camera size={20} /> {t('start.camera')}
             </PrimaryButton>
             <SecondaryButton onClick={() => fileInput.current?.click()}>
-              <ImageIcon size={20} /> Choose from gallery
+              <ImageIcon size={20} /> {t('start.gallery')}
             </SecondaryButton>
             {provider === 'demo' && <p className="pt-1 text-center text-xs text-muted">Demo mode: no AI key configured on the server.</p>}
             <a href="/admin" className="block pt-2 text-center text-xs text-muted underline-offset-2 hover:underline">
@@ -287,8 +295,16 @@ export default function App() {
       />
 
       <div className="flex items-baseline justify-between px-5 pb-3 pt-5">
-        <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted">New roof</p>
-        <p className="truncate pl-4 text-sm font-semibold text-ink">{product?.name}</p>
+        <p className="shrink-0 text-xs font-bold uppercase tracking-[0.1em] text-muted">{t('editor.heading')}</p>
+        {product && (
+          <button
+            onClick={() => setShowDetails(true)}
+            className="min-w-0 truncate pl-4 text-right text-sm font-semibold text-ink underline decoration-line underline-offset-4 hover:decoration-brand"
+            title={t('editor.details')}
+          >
+            {product.name}
+          </button>
+        )}
       </div>
       <div className="flex flex-1 items-center">
         <Stage
@@ -332,16 +348,22 @@ export default function App() {
 
       <section className="border-t border-line bg-paper pb-6 pt-3">
         {product ? (
-          <MaterialPicker products={products} selected={product} onSelect={(p) => setProductId(p.id)} disabled={busy} />
+          <MaterialPicker
+            categories={categories}
+            products={products}
+            selected={product}
+            onSelect={(p) => setProductId(p.id)}
+            disabled={busy}
+          />
         ) : (
           <p className="px-5 py-6 text-center text-sm text-muted">No products yet. Add some at /admin.</p>
         )}
         <div className="mt-5 grid grid-cols-2 gap-3 px-5">
           <SecondaryButton onClick={accept} disabled={busy || results.length === 0}>
-            <Check size={20} /> Accept
+            <Check size={20} /> {t('editor.accept')}
           </SecondaryButton>
           <PrimaryButton onClick={generate} disabled={busy || !product}>
-            <RefreshCw size={20} className={busy ? 'animate-spin' : ''} /> Generate
+            <RefreshCw size={20} className={busy ? 'animate-spin' : ''} /> {t('editor.generate')}
           </PrimaryButton>
         </div>
       </section>
@@ -356,6 +378,10 @@ export default function App() {
         </div>
       )}
 
+      {showDetails && product && (
+        <ProductDetails product={product} category={categoryName(product.category)} onClose={() => setShowDetails(false)} />
+      )}
+
       {fullscreen && (
         <button className="fixed inset-0 z-30 flex items-center justify-center bg-black" onClick={() => setFullscreen(false)}>
           <img src={current} alt="Full screen" className="max-h-full max-w-full object-contain" />
@@ -367,6 +393,7 @@ export default function App() {
 }
 
 function LoginScreen({ onUnlock }: { onUnlock: (code: string) => void }) {
+  const t = useT();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
@@ -379,7 +406,7 @@ function LoginScreen({ onUnlock }: { onUnlock: (code: string) => void }) {
     setError('');
     try {
       if (await checkCode(value)) onUnlock(value);
-      else setError('That access code is not correct.');
+      else setError(t('login.error'));
     } catch {
       setError('Could not reach the server. Check your connection and try again.');
     } finally {
@@ -392,11 +419,11 @@ function LoginScreen({ onUnlock }: { onUnlock: (code: string) => void }) {
       <Header />
       <form onSubmit={submit} className="flex flex-1 flex-col justify-between px-5 pb-8 pt-8">
         <div>
-          <Tag>Roof Visualizer</Tag>
-          <h1 className="mt-4 text-[32px] font-bold leading-tight">Sign in to continue</h1>
-          <p className="mt-3 leading-relaxed text-muted">Enter the access code you received from wienerberger.</p>
+          <Tag>{t('start.tag')}</Tag>
+          <h1 className="mt-4 text-[32px] font-bold leading-tight">{t('login.title')}</h1>
+          <p className="mt-3 whitespace-pre-line leading-relaxed text-muted">{t('login.intro')}</p>
           <label className="mt-10 block text-sm font-semibold text-ink" htmlFor="code">
-            Access code
+            {t('login.label')}
           </label>
           <div className="mt-2 flex items-center gap-3 rounded-wb border border-line bg-white px-3 py-3 focus-within:border-brand">
             <Lock size={18} className="text-muted" />
@@ -414,7 +441,7 @@ function LoginScreen({ onUnlock }: { onUnlock: (code: string) => void }) {
           {error && <p className="mt-3 text-sm font-semibold text-brand">{error}</p>}
         </div>
         <PrimaryButton type="submit" disabled={checking || !code.trim()}>
-          {checking ? 'Checking…' : 'Sign in'} <ArrowRight size={20} />
+          {checking ? '…' : t('login.button')} <ArrowRight size={20} />
         </PrimaryButton>
       </form>
     </Shell>
@@ -446,5 +473,42 @@ function ToolButton({
     >
       {children}
     </button>
+  );
+}
+
+function ProductDetails({ product, category, onClose }: { product: Product; category: string; onClose: () => void }) {
+  const t = useT();
+  return (
+    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40" onClick={onClose}>
+      <div
+        className="max-h-[85dvh] w-full max-w-xl overflow-y-auto rounded-t-[6px] bg-white px-5 pb-8 pt-5 text-ink"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-4">
+          <img src={productThumb(product, 160)} alt="" className="h-20 w-20 shrink-0 rounded-wb border border-line object-cover" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted">{[product.brand, category].filter(Boolean).join(' · ')}</p>
+            <h2 className="text-xl font-bold leading-tight">{product.name}</h2>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="text-muted">
+            <X size={22} />
+          </button>
+        </div>
+        <p className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-muted">{product.description}</p>
+        {product.specs.length > 0 && (
+          <>
+            <h3 className="mt-6 text-lg font-bold">{t('editor.details')}</h3>
+            <dl className="mt-2 divide-y divide-line border-y border-line text-[15px]">
+              {product.specs.map((s, i) => (
+                <div key={i} className="grid grid-cols-2 gap-4 py-2.5">
+                  <dt className="text-muted">{s.label}</dt>
+                  <dd>{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

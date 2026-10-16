@@ -1,10 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, ImagePlus, Lock, Plus, Star, Trash2, X } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  ClipboardPaste,
+  ImagePlus,
+  ListPlus,
+  Lock,
+  Plus,
+  RotateCcw,
+  Star,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from '../components/ui';
 import { fileToDataUrl } from '../lib/image';
 import { productThumb } from '../lib/swatch';
-import { CATEGORIES } from '../materials';
-import type { Category, Product, ProductInput } from '../types';
+import { DEFAULT_TEXTS, TEXT_GROUPS } from '../texts';
+import type { Catalog, Category, Product, ProductInput, Spec, Texts } from '../types';
 
 const PASSWORD_KEY = 'roof-visualizer:admin-password';
 const MAX_PHOTOS = 6;
@@ -13,9 +27,28 @@ const AI_PHOTOS = 3;
 const DESCRIPTION_TEMPLATE = `Shape / profile:
 Colour:
 Surface finish:
-Size / format:
 Laying pattern:
 Other details: `;
+
+/** Rows offered by "Add common fields" (the usual roof tile data sheet). */
+const COMMON_SPECS = [
+  'Material',
+  'Overall dimensions',
+  'Effective covering width',
+  'Covering length',
+  'Tiles per m²',
+  'Weight per tile',
+  'Roof weight',
+  'Installation',
+  'Colors',
+];
+
+type Tab = 'products' | 'categories' | 'texts';
+
+interface SaveResult {
+  synced: boolean;
+  warning?: string;
+}
 
 function readPassword() {
   try {
@@ -32,22 +65,38 @@ async function api<T>(password: string, method: string, url: string, body?: unkn
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error(data.error || `Request failed (${res.status})`), { status: res.status });
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
   return data as T;
 }
 
-interface SaveResult {
-  product?: Product;
-  synced: boolean;
-  warning?: string;
+/** Splits text copied from a web page, spreadsheet or PDF table into label/value rows. */
+export function parseSpecTable(text: string): Spec[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const parts = line.includes('\t') ? line.split(/\t+/) : line.includes(':') ? line.split(/:(.*)/s) : line.split(/\s{2,}/);
+      const [label, ...rest] = parts.map((p) => p.trim()).filter(Boolean);
+      return { label: label ?? '', value: rest.join(' ').trim() };
+    })
+    .filter((s) => s.label && !(s.label.toLowerCase() === 'property' && s.value.toLowerCase() === 'specification'));
 }
 
 export default function Admin() {
   const [password, setPassword] = useState(readPassword);
   const [session, setSession] = useState<{ githubSync: boolean } | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [catalog, setCatalog] = useState<Catalog>({ categories: [], products: [] });
+  const [texts, setTexts] = useState<Texts>({});
+  const [tab, setTab] = useState<Tab>('products');
   const [editing, setEditing] = useState<Product | 'new' | null>(null);
   const [notice, setNotice] = useState<{ text: string; warn?: boolean } | null>(null);
+
+  async function reload(pw = password) {
+    const [c, t] = await Promise.all([api<Catalog>(pw, 'GET', '/api/catalog'), fetch('/api/texts').then((r) => r.json())]);
+    setCatalog(c);
+    setTexts(t);
+  }
 
   async function login(pw: string) {
     const res = await api<{ githubSync: boolean }>(pw, 'POST', '/api/admin/login');
@@ -55,8 +104,8 @@ export default function Admin() {
       sessionStorage.setItem(PASSWORD_KEY, pw);
     } catch {}
     setPassword(pw);
+    await reload(pw);
     setSession(res);
-    setProducts(await api<Product[]>(pw, 'GET', '/api/products'));
   }
 
   useEffect(() => {
@@ -73,25 +122,27 @@ export default function Admin() {
     setSession(null);
   }
 
-  if (!session) return <AdminLogin onLogin={login} />;
-
-  async function onSaved(result: SaveResult, deletedId?: string) {
-    setProducts(await api<Product[]>(password, 'GET', '/api/products'));
-    setEditing(null);
-    setNotice(
-      result.warning
-        ? { text: result.warning, warn: true }
-        : { text: deletedId ? 'Product deleted.' : 'Saved. The product is in the app now and stored in GitHub.' },
-    );
+  /** Reloads the data and shows how a save went. */
+  async function saved(result: SaveResult, message: string) {
+    await reload();
+    setNotice(result.warning ? { text: result.warning, warn: true } : { text: `${message} Stored in GitHub.` });
+    window.scrollTo({ top: 0 });
   }
+
+  if (!session) return <AdminLogin onLogin={login} />;
 
   if (editing) {
     return (
       <ProductForm
         password={password}
         product={editing === 'new' ? null : editing}
+        categories={catalog.categories}
+        onCategoriesChanged={(categories) => setCatalog((c) => ({ ...c, categories }))}
         onCancel={() => setEditing(null)}
-        onSaved={onSaved}
+        onSaved={async (result, message) => {
+          setEditing(null);
+          await saved(result, message);
+        }}
       />
     );
   }
@@ -106,18 +157,31 @@ export default function Admin() {
         }
       />
       <div className="px-5 pb-10 pt-8">
-        <Tag>Product admin</Tag>
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-[30px] font-bold leading-tight">Roof products</h1>
-            <p className="mt-1 text-muted">These are the materials customers can choose in the app.</p>
-          </div>
-          <div>
-            <PrimaryButton onClick={() => setEditing('new')} className="px-6">
-              <Plus size={18} /> Add product
-            </PrimaryButton>
-          </div>
-        </div>
+        <Tag>Admin</Tag>
+        <h1 className="mt-4 text-[30px] font-bold leading-tight">Roof Visualizer admin</h1>
+
+        <nav className="mt-6 flex gap-1 border-b border-line">
+          {(
+            [
+              ['products', 'Products'],
+              ['categories', 'Categories'],
+              ['texts', 'App texts'],
+            ] as [Tab, string][]
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => {
+                setTab(id);
+                setNotice(null);
+              }}
+              className={`border-b-[3px] px-4 pb-2.5 pt-1 text-[15px] ${
+                tab === id ? 'border-brand font-semibold text-ink' : 'border-transparent text-muted hover:text-ink'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
 
         {!session.githubSync && (
           <p className="mt-6 rounded-wb border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
@@ -138,33 +202,11 @@ export default function Admin() {
           </div>
         )}
 
-        {CATEGORIES.map((category) => {
-          const items = products.filter((p) => p.category === category);
-          if (items.length === 0) return null;
-          return (
-            <section key={category} className="mt-8">
-              <h2 className="border-b border-line pb-2 text-lg font-bold">{category}</h2>
-              <ul className="divide-y divide-dotted divide-line">
-                {items.map((p) => (
-                  <li key={p.id}>
-                    <button onClick={() => setEditing(p)} className="flex w-full items-center gap-4 py-3 text-left hover:bg-paper">
-                      <img src={productThumb(p, 120)} alt="" className="h-14 w-14 shrink-0 rounded-wb border border-line object-cover" />
-                      <span className="min-w-0 flex-1">
-                        {p.brand && <span className="block text-xs font-semibold uppercase tracking-wide text-muted">{p.brand}</span>}
-                        <span className="block truncate font-semibold">{p.name}</span>
-                        <span className="block truncate text-sm text-muted">{p.description}</span>
-                      </span>
-                      <span className={`shrink-0 text-xs ${p.images.length ? 'text-ink' : 'text-muted'}`}>
-                        {p.images.length ? `${p.images.length} photo${p.images.length > 1 ? 's' : ''}` : 'No photos'}
-                      </span>
-                      <ArrowRight size={18} className="shrink-0 text-brand" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          );
-        })}
+        {tab === 'products' && <ProductList catalog={catalog} onEdit={setEditing} />}
+        {tab === 'categories' && (
+          <CategoryEditor password={password} catalog={catalog} onSaved={(r) => saved(r, 'Categories saved.')} />
+        )}
+        {tab === 'texts' && <TextEditor password={password} texts={texts} onSaved={(r) => saved(r, 'Texts saved.')} />}
 
         <a href="/" className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-brand">
           <ArrowLeft size={16} /> Back to the app
@@ -173,6 +215,8 @@ export default function Admin() {
     </Shell>
   );
 }
+
+// ---- Sign in --------------------------------------------------------------------------------
 
 function AdminLogin({ onLogin }: { onLogin: (password: string) => Promise<void> }) {
   const [value, setValue] = useState('');
@@ -197,9 +241,9 @@ function AdminLogin({ onLogin }: { onLogin: (password: string) => Promise<void> 
       <Header />
       <form onSubmit={submit} className="flex flex-1 flex-col justify-between px-5 pb-8 pt-8">
         <div>
-          <Tag>Product admin</Tag>
-          <h1 className="mt-4 text-[32px] font-bold leading-tight">Manage roof products</h1>
-          <p className="mt-3 leading-relaxed text-muted">Sign in with the admin password to add or change products.</p>
+          <Tag>Admin</Tag>
+          <h1 className="mt-4 text-[32px] font-bold leading-tight">Manage the Roof Visualizer</h1>
+          <p className="mt-3 leading-relaxed text-muted">Sign in with the admin password to change products, categories and texts.</p>
           <label className="mt-10 block text-sm font-semibold" htmlFor="admin-password">
             Admin password
           </label>
@@ -225,21 +269,81 @@ function AdminLogin({ onLogin }: { onLogin: (password: string) => Promise<void> 
   );
 }
 
+// ---- Products -------------------------------------------------------------------------------
+
+function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Product | 'new') => void }) {
+  const { categories, products } = catalog;
+  const orphans = products.filter((p) => !categories.some((c) => c.id === p.category));
+  const groups = [
+    ...categories.map((c) => ({ key: c.id, title: c.name, items: products.filter((p) => p.category === c.id) })),
+    ...(orphans.length ? [{ key: '-', title: 'Without category', items: orphans }] : []),
+  ];
+
+  return (
+    <>
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+        <p className="text-muted">These are the products customers can choose in the app.</p>
+        <div>
+          <PrimaryButton onClick={() => onEdit('new')} className="px-6">
+            <Plus size={18} /> Add product
+          </PrimaryButton>
+        </div>
+      </div>
+      {groups.map((g) => (
+        <section key={g.key} className="mt-8">
+          <h2 className="border-b border-line pb-2 text-lg font-bold">
+            {g.title} <span className="text-sm font-normal text-muted">({g.items.length})</span>
+          </h2>
+          {g.items.length === 0 && <p className="py-3 text-sm text-muted">No products in this category yet.</p>}
+          <ul className="divide-y divide-dotted divide-line">
+            {g.items.map((p) => (
+              <li key={p.id}>
+                <button onClick={() => onEdit(p)} className="flex w-full items-center gap-4 py-3 text-left hover:bg-paper">
+                  <img src={productThumb(p, 120)} alt="" className="h-14 w-14 shrink-0 rounded-wb border border-line object-cover" />
+                  <span className="min-w-0 flex-1">
+                    {p.brand && <span className="block text-xs font-semibold uppercase tracking-wide text-muted">{p.brand}</span>}
+                    <span className="block truncate font-semibold">{p.name}</span>
+                    <span className="block truncate text-sm text-muted">{p.description}</span>
+                  </span>
+                  <span className="hidden shrink-0 text-right text-xs text-muted sm:block">
+                    {p.images.length ? `${p.images.length} photo${p.images.length > 1 ? 's' : ''}` : 'No photos'}
+                    <br />
+                    {p.specs.length ? `${p.specs.length} data rows` : 'No technical data'}
+                  </span>
+                  <ArrowRight size={18} className="shrink-0 text-brand" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </>
+  );
+}
+
+const fieldClass = 'mt-2 w-full rounded-wb border border-line bg-white px-3 py-2.5 font-normal outline-none focus:border-brand';
+
 function ProductForm({
   password,
   product,
+  categories,
+  onCategoriesChanged,
   onCancel,
   onSaved,
 }: {
   password: string;
   product: Product | null;
+  categories: Category[];
+  onCategoriesChanged: (categories: Category[]) => void;
   onCancel: () => void;
-  onSaved: (result: SaveResult, deletedId?: string) => void;
+  onSaved: (result: SaveResult, message: string) => void;
 }) {
   const [name, setName] = useState(product?.name ?? '');
   const [brand, setBrand] = useState(product?.brand ?? '');
-  const [category, setCategory] = useState<Category>(product?.category ?? 'Tile');
+  const [category, setCategory] = useState(product?.category ?? categories[0]?.id ?? '');
+  const [newCategory, setNewCategory] = useState<string | null>(null);
   const [description, setDescription] = useState(product?.description ?? '');
+  const [specs, setSpecs] = useState<Spec[]>(product?.specs ?? []);
   const [images, setImages] = useState<string[]>(product?.images ?? []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -254,8 +358,24 @@ function ProductForm({
     setImages((prev) => [...prev, ...added]);
   }
 
-  function makeMain(i: number) {
-    setImages((prev) => [prev[i], ...prev.filter((_, j) => j !== i)]);
+  async function createCategory() {
+    const label = newCategory?.trim();
+    if (!label) return;
+    setBusy(true);
+    setError('');
+    try {
+      const res = await api<SaveResult & { categories: Category[] }>(password, 'PUT', '/api/admin/categories', [
+        ...categories,
+        { name: label, description: '' },
+      ]);
+      onCategoriesChanged(res.categories);
+      setCategory(res.categories[res.categories.length - 1].id);
+      setNewCategory(null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function save(e: React.FormEvent) {
@@ -263,8 +383,8 @@ function ProductForm({
     setBusy(true);
     setError('');
     try {
-      const body: ProductInput = { id: product?.id, name, brand, category, description, images };
-      onSaved(await api<SaveResult>(password, 'POST', '/api/admin/products', body));
+      const body: ProductInput = { id: product?.id, name, brand, category, description, specs, images };
+      onSaved(await api<SaveResult>(password, 'POST', '/api/admin/products', body), `"${name.trim()}" saved.`);
     } catch (err: any) {
       setError(err.message);
       setBusy(false);
@@ -275,14 +395,15 @@ function ProductForm({
     if (!product || !confirm(`Delete "${product.name}"? Customers will no longer be able to choose it.`)) return;
     setBusy(true);
     try {
-      onSaved(await api<SaveResult>(password, 'DELETE', `/api/admin/products/${encodeURIComponent(product.id)}`), product.id);
+      onSaved(
+        await api<SaveResult>(password, 'DELETE', `/api/admin/products/${encodeURIComponent(product.id)}`),
+        `"${product.name}" deleted.`,
+      );
     } catch (err: any) {
       setError(err.message);
       setBusy(false);
     }
   }
-
-  const fieldClass = 'mt-2 w-full rounded-wb border border-line bg-white px-3 py-2.5 outline-none focus:border-brand';
 
   return (
     <Shell wide>
@@ -313,7 +434,12 @@ function ProductForm({
                 </span>
                 <div className="absolute right-1 top-1 flex gap-1">
                   {i > 0 && (
-                    <button type="button" onClick={() => makeMain(i)} title="Make main photo" className="rounded-wb bg-white/90 p-1 text-ink">
+                    <button
+                      type="button"
+                      onClick={() => setImages((prev) => [prev[i], ...prev.filter((_, j) => j !== i)])}
+                      title="Make main photo"
+                      className="rounded-wb bg-white/90 p-1 text-ink"
+                    >
                       <Star size={14} />
                     </button>
                   )}
@@ -353,14 +479,46 @@ function ProductForm({
             Brand / product line
             <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="e.g. Koramic, Tondach" className={fieldClass} />
           </label>
-          <label className="block text-sm font-semibold">
-            Category *
-            <select value={category} onChange={(e) => setCategory(e.target.value as Category)} className={fieldClass}>
-              {CATEGORIES.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-          </label>
+          <div className="text-sm font-semibold">
+            <label htmlFor="category">Category *</label>
+            {newCategory === null ? (
+              <select
+                id="category"
+                value={category}
+                onChange={(e) => (e.target.value === '__new' ? setNewCategory('') : setCategory(e.target.value))}
+                className={fieldClass}
+              >
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+                <option value="__new">+ New category…</option>
+              </select>
+            ) : (
+              <div className="mt-2 flex gap-2">
+                <input
+                  autoFocus
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      createCategory();
+                    }
+                  }}
+                  placeholder="New category name"
+                  className={`${fieldClass} mt-0`}
+                />
+                <button type="button" onClick={createCategory} disabled={busy} className="rounded-wb bg-brand px-4 font-bold text-white">
+                  Add
+                </button>
+                <button type="button" onClick={() => setNewCategory(null)} className="px-2 text-muted" aria-label="Cancel">
+                  <X size={18} />
+                </button>
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="mt-8">
@@ -376,20 +534,21 @@ function ProductForm({
           </div>
           <p className="mt-1 text-sm leading-relaxed text-muted">
             Describe what the product looks like on a roof, the way a roofer would: shape or profile (flat interlocking,
-            S-shaped pantile, beaver tail…), exact colour and colour variation, surface (matte, engobed, glazed), size or
-            tiles per m², laying pattern, and visible details such as ridge tiles. Skip marketing words; the AI only uses
-            what can be seen.
+            S-shaped pantile, beaver tail…), exact colour and colour variation, surface (matte, engobed, glazed), laying
+            pattern, and visible details such as ridge tiles. Skip marketing words; the AI only uses what can be seen.
           </p>
           <textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            rows={7}
+            rows={6}
             required
-            placeholder="Flat interlocking clay tile with a single central rib. Copper-brown engobe with a slight natural colour variation, matte finish. Large format, about 13 tiles per m². Laid in straight vertical lines. Matching rounded ridge tiles."
+            placeholder="Flat interlocking clay tile with a single central rib. Copper-brown engobe with a slight natural colour variation, matte finish. Laid in straight vertical lines. Matching rounded ridge tiles."
             className={`${fieldClass} leading-relaxed`}
           />
         </section>
+
+        <SpecEditor specs={specs} onChange={setSpecs} />
 
         {error && <p className="mt-5 text-sm font-semibold text-brand">{error}</p>}
 
@@ -402,11 +561,302 @@ function ProductForm({
           <SecondaryButton onClick={onCancel} disabled={busy} className="sm:w-40">
             Cancel
           </SecondaryButton>
-          <PrimaryButton type="submit" disabled={busy} className="sm:w-48">
+          <PrimaryButton type="submit" disabled={busy || !category} className="sm:w-48">
             {busy ? 'Saving…' : 'Save product'}
           </PrimaryButton>
         </div>
       </form>
     </Shell>
+  );
+}
+
+function SpecEditor({ specs, onChange }: { specs: Spec[]; onChange: (specs: Spec[]) => void }) {
+  const [pasting, setPasting] = useState(false);
+  const [pasted, setPasted] = useState('');
+  const update = (i: number, patch: Partial<Spec>) => onChange(specs.map((s, j) => (j === i ? { ...s, ...patch } : s)));
+
+  function applyPaste() {
+    const rows = parseSpecTable(pasted);
+    // Fill empty rows with the same label first, then append the rest.
+    const next = [...specs];
+    for (const row of rows) {
+      const slot = next.findIndex((s) => s.label.toLowerCase() === row.label.toLowerCase());
+      if (slot >= 0) next[slot] = row;
+      else next.push(row);
+    }
+    onChange(next);
+    setPasted('');
+    setPasting(false);
+  }
+
+  return (
+    <section className="mt-8">
+      <h2 className="text-lg font-bold">Technical data</h2>
+      <p className="mt-1 text-sm leading-relaxed text-muted">
+        Dimensions, tiles per m², colours and so on. The AI uses it for the correct tile size and proportions, and customers
+        can see it in the app.
+      </p>
+
+      {specs.length > 0 && (
+        <div className="mt-4 overflow-hidden rounded-wb border border-line">
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2 border-b border-line bg-paper px-3 py-2 text-sm font-semibold">
+            <span>Property</span>
+            <span>Specification</span>
+            <span className="w-[72px]" />
+          </div>
+          {specs.map((s, i) => (
+            <div key={i} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2 border-b border-dotted border-line px-3 py-1.5 last:border-b-0">
+              <input
+                value={s.label}
+                onChange={(e) => update(i, { label: e.target.value })}
+                placeholder="Property"
+                aria-label={`Property ${i + 1}`}
+                className="min-w-0 rounded-wb border border-transparent px-2 py-1.5 hover:border-line focus:border-brand focus:outline-none"
+              />
+              <input
+                value={s.value}
+                onChange={(e) => update(i, { value: e.target.value })}
+                placeholder="Specification"
+                aria-label={`Specification ${i + 1}`}
+                className="min-w-0 rounded-wb border border-transparent px-2 py-1.5 hover:border-line focus:border-brand focus:outline-none"
+              />
+              <span className="flex w-[72px] justify-end gap-1 text-muted">
+                <button
+                  type="button"
+                  disabled={i === 0}
+                  onClick={() => onChange(specs.map((x, j) => (j === i - 1 ? specs[i] : j === i ? specs[i - 1] : x)))}
+                  title="Move up"
+                  className="p-1 hover:text-ink disabled:opacity-30"
+                >
+                  <ArrowUp size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChange(specs.filter((_, j) => j !== i))}
+                  title="Remove row"
+                  className="p-1 text-brand"
+                >
+                  <X size={15} />
+                </button>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-brand">
+        <button type="button" onClick={() => onChange([...specs, { label: '', value: '' }])} className="flex items-center gap-1.5">
+          <Plus size={16} /> Add row
+        </button>
+        {specs.length === 0 && (
+          <button
+            type="button"
+            onClick={() => onChange(COMMON_SPECS.map((label) => ({ label, value: '' })))}
+            className="flex items-center gap-1.5"
+          >
+            <ListPlus size={16} /> Add common fields
+          </button>
+        )}
+        <button type="button" onClick={() => setPasting((p) => !p)} className="flex items-center gap-1.5">
+          <ClipboardPaste size={16} /> Paste a table
+        </button>
+      </div>
+
+      {pasting && (
+        <div className="mt-3 rounded-wb border border-line bg-paper p-3">
+          <p className="text-sm text-muted">
+            Copy the technical data table from a product page, PDF or spreadsheet and paste it here. One property per line;
+            the property and value can be separated by a tab, a colon or several spaces.
+          </p>
+          <textarea
+            value={pasted}
+            onChange={(e) => setPasted(e.target.value)}
+            rows={6}
+            autoFocus
+            placeholder={'Material\tFired clay (ceramic)\nOverall dimensions\t272 × 480 mm\nTiles per m²: 10.9–11.8'}
+            className={`${fieldClass} font-mono text-sm`}
+          />
+          <div className="mt-2 flex gap-3">
+            <button type="button" onClick={applyPaste} disabled={!pasted.trim()} className="rounded-wb bg-brand px-4 py-2 text-sm font-bold text-white disabled:opacity-40">
+              Add {parseSpecTable(pasted).length || ''} rows
+            </button>
+            <button type="button" onClick={() => setPasting(false)} className="text-sm font-semibold text-muted">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ---- Categories -----------------------------------------------------------------------------
+
+function CategoryEditor({ password, catalog, onSaved }: { password: string; catalog: Catalog; onSaved: (r: SaveResult) => void }) {
+  const [draft, setDraft] = useState<Partial<Category>[]>(catalog.categories);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const count = (id?: string) => catalog.products.filter((p) => p.category === id).length;
+  const update = (i: number, patch: Partial<Category>) => setDraft((d) => d.map((c, j) => (j === i ? { ...c, ...patch } : c)));
+  const move = (i: number, by: number) =>
+    setDraft((d) => {
+      const next = [...d];
+      [next[i], next[i + by]] = [next[i + by], next[i]];
+      return next;
+    });
+
+  async function save() {
+    setBusy(true);
+    setError('');
+    try {
+      onSaved(await api<SaveResult>(password, 'PUT', '/api/admin/categories', draft));
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="mt-6">
+      <p className="text-muted">
+        Categories are the filters customers see above the products (in this order). The AI note tells the AI what kind of
+        roofing the category is.
+      </p>
+      <div className="mt-5 space-y-3">
+        {draft.map((c, i) => {
+          const used = count(c.id);
+          return (
+            <div key={c.id ?? `new-${i}`} className="rounded-wb border border-line p-4">
+              <div className="grid gap-4 sm:grid-cols-[1fr_1.4fr_auto]">
+                <label className="block text-sm font-semibold">
+                  Name
+                  <input value={c.name ?? ''} onChange={(e) => update(i, { name: e.target.value })} className={fieldClass} />
+                </label>
+                <label className="block text-sm font-semibold">
+                  AI note
+                  <input
+                    value={c.description ?? ''}
+                    onChange={(e) => update(i, { description: e.target.value })}
+                    placeholder="e.g. Clay or concrete roof tiles."
+                    className={fieldClass}
+                  />
+                </label>
+                <div className="flex items-end gap-1 pb-1 text-muted">
+                  <button type="button" onClick={() => move(i, -1)} disabled={i === 0} title="Move up" className="p-2 hover:text-ink disabled:opacity-30">
+                    <ArrowUp size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => move(i, 1)}
+                    disabled={i === draft.length - 1}
+                    title="Move down"
+                    className="p-2 hover:text-ink disabled:opacity-30"
+                  >
+                    <ArrowDown size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDraft((d) => d.filter((_, j) => j !== i))}
+                    disabled={used > 0}
+                    title={used > 0 ? 'Move or delete its products first' : 'Delete category'}
+                    className="p-2 text-brand disabled:text-muted disabled:opacity-40"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-muted">{used === 1 ? '1 product' : `${used} products`}</p>
+            </div>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={() => setDraft((d) => [...d, { name: '', description: '' }])}
+        className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-brand"
+      >
+        <Plus size={16} /> Add category
+      </button>
+      {error && <p className="mt-4 text-sm font-semibold text-brand">{error}</p>}
+      <div className="mt-6 flex gap-3">
+        <SecondaryButton onClick={() => setDraft(catalog.categories)} disabled={busy} className="sm:w-40">
+          Undo changes
+        </SecondaryButton>
+        <PrimaryButton onClick={save} disabled={busy} className="sm:w-48">
+          {busy ? 'Saving…' : 'Save categories'}
+        </PrimaryButton>
+      </div>
+    </section>
+  );
+}
+
+// ---- App texts ------------------------------------------------------------------------------
+
+function TextEditor({ password, texts, onSaved }: { password: string; texts: Texts; onSaved: (r: SaveResult) => void }) {
+  const [draft, setDraft] = useState<Texts>(() => ({ ...DEFAULT_TEXTS, ...texts }));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function save() {
+    setBusy(true);
+    setError('');
+    try {
+      onSaved(await api<SaveResult>(password, 'PUT', '/api/admin/texts', draft));
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="mt-6">
+      <p className="text-muted">Every text customers see in the app. Leave a field empty to use the default.</p>
+      {TEXT_GROUPS.map((group) => (
+        <div key={group.title} className="mt-8">
+          <h2 className="border-b border-line pb-2 text-lg font-bold">{group.title}</h2>
+          <div className="mt-4 grid gap-5 sm:grid-cols-2">
+            {group.fields.map((f) => {
+              const value = draft[f.key] ?? '';
+              const changed = value.trim() !== f.value;
+              const props = {
+                value,
+                onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+                  setDraft((d) => ({ ...d, [f.key]: e.target.value })),
+                placeholder: f.value,
+                className: `${fieldClass} ${changed ? 'border-brand/50 bg-red-50/40' : ''}`,
+              };
+              return (
+                <label key={f.key} className={`block text-sm font-semibold ${f.long ? 'sm:col-span-2' : ''}`}>
+                  <span className="flex items-center justify-between gap-2">
+                    {f.label}
+                    {changed && (
+                      <button
+                        type="button"
+                        onClick={() => setDraft((d) => ({ ...d, [f.key]: f.value }))}
+                        className="flex items-center gap-1 text-xs font-semibold text-brand"
+                      >
+                        <RotateCcw size={12} /> Default
+                      </button>
+                    )}
+                  </span>
+                  {f.long ? <textarea rows={3} {...props} /> : <input {...props} />}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {error && <p className="mt-4 text-sm font-semibold text-brand">{error}</p>}
+      <div className="sticky bottom-0 mt-8 flex gap-3 border-t border-line bg-white py-4">
+        <SecondaryButton onClick={() => setDraft({ ...DEFAULT_TEXTS, ...texts })} disabled={busy} className="sm:w-40">
+          Undo changes
+        </SecondaryButton>
+        <PrimaryButton onClick={save} disabled={busy} className="sm:w-48">
+          {busy ? 'Saving…' : 'Save texts'}
+        </PrimaryButton>
+      </div>
+    </section>
   );
 }

@@ -5,15 +5,20 @@ import path from 'path';
 import { githubConfig } from './server/github';
 import {
   deleteProduct,
+  getCategory,
   getProduct,
+  getTexts,
   IMAGE_URL_PREFIX,
   imageDir,
+  listCategories,
   listProducts,
   referenceImages,
+  saveCategories,
   saveProduct,
-} from './server/products';
+  saveTexts,
+} from './server/store';
 import { pickProvider } from './server/providers';
-import type { GenerateBody, ProductInput } from './src/types';
+import type { Category, GenerateBody, ProductInput, Texts } from './src/types';
 
 const MAX_VARIANTS = 4;
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
@@ -61,10 +66,13 @@ async function startServer() {
     res.status(401).json({ error: 'Wrong access code.' });
   });
 
-  app.get('/api/products', (req, res) => {
+  // Texts are public: the sign-in screen needs them before the visitor has a code.
+  app.get('/api/texts', (_req, res) => res.json(getTexts()));
+
+  app.get('/api/catalog', (req, res) => {
     const isAdmin = Boolean(adminPassword) && sameSecret(req.get('x-admin-password'), adminPassword);
     if (!hasAccess(req) && !isAdmin) return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
-    res.json(listProducts());
+    res.json({ categories: listCategories(), products: listProducts() });
   });
 
   // ---- Product admin (/admin), protected by ADMIN_PASSWORD -------------------------------
@@ -93,6 +101,20 @@ async function startServer() {
       res.status(400).json({ error: err.message });
     }
   });
+  admin.put('/categories', async (req, res) => {
+    try {
+      res.json(await saveCategories(req.body as Partial<Category>[]));
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  admin.put('/texts', async (req, res) => {
+    try {
+      res.json(await saveTexts(req.body as Texts));
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
   app.use('/api/admin', admin);
 
   app.post('/api/generate', async (req, res) => {
@@ -100,7 +122,7 @@ async function startServer() {
       return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
     }
     if (rateLimited(req.ip ?? 'unknown')) {
-      return res.status(429).json({ error: `Limit reached (${RATE_LIMIT} generations per hour). Try again later.` });
+      return res.status(429).json({ code: 'limit', error: `Limit reached (${RATE_LIMIT} generations per hour). Try again later.` });
     }
     const body = req.body as Partial<GenerateBody>;
     const product = body.productId ? getProduct(body.productId) : undefined;
@@ -115,6 +137,7 @@ async function startServer() {
       const images = await provider.generate({
         image: body.image,
         product,
+        category: getCategory(product.category),
         references: photos.length ? photos : swatch,
         photoReferences: photos.length > 0,
         count,

@@ -42,8 +42,14 @@ You get a public link like `https://roof-visualizer.onrender.com`. No coding nee
 ## Manage your products (/admin)
 
 The app has a back office at **`/admin`** (e.g. `https://roof-visualizer.onrender.com/admin`, or the small
-"Manage products" link on the start screen). There you add, edit and delete roof products: photos, name, brand,
-category and a description the AI uses.
+"Manage products" link on the start screen). It has three tabs:
+
+- **Products:** add, edit and delete products: photos, name, brand, category, a description for the AI and a
+  **technical data** table (paste it straight from a product page, PDF or spreadsheet with "Paste a table").
+  Customers see the technical data when they tap the product name in the app.
+- **Categories:** rename, reorder, add and delete the categories customers filter by, each with a short note for
+  the AI. A category can only be deleted once it has no products.
+- **App texts:** every text customers see, with ready-made defaults. Change any of them; "Default" restores one.
 
 It needs two more environment variables in Render (service → **Environment** → **Edit** → **+ Add**):
 

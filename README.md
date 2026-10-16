@@ -48,10 +48,17 @@ Set `AI_PROVIDER=gemini|replicate|demo` to force one when several keys are set.
 
 ## Products
 
-Products live in `data/products.json` with photos in `data/product-images/`, and are managed in the app at
-**`/admin`** (protected by `ADMIN_PASSWORD`). Each product has a name, brand, category, a description for the AI
-and up to 6 photos; the first 3 photos are sent to the image model as references with every generation. Products
-without photos use a drawn texture (`src/lib/swatch.ts`).
+Everything is managed in the app at **`/admin`** (protected by `ADMIN_PASSWORD`) and stored in `data/`:
+
+| File | Content |
+|---|---|
+| `data/categories.json` | categories (name, AI note), in display order |
+| `data/products.json` | products: name, brand, category, AI description, technical data, photos |
+| `data/product-images/` | product photos |
+| `data/texts.json` | app texts that differ from the defaults in `src/texts.ts` |
+
+With every generation the model gets the product description, technical data, the category note and the first
+3 product photos as references. Products without photos use a drawn texture (`src/lib/swatch.ts`).
 
 On hosts with a throwaway disk (Render), set `GITHUB_TOKEN` so admin changes are committed back to the repo
 (`server/github.ts`); see DEPLOY.md.

@@ -10,7 +10,7 @@ import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 import { pickProvider } from '../server/providers';
-import { getProduct, listProducts, referenceImages } from '../server/products';
+import { getCategory, getProduct, listProducts, referenceImages } from '../server/store';
 
 const args = process.argv.slice(2);
 const flag = (name: string) => {
@@ -41,7 +41,7 @@ for (const photo of photos) {
     const references = referenceImages(product);
     const started = Date.now();
     try {
-      const images = await provider.generate({ image, product, references, photoReferences: references.length > 0, count });
+      const images = await provider.generate({ image, product, category: getCategory(product.category), references, photoReferences: references.length > 0, count });
       images.forEach((dataUrl, n) => {
         const [, mime, b64] = /^data:image\/([^;]+);base64,(.*)$/s.exec(dataUrl)!;
         const file = path.join(outDir, `${path.parse(photo).name}-${id}-${n + 1}.${mime === 'jpeg' ? 'jpg' : mime}`);

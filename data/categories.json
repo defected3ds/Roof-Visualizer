@@ -1,0 +1,27 @@
+[
+  {
+    "id": "tile",
+    "name": "Tile",
+    "description": "Clay or concrete roof tiles."
+  },
+  {
+    "id": "shingles",
+    "name": "Shingles",
+    "description": "Asphalt (bitumen) roof shingles."
+  },
+  {
+    "id": "slate",
+    "name": "Slate",
+    "description": "Natural or fibre-cement slate roofing."
+  },
+  {
+    "id": "shake",
+    "name": "Shake",
+    "description": "Wooden shakes or shingles."
+  },
+  {
+    "id": "metal",
+    "name": "Metal",
+    "description": "Metal roofing sheets or panels."
+  }
+]

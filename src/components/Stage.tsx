@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '../lib/texts';
 
 interface Props {
   base: string;
@@ -13,6 +14,7 @@ interface Props {
 
 /** The photo area: current image, swipeable results, before/after slider and the generating overlay. */
 export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps }: Props) {
+  const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState(50);
 
@@ -45,8 +47,8 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
                     style={{ clipPath: `inset(0 0 0 ${split}%)` }}
                   />
                   <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white shadow" style={{ left: `${split}%` }} />
-                  <span className="absolute left-0 top-3 bg-ink px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-white">Before</span>
-                  <span className="absolute right-0 top-3 bg-brand px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-white">After</span>
+                  <span className="absolute left-0 top-3 bg-ink px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-white">{t('editor.before')}</span>
+                  <span className="absolute right-0 top-3 bg-brand px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-white">{t('editor.after')}</span>
                   <input
                     type="range"
                     min={0}
@@ -81,6 +83,7 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
 }
 
 function GeneratingOverlay({ startedAt, edgeMaps }: { startedAt: number | null; edgeMaps: string[] }) {
+  const t = useT();
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 100);
@@ -121,7 +124,7 @@ function GeneratingOverlay({ startedAt, edgeMaps }: { startedAt: number | null; 
           </svg>
           <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-white">{elapsed.toFixed(1)}s</span>
         </div>
-        <p className="text-lg font-semibold text-white drop-shadow">Generating images</p>
+        <p className="text-lg font-semibold text-white drop-shadow">{t('editor.generating')}</p>
       </div>
     </div>
   );

@@ -1,10 +1,11 @@
 import { GoogleGenAI } from '@google/genai';
-import type { Product } from '../src/types';
+import type { Category, Product } from '../src/types';
 
 export interface GenerateRequest {
   /** The house photo as a data URL. */
   image: string;
   product: Product;
+  category?: Category;
   /** Product photos (or a drawn texture) as data URLs, sent to the model after the house photo. */
   references: string[];
   /** True when the references are real product photos rather than a drawn texture. */
@@ -23,11 +24,16 @@ export interface Provider {
  * dedicated apps enforces. Modern instruction-following image editors respect it well.
  */
 export function buildPrompt(req: GenerateRequest, variant: number): string {
-  const { product } = req;
+  const { product, category } = req;
   const label = [product.brand, product.name].filter(Boolean).join(' ');
+  const kind = category ? ` ${category.name.toLowerCase()}` : '';
   const lines = [
-    `Edit this photo of a house (the first image): replace ONLY the roof covering with the ${product.category.toLowerCase()} roofing product "${label}".`,
+    `Edit this photo of a house (the first image): replace ONLY the roof covering with the${kind} roofing product "${label}".`,
+    ...(category?.description ? [`Product type: ${category.description}`] : []),
     `Product details: ${product.description}`,
+    ...(product.specs.length
+      ? [`Technical data (use it for the correct tile size, proportions and colour): ${product.specs.map((s) => `${s.label}: ${s.value}`).join('; ')}.`]
+      : []),
     'Keep everything else pixel-identical: the same camera angle, framing, walls, windows, doors, chimneys, gutters, trim, sky, trees, people and lighting.',
     'Preserve the exact roof geometry: ridges, hips, valleys, dormers, eaves and pitch must not move or change shape.',
     'Lay the new material in correct perspective following each roof plane, with realistic scale, course lines, ridge caps, shadows and weathering matching the photo light.',

@@ -1,32 +1,34 @@
 import { useMemo, useState } from 'react';
-import { CATEGORIES } from '../materials';
+import { useT } from '../lib/texts';
 import { productThumb } from '../lib/swatch';
 import type { Category, Product } from '../types';
 
 interface Props {
+  categories: Category[];
   products: Product[];
   selected: Product;
   onSelect: (p: Product) => void;
   disabled?: boolean;
 }
 
-export function MaterialPicker({ products, selected, onSelect, disabled }: Props) {
-  const [filter, setFilter] = useState<Category | 'All'>(selected.category);
-  const categories = CATEGORIES.filter((c) => products.some((p) => p.category === c));
-  const items = useMemo(() => (filter === 'All' ? products : products.filter((p) => p.category === filter)), [filter, products]);
+export function MaterialPicker({ categories, products, selected, onSelect, disabled }: Props) {
+  const t = useT();
+  const [filter, setFilter] = useState<string>(selected.category);
+  const tabs = categories.filter((c) => products.some((p) => p.category === c.id));
+  const items = useMemo(() => (filter === 'all' ? products : products.filter((p) => p.category === filter)), [filter, products]);
 
   return (
     <div className="space-y-4">
       <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line px-3">
-        {(['All', ...categories] as const).map((c) => (
+        {[{ id: 'all', name: t('editor.all') }, ...tabs].map((c) => (
           <button
-            key={c}
-            onClick={() => setFilter(c)}
+            key={c.id}
+            onClick={() => setFilter(c.id)}
             className={`shrink-0 border-b-[3px] px-3 pb-2.5 pt-1 text-[15px] transition ${
-              filter === c ? 'border-brand font-semibold text-ink' : 'border-transparent text-muted hover:text-ink'
+              filter === c.id ? 'border-brand font-semibold text-ink' : 'border-transparent text-muted hover:text-ink'
             }`}
           >
-            {c}
+            {c.name}
           </button>
         ))}
       </div>
