@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { commitFiles, githubConfig, readRepoFile, type FileChange } from './github';
-import { DEFAULT_TEXTS } from '../src/texts';
+import { DEFAULT_TEXTS, IMAGE_TEXT_KEYS } from '../src/texts';
 import type { Category, Product, ProductInput, Spec, Texts } from '../src/types';
 
 /**
@@ -22,6 +22,10 @@ export const MAX_REFERENCES = 3;
 
 export const IMAGE_URL_PREFIX = '/product-images/';
 export const imageDir = path.join(ROOT, IMAGE_DIR);
+/** Uploaded site photos (e.g. the start screen photo), served at /site/. */
+const SITE_DIR = 'data/site';
+export const SITE_URL_PREFIX = '/site/';
+export const siteDir = path.join(ROOT, SITE_DIR);
 
 function readJson<T>(rel: string, fallback: T): T {
   const file = path.join(ROOT, rel);
@@ -50,10 +54,17 @@ load();
 export async function syncFromGitHub() {
   if (!githubConfig()) return;
   try {
-    for (const rel of Object.values(FILES)) {
+    // Download everything first and only replace the local copy when all files look valid.
+    const downloads: [string, Buffer][] = [];
+    for (const [name, rel] of Object.entries(FILES)) {
       const content = await readRepoFile(rel);
-      if (content) fs.writeFileSync(path.join(ROOT, rel), content);
+      if (!content) continue;
+      const parsed = JSON.parse(content.toString('utf8'));
+      const valid = name === 'texts' ? parsed && typeof parsed === 'object' && !Array.isArray(parsed) : Array.isArray(parsed);
+      if (!valid) throw new Error(`${rel} on GitHub is not a valid ${name} file`);
+      downloads.push([rel, content]);
     }
+    for (const [rel, content] of downloads) fs.writeFileSync(path.join(ROOT, rel), content);
     load();
     console.log(`[store] Loaded catalog from GitHub: ${categories.length} categories, ${products.length} products`);
   } catch (err) {
@@ -61,10 +72,15 @@ export async function syncFromGitHub() {
   }
 }
 
-/** Makes sure a product photo is on disk, downloading it from GitHub if this server doesn't have it yet. */
+/** Makes sure a product or site photo is on disk, downloading it from GitHub if this server doesn't have it yet. */
 export async function ensureImage(url: string): Promise<string | null> {
-  if (!url.startsWith(IMAGE_URL_PREFIX) || url.includes('..')) return null;
-  const rel = urlToRepoPath(url);
+  if (url.includes('..')) return null;
+  const rel = url.startsWith(IMAGE_URL_PREFIX)
+    ? urlToRepoPath(url)
+    : url.startsWith(SITE_URL_PREFIX)
+      ? path.posix.join(SITE_DIR, url.slice(SITE_URL_PREFIX.length))
+      : null;
+  if (!rel) return null;
   const abs = path.join(ROOT, rel);
   if (fs.existsSync(abs)) return abs;
   const content = await readRepoFile(rel).catch(() => null);
@@ -243,16 +259,35 @@ export function saveCategories(input: Partial<Category>[]): Promise<SaveResult &
 
 // ---- App texts ------------------------------------------------------------------------------
 
-/** Stores only texts that differ from the defaults, so improved defaults still reach untouched fields. */
+/**
+ * Stores only texts that differ from the defaults, so improved defaults still reach untouched fields.
+ * Photo fields (IMAGE_TEXT_KEYS) may carry a new upload as a data URL; it is saved under data/site/.
+ */
 export function saveTexts(input: Texts): Promise<SaveResult & { texts: Texts }> {
   return serialized(async () => {
     const next: Texts = {};
+    const changes: FileChange[] = [];
     for (const [key, value] of Object.entries(input ?? {})) {
       if (!(key in DEFAULT_TEXTS)) continue;
-      const text = String(value ?? '').trim();
+      let text = String(value ?? '').trim();
+      if (IMAGE_TEXT_KEYS.includes(key)) {
+        const upload = /^data:image\/(jpeg|png|webp);base64,(.+)$/s.exec(text);
+        if (upload) {
+          const file = `${slug(key)}-${Date.now().toString(36)}.${upload[1] === 'jpeg' ? 'jpg' : upload[1]}`;
+          changes.push({ path: path.posix.join(SITE_DIR, file), content: Buffer.from(upload[2], 'base64') });
+          text = SITE_URL_PREFIX + file;
+        } else if (text && !text.startsWith(SITE_URL_PREFIX) && text !== DEFAULT_TEXTS[key]) {
+          throw new Error('Photos must be JPEG, PNG or WebP');
+        }
+        const old = texts[key];
+        if (old?.startsWith(SITE_URL_PREFIX) && old !== text) {
+          changes.push({ path: path.posix.join(SITE_DIR, old.slice(SITE_URL_PREFIX.length)), content: null });
+        }
+      }
       if (text && text !== DEFAULT_TEXTS[key]) next[key] = text;
     }
-    const result = await persist([{ path: FILES.texts, content: json(next) }], 'Update app texts');
+    changes.push({ path: FILES.texts, content: json(next) });
+    const result = await persist(changes, 'Update app texts');
     texts = next;
     return { ...result, texts };
   });

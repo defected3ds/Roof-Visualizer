@@ -1,27 +1,37 @@
 [
   {
-    "id": "tile",
-    "name": "Tile",
-    "description": "Clay or concrete roof tiles."
+    "id": "plain-tile",
+    "name": "Plain Tile",
+    "description": "Small rectangular plain tiles laid double-lap in broken bond (staggered joints), giving a fine, densely textured roof."
   },
   {
-    "id": "shingles",
-    "name": "Shingles",
-    "description": "Asphalt (bitumen) roof shingles."
+    "id": "interlocking-pantile",
+    "name": "Interlocking Pantile",
+    "description": "Interlocking tiles with a wave (pantile) profile, laid in straight vertical lines."
   },
   {
-    "id": "slate",
-    "name": "Slate",
-    "description": "Natural or fibre-cement slate roofing."
+    "id": "traditional-pantile",
+    "name": "Traditional Pantile",
+    "description": "Traditional S-shaped (hollow) pantiles with a deep, flowing wave, laid in straight vertical lines."
   },
   {
-    "id": "shake",
-    "name": "Shake",
-    "description": "Wooden shakes or shingles."
+    "id": "double-roman",
+    "name": "Double Roman",
+    "description": "Interlocking Roman tiles: flat pans separated by rounded rolls, laid in straight vertical lines."
   },
   {
-    "id": "metal",
-    "name": "Metal",
-    "description": "Metal roofing sheets or panels."
+    "id": "profiled-tile",
+    "name": "Profiled Tile",
+    "description": "Interlocking tiles with a ribbed profile of raised vertical rolls, giving strong vertical lines."
+  },
+  {
+    "id": "medium-interlocking",
+    "name": "Medium Format Interlocking",
+    "description": "Medium-size flat interlocking tiles that look like plain tiles or slates, laid in broken bond."
+  },
+  {
+    "id": "large-flat",
+    "name": "Large Format Flat",
+    "description": "Large flat interlocking tiles with a clean, slate-like or modern flat appearance and thin straight leading edges."
   }
 ]

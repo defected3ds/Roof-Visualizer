@@ -828,7 +828,7 @@ function TextEditor({ password, texts, onSaved }: { password: string; texts: Tex
                 className: `${fieldClass} ${changed ? 'border-brand/50 bg-red-50/40' : ''}`,
               };
               return (
-                <label key={f.key} className={`block text-sm font-semibold ${f.long ? 'sm:col-span-2' : ''}`}>
+                <label key={f.key} className={`block text-sm font-semibold ${f.long || f.image ? 'sm:col-span-2' : ''}`}>
                   <span className="flex items-center justify-between gap-2">
                     {f.label}
                     {changed && (
@@ -841,7 +841,13 @@ function TextEditor({ password, texts, onSaved }: { password: string; texts: Tex
                       </button>
                     )}
                   </span>
-                  {f.long ? <textarea rows={3} {...props} /> : <input {...props} />}
+                  {f.image ? (
+                    <PhotoField value={value || f.value} onChange={(v) => setDraft((d) => ({ ...d, [f.key]: v }))} />
+                  ) : f.long ? (
+                    <textarea rows={3} {...props} />
+                  ) : (
+                    <input {...props} />
+                  )}
                 </label>
               );
             })}
@@ -858,5 +864,35 @@ function TextEditor({ password, texts, onSaved }: { password: string; texts: Tex
         </PrimaryButton>
       </div>
     </section>
+  );
+}
+
+function PhotoField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  return (
+    <span className="mt-2 flex flex-wrap items-end gap-4 font-normal">
+      <img src={value} alt="" className="aspect-[4/3] w-full max-w-sm rounded-wb border border-line object-cover" />
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          input.current?.click();
+        }}
+        className="flex items-center gap-1.5 text-sm font-semibold text-brand"
+      >
+        <ImagePlus size={16} /> Upload new photo
+      </button>
+      <input
+        ref={input}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (file) onChange(await fileToDataUrl(file, 1600));
+        }}
+      />
+    </span>
   );
 }

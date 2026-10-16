@@ -226,19 +226,12 @@ function RoofApp() {
       <Shell>
         {pickers}
         <Header />
-        <div className="flex flex-1 flex-col justify-between px-5 pb-8 pt-8">
+        <img src={t('start.image')} alt="" className="aspect-[4/3] w-full object-cover" />
+        <div className="flex flex-1 flex-col justify-between px-5 pb-8 pt-6">
           <div>
             <Tag>{t('start.tag')}</Tag>
             <h1 className="mt-4 text-[34px] font-bold leading-tight">{t('start.title')}</h1>
             <p className="mt-4 whitespace-pre-line text-[17px] leading-relaxed text-muted">{t('start.intro')}</p>
-            <div className="mt-8 grid grid-cols-4 gap-2">
-              {categories.flatMap((c) => products.find((p) => p.category === c.id) ?? []).slice(0, 4).map((p) => (
-                <figure key={p.id} className="overflow-hidden rounded-wb border border-line">
-                  <img src={productThumb(p, 160)} alt="" className="aspect-square w-full object-cover" />
-                  <figcaption className="truncate px-1.5 py-1 text-[11px] text-muted">{categoryName(p.category)}</figcaption>
-                </figure>
-              ))}
-            </div>
             <ol className="mt-8 divide-y divide-dotted divide-line border-y border-line">
               {[t('start.step1'), t('start.step2'), t('start.step3')].map((text, i) => (
                 <li key={i} className="flex gap-4 py-3.5 text-[15px] text-ink">

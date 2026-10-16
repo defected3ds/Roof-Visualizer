@@ -1,274 +1,6522 @@
 [
   {
-    "id": "barrel-terracotta",
-    "name": "Barrel – Terracotta",
-    "category": "tile",
-    "brand": "",
-    "description": "Classic orange-red terracotta Spanish barrel (S-profile) clay roof tiles.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "barrel",
-      "colors": [
-        "#b5532f",
-        "#6e2a14",
-        "#de8a5e"
-      ]
-    }
+    "id": "alban-sussex-blend",
+    "name": "Alban Sussex Blend",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Cambered clay plain tile with a lightly sanded surface and soft, slightly irregular edges, laid double-lap in broken bond. The camber gives each course a gently curved, rippled look. Colour: blended red-brown with darker purple-brown and lighter sandy tones.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "510"
+      },
+      {
+        "label": "Product ID",
+        "value": "750754"
+      }
+    ],
+    "images": [
+      "/product-images/alban-sussex-blend/1.jpg",
+      "/product-images/alban-sussex-blend/2.jpg"
+    ]
   },
   {
-    "id": "barrel-aged",
-    "name": "Barrel – Aged Mission",
-    "category": "tile",
-    "brand": "",
-    "description": "Aged, weathered mission-style Spanish barrel clay roof tiles in dark red-brown with darker blended flashing.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "barrel",
-      "colors": [
-        "#8a4632",
-        "#3e1d14",
-        "#b9765a"
-      ]
-    }
+    "id": "barrow-bay-brown",
+    "name": "Barrow Bay Brown",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Handcrafted-look cross-cambered clay plain tile with a lightly sanded surface and slightly soft edges, laid double-lap in broken bond. Small rectangular units with a fine, traditional texture. Colour: reddish brown.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "530"
+      },
+      {
+        "label": "Product ID",
+        "value": "750760"
+      }
+    ],
+    "images": [
+      "/product-images/barrow-bay-brown/1.jpg",
+      "/product-images/barrow-bay-brown/2.jpg"
+    ]
   },
   {
-    "id": "barrel-charcoal",
-    "name": "Barrel – Charcoal",
-    "category": "tile",
-    "brand": "",
-    "description": "Charcoal-black glazed Spanish barrel (S-profile) roof tiles with a subtle sheen.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "barrel",
-      "colors": [
-        "#3b3b3d",
-        "#161617",
-        "#6a6a6e"
-      ]
-    }
+    "id": "barrow-burnt-oak",
+    "name": "Barrow Burnt Oak",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Handcrafted-look cross-cambered clay plain tile with a lightly sanded surface and slightly soft edges, laid double-lap in broken bond. Small rectangular units with a fine, traditional texture. Colour: dark brown with warm undertones.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "530"
+      },
+      {
+        "label": "Product ID",
+        "value": "750761"
+      }
+    ],
+    "images": [
+      "/product-images/barrow-burnt-oak/1.jpg"
+    ]
   },
   {
-    "id": "flat-red",
-    "name": "Flat Tile – Brick Red",
-    "category": "tile",
-    "brand": "",
-    "description": "Flat interlocking brick-red clay roof tiles in neat straight courses (European style).",
-    "specs": [],
+    "id": "barrow-dark-rusper",
+    "name": "Barrow Dark Rusper",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Handcrafted-look cross-cambered clay plain tile with a lightly sanded surface and slightly soft edges, laid double-lap in broken bond. Small rectangular units with a fine, traditional texture. Colour: deep red-brown.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "530"
+      },
+      {
+        "label": "Product ID",
+        "value": "750762"
+      }
+    ],
+    "images": [
+      "/product-images/barrow-dark-rusper/1.jpg",
+      "/product-images/barrow-dark-rusper/2.jpg"
+    ]
+  },
+  {
+    "id": "barrow-light-rusper",
+    "name": "Barrow Light Rusper",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Handcrafted-look cross-cambered clay plain tile with a lightly sanded surface and slightly soft edges, laid double-lap in broken bond. Small rectangular units with a fine, traditional texture. Colour: warm orange-ochre.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "530"
+      },
+      {
+        "label": "Product ID",
+        "value": "750763"
+      }
+    ],
+    "images": [
+      "/product-images/barrow-light-rusper/1.jpg",
+      "/product-images/barrow-light-rusper/2.jpg"
+    ]
+  },
+  {
+    "id": "county-peg-weathered",
+    "name": "County Peg Weathered",
+    "category": "plain-tile",
+    "brand": "Keymer",
+    "description": "Handmade clay peg tile: small rectangular plain tile with irregular, softly curved shape and edges, laid double-lap in broken bond, giving an uneven, historic texture. Colour: weathered blend of red-brown with darker aged patches.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "150 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "230 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "70 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "40°"
+      },
+      {
+        "label": "Headlap",
+        "value": "60mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "95 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "95 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "760"
+      },
+      {
+        "label": "Product ID",
+        "value": "750781"
+      }
+    ],
     "images": [],
     "swatch": {
       "pattern": "flat-tile",
       "colors": [
-        "#a2412c",
-        "#5a1f12",
-        "#cf6f55"
+        "#8f4a35",
+        "#4a2419",
+        "#b06a52"
       ]
     }
   },
   {
-    "id": "flat-anthracite",
-    "name": "Flat Tile – Anthracite",
-    "category": "tile",
+    "id": "goxhill-autumn-brown",
+    "name": "Goxhill Autumn Brown",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Cross-cambered clay plain tile, small rectangular units laid double-lap in broken bond, with natural colour variation from tile to tile. Colour: warm brown-red blend.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "72 kg"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "540"
+      },
+      {
+        "label": "Product ID",
+        "value": "750809"
+      }
+    ],
+    "images": [
+      "/product-images/goxhill-autumn-brown/1.jpg"
+    ]
+  },
+  {
+    "id": "goxhill-dark-chestnut",
+    "name": "Goxhill Dark Chestnut",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Cross-cambered clay plain tile, small rectangular units laid double-lap in broken bond, with natural colour variation from tile to tile. Colour: dark chestnut brown with some lighter tiles.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "72 kg"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "540"
+      },
+      {
+        "label": "Product ID",
+        "value": "750810"
+      }
+    ],
+    "images": [
+      "/product-images/goxhill-dark-chestnut/1.jpg"
+    ]
+  },
+  {
+    "id": "goxhill-dark-red",
+    "name": "Goxhill Dark Red",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Cross-cambered clay plain tile, small rectangular units laid double-lap in broken bond, with natural colour variation from tile to tile. Colour: dark red with brown variation.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "72 kg"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "540"
+      },
+      {
+        "label": "Product ID",
+        "value": "750811"
+      }
+    ],
+    "images": [
+      "/product-images/goxhill-dark-red/1.jpg"
+    ]
+  },
+  {
+    "id": "goxhill-restoration-blend",
+    "name": "Goxhill Restoration Blend",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Cross-cambered clay plain tile, small rectangular units laid double-lap in broken bond, with natural colour variation from tile to tile. Colour: aged blend of orange-red with dark grey-black weathered patches.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "72 kg"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "540"
+      },
+      {
+        "label": "Product ID",
+        "value": "2168288"
+      }
+    ],
+    "images": [
+      "/product-images/goxhill-restoration-blend/1.jpg"
+    ]
+  },
+  {
+    "id": "humber-antique-slate",
+    "name": "Humber Antique Slate",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Traditional cross-cambered, machine-made clay plain tile: small rectangular units with crisp edges, laid double-lap in broken bond. Colour: dark grey to black, like slate.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "540"
+      },
+      {
+        "label": "Product ID",
+        "value": "848536"
+      }
+    ],
+    "images": [
+      "/product-images/humber-antique-slate/1.jpg"
+    ]
+  },
+  {
+    "id": "humber-flanders",
+    "name": "Humber Flanders",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Traditional cross-cambered, machine-made clay plain tile: small rectangular units with crisp edges, laid double-lap in broken bond. Colour: red with darker brown-black flashing.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "540"
+      },
+      {
+        "label": "Product ID",
+        "value": "750817"
+      }
+    ],
+    "images": [
+      "/product-images/humber-flanders/1.jpg",
+      "/product-images/humber-flanders/2.jpg"
+    ]
+  },
+  {
+    "id": "humber-natural-red",
+    "name": "Humber Natural Red",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Traditional cross-cambered, machine-made clay plain tile: small rectangular units with crisp edges, laid double-lap in broken bond. Colour: even orange-red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "540"
+      },
+      {
+        "label": "Product ID",
+        "value": "750818"
+      }
+    ],
+    "images": [
+      "/product-images/humber-natural-red/1.jpg",
+      "/product-images/humber-natural-red/2.jpg"
+    ]
+  },
+  {
+    "id": "humber-sandfaced-buckingham",
+    "name": "Humber Sandfaced Buckingham",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Traditional cross-cambered, machine-made clay plain tile: small rectangular units with crisp edges, laid double-lap in broken bond. Colour: brown-red, sandfaced, with darker shading.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "530"
+      },
+      {
+        "label": "Product ID",
+        "value": "1064797"
+      }
+    ],
+    "images": [
+      "/product-images/humber-sandfaced-buckingham/1.jpg",
+      "/product-images/humber-sandfaced-buckingham/2.jpg"
+    ]
+  },
+  {
+    "id": "humber-sandfaced-kensington",
+    "name": "Humber Sandfaced Kensington",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Traditional cross-cambered, machine-made clay plain tile: small rectangular units with crisp edges, laid double-lap in broken bond. Colour: olive-brown and grey blend, sandfaced.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "530"
+      },
+      {
+        "label": "Product ID",
+        "value": "1064795"
+      }
+    ],
+    "images": [
+      "/product-images/humber-sandfaced-kensington/1.jpg",
+      "/product-images/humber-sandfaced-kensington/2.jpg"
+    ]
+  },
+  {
+    "id": "humber-tuscan",
+    "name": "Humber Tuscan",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Traditional cross-cambered, machine-made clay plain tile: small rectangular units with crisp edges, laid double-lap in broken bond. Colour: red-brown with darker tones.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "540"
+      },
+      {
+        "label": "Product ID",
+        "value": "750819"
+      }
+    ],
+    "images": [
+      "/product-images/humber-tuscan/1.jpg",
+      "/product-images/humber-tuscan/2.jpg"
+    ]
+  },
+  {
+    "id": "kent-peg-antique",
+    "name": "Kent Peg Antique",
+    "category": "plain-tile",
+    "brand": "Keymer",
+    "description": "Handmade clay peg tile: small rectangular plain tile with irregular, softly curved shape, laid double-lap in broken bond, giving an uneven, historic texture. Colour: warm antique red-orange blend.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "250 x 150 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "150 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "230 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "70 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "40°"
+      },
+      {
+        "label": "Headlap",
+        "value": "60mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "95 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "95 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "800"
+      },
+      {
+        "label": "Product ID",
+        "value": "750821"
+      }
+    ],
+    "images": [
+      "/product-images/kent-peg-antique/1.jpg"
+    ]
+  },
+  {
+    "id": "plain-tile-antique-no2",
+    "name": "Plain Tile Antique No2",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete plain tile: small rectangular units with a slightly granular surface, laid double-lap in broken bond, giving a fine, traditional texture. Colour: dark brown-black with a subtle antique variation.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "78 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "768"
+      },
+      {
+        "label": "Product ID",
+        "value": "848577"
+      }
+    ],
+    "images": [
+      "/product-images/plain-tile-antique-no2/1.jpg",
+      "/product-images/plain-tile-antique-no2/2.jpg"
+    ]
+  },
+  {
+    "id": "plain-tile-brindle",
+    "name": "Plain Tile Brindle",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete plain tile: small rectangular units with a slightly granular surface, laid double-lap in broken bond, giving a fine, traditional texture. Colour: brown-red with dark brindle streaks.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "78 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "768"
+      },
+      {
+        "label": "Product ID",
+        "value": "848578"
+      }
+    ],
+    "images": [
+      "/product-images/plain-tile-brindle/1.jpg",
+      "/product-images/plain-tile-brindle/2.jpg"
+    ]
+  },
+  {
+    "id": "plain-tile-brown",
+    "name": "Plain Tile Brown",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete plain tile: small rectangular units with a slightly granular surface, laid double-lap in broken bond, giving a fine, traditional texture. Colour: warm grey-brown.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "78 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "768"
+      },
+      {
+        "label": "Product ID",
+        "value": "848579"
+      }
+    ],
+    "images": [
+      "/product-images/plain-tile-brown/1.jpg",
+      "/product-images/plain-tile-brown/2.jpg"
+    ]
+  },
+  {
+    "id": "plain-tile-dark-grey",
+    "name": "Plain Tile Dark Grey",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete plain tile: small rectangular units with a slightly granular surface, laid double-lap in broken bond, giving a fine, traditional texture. Colour: dark charcoal grey.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "78 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "768"
+      },
+      {
+        "label": "Product ID",
+        "value": "848581"
+      }
+    ],
+    "images": [
+      "/product-images/plain-tile-dark-grey/1.jpg",
+      "/product-images/plain-tile-dark-grey/2.jpg"
+    ]
+  },
+  {
+    "id": "plain-tile-dark-heather",
+    "name": "Plain Tile Dark Heather",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete plain tile: small rectangular units with a slightly granular surface, laid double-lap in broken bond, giving a fine, traditional texture. Colour: deep red-brown blended with near-black (dark heather).",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "78 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "768"
+      },
+      {
+        "label": "Product ID",
+        "value": "848582"
+      }
+    ],
+    "images": [
+      "/product-images/plain-tile-dark-heather/1.jpg",
+      "/product-images/plain-tile-dark-heather/2.jpg"
+    ]
+  },
+  {
+    "id": "plain-tile-mottled-red",
+    "name": "Plain Tile Mottled Red",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete plain tile: small rectangular units with a slightly granular surface, laid double-lap in broken bond, giving a fine, traditional texture. Colour: muted red-brown with a mottled finish.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "78 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "768"
+      },
+      {
+        "label": "Product ID",
+        "value": "848583"
+      }
+    ],
+    "images": [
+      "/product-images/plain-tile-mottled-red/1.jpg",
+      "/product-images/plain-tile-mottled-red/2.jpg"
+    ]
+  },
+  {
+    "id": "plain-tile-rustic",
+    "name": "Plain Tile Rustic",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete plain tile: small rectangular units with a slightly granular surface, laid double-lap in broken bond, giving a fine, traditional texture. Colour: red with dark brown-black streaks.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "78 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "768"
+      },
+      {
+        "label": "Product ID",
+        "value": "848507"
+      }
+    ],
+    "images": [
+      "/product-images/plain-tile-rustic/1.jpg"
+    ]
+  },
+  {
+    "id": "plain-tile-sandown",
+    "name": "Plain Tile Sandown",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete plain tile: small rectangular units with a slightly granular surface, laid double-lap in broken bond, giving a fine, traditional texture. Colour: mid brown-red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "78 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "768"
+      },
+      {
+        "label": "Product ID",
+        "value": "848584"
+      }
+    ],
+    "images": [
+      "/product-images/plain-tile-sandown/1.jpg",
+      "/product-images/plain-tile-sandown/2.jpg"
+    ]
+  },
+  {
+    "id": "plain-tile-terracotta-red",
+    "name": "Plain Tile Terracotta Red",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete plain tile: small rectangular units with a slightly granular surface, laid double-lap in broken bond, giving a fine, traditional texture. Colour: even terracotta red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "78 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "768"
+      },
+      {
+        "label": "Product ID",
+        "value": "848585"
+      }
+    ],
+    "images": [
+      "/product-images/plain-tile-terracotta-red/1.jpg",
+      "/product-images/plain-tile-terracotta-red/2.jpg"
+    ]
+  },
+  {
+    "id": "renaissance-pt-oast-orange",
+    "name": "Renaissance PT - Oast Orange",
+    "category": "plain-tile",
     "brand": "",
-    "description": "Modern matte anthracite-grey flat concrete roof tiles in clean straight courses.",
-    "specs": [],
+    "description": "Clay plain tile: small rectangular units laid double-lap in broken bond, with strong colour variation from tile to tile. Colour: orange with grey-black blended tiles.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "0 x 0 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "59 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "75mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "50.8 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "48mm"
+      },
+      {
+        "label": "Product ID",
+        "value": "2803846"
+      }
+    ],
+    "images": [
+      "/product-images/renaissance-pt-oast-orange/1.jpg"
+    ]
+  },
+  {
+    "id": "traditional-antique",
+    "name": "Traditional Antique",
+    "category": "plain-tile",
+    "brand": "Keymer",
+    "description": "Genuine handmade clay plain tile with irregular shape, soft edges and a gentle camber, laid double-lap in broken bond, giving a characterful, uneven historic texture. Colour: aged red-brown blend.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "40°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "72 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "760"
+      },
+      {
+        "label": "Product ID",
+        "value": "750888"
+      }
+    ],
     "images": [],
     "swatch": {
       "pattern": "flat-tile",
       "colors": [
-        "#34383c",
-        "#141618",
-        "#5e656b"
+        "#8a4532",
+        "#46221a",
+        "#b0684c"
       ]
     }
   },
   {
-    "id": "shingle-charcoal",
-    "name": "Architectural – Charcoal",
-    "category": "shingles",
-    "brand": "",
-    "description": "Dimensional architectural asphalt shingles in blended charcoal grey.",
-    "specs": [],
+    "id": "traditional-elizabethan",
+    "name": "Traditional Elizabethan",
+    "category": "plain-tile",
+    "brand": "Keymer",
+    "description": "Genuine handmade clay plain tile with irregular shape, soft edges and a gentle camber, laid double-lap in broken bond, giving a characterful, uneven historic texture. Colour: mixed red, orange and brown tones.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "40°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "72 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "760"
+      },
+      {
+        "label": "Product ID",
+        "value": "750889"
+      }
+    ],
+    "images": [
+      "/product-images/traditional-elizabethan/1.jpg",
+      "/product-images/traditional-elizabethan/2.jpg"
+    ]
+  },
+  {
+    "id": "traditional-wealden-red",
+    "name": "Traditional Wealden Red",
+    "category": "plain-tile",
+    "brand": "Keymer",
+    "description": "Genuine handmade clay plain tile with irregular shape, soft edges and a gentle camber, laid double-lap in broken bond, giving a characterful, uneven historic texture. Colour: warm red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "40°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "72 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "760"
+      },
+      {
+        "label": "Product ID",
+        "value": "750890"
+      }
+    ],
     "images": [],
     "swatch": {
-      "pattern": "shingle",
+      "pattern": "flat-tile",
       "colors": [
-        "#3d3f42",
-        "#1c1d1f",
-        "#6b6e72"
+        "#a5462e",
+        "#5a2115",
+        "#cc6a4d"
       ]
     }
   },
   {
-    "id": "shingle-weathered",
-    "name": "Architectural – Weathered Wood",
-    "category": "shingles",
-    "brand": "",
-    "description": "Dimensional architectural asphalt shingles in a weathered-wood brown-grey blend.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "shingle",
-      "colors": [
-        "#6e6457",
-        "#3b342c",
-        "#9b8f80"
-      ]
-    }
+    "id": "village-reclaimed",
+    "name": "Village Reclaimed",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Clay plain tile with a reclaimed look: small rectangular units laid double-lap in broken bond. Colour: red-brown with green-grey and dark weathered patches.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "520"
+      },
+      {
+        "label": "Product ID",
+        "value": "848617"
+      }
+    ],
+    "images": [
+      "/product-images/village-reclaimed/1.jpg",
+      "/product-images/village-reclaimed/2.jpg"
+    ]
   },
   {
-    "id": "shingle-brown",
-    "name": "Architectural – Autumn Brown",
-    "category": "shingles",
+    "id": "arcadia",
+    "name": "Arcadia",
+    "category": "interlocking-pantile",
     "brand": "",
-    "description": "Dimensional architectural asphalt shingles in warm autumn brown blend.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "shingle",
-      "colors": [
-        "#6b4a33",
-        "#35231a",
-        "#9a7255"
-      ]
-    }
+    "description": "Interlocking clay pantile with a flowing S-shaped wave, giving pronounced curved courses. Reclaimed, aged look. Colour: reclaimed blend of orange-red, ochre and weathered grey-green.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "365 x 250 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "340 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "45 mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "42.4 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "290 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "290 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "432"
+      },
+      {
+        "label": "Product ID",
+        "value": "1108288"
+      }
+    ],
+    "images": [
+      "/product-images/arcadia/1.jpg",
+      "/product-images/arcadia/2.jpg"
+    ]
   },
   {
-    "id": "slate-natural",
-    "name": "Natural Slate – Grey",
-    "category": "slate",
-    "brand": "",
-    "description": "Natural split blue-grey slate roof tiles with slightly irregular edges and subtle colour variation.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "slate",
-      "colors": [
-        "#4a5056",
-        "#22262a",
-        "#757d85"
-      ]
-    }
+    "id": "double-pantile-antique-no-2",
+    "name": "Double Pantile Antique No.2",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking double pantile: each tile has two rounded S-waves, laid in straight vertical lines; slightly granular matte surface. Colour: dark brown-black with a subtle antique variation.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "402 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "55 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "48.9 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "210"
+      },
+      {
+        "label": "Product ID",
+        "value": "848517"
+      }
+    ],
+    "images": [
+      "/product-images/double-pantile-antique-no-2/1.jpg",
+      "/product-images/double-pantile-antique-no-2/2.jpg"
+    ]
   },
   {
-    "id": "slate-black",
-    "name": "Natural Slate – Black",
-    "category": "slate",
-    "brand": "",
-    "description": "Natural black slate roof tiles with a fine riven texture and soft sheen.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "slate",
-      "colors": [
-        "#2a2c2f",
-        "#0f1011",
-        "#4d5156"
-      ]
-    }
+    "id": "double-pantile-brown",
+    "name": "Double Pantile Brown",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking double pantile: each tile has two rounded S-waves, laid in straight vertical lines; slightly granular matte surface. Colour: warm grey-brown.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "402 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "55 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "48.9 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "210"
+      },
+      {
+        "label": "Product ID",
+        "value": "848518"
+      }
+    ],
+    "images": [
+      "/product-images/double-pantile-brown/1.jpg",
+      "/product-images/double-pantile-brown/2.jpg"
+    ]
   },
   {
-    "id": "slate-multi",
-    "name": "Slate – Multi Blend",
-    "category": "slate",
-    "brand": "",
-    "description": "Mixed slate roof in a blend of grey, purple and rust-toned natural slates.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "slate",
-      "colors": [
-        "#5b5a5e",
-        "#2b2a2d",
-        "#8b7466"
-      ]
-    }
+    "id": "double-pantile-dark-grey",
+    "name": "Double Pantile Dark Grey",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking double pantile: each tile has two rounded S-waves, laid in straight vertical lines; slightly granular matte surface. Colour: dark charcoal grey.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "402 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "55 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "48.9 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "210"
+      },
+      {
+        "label": "Product ID",
+        "value": "848519"
+      }
+    ],
+    "images": [
+      "/product-images/double-pantile-dark-grey/1.jpg",
+      "/product-images/double-pantile-dark-grey/2.jpg"
+    ]
   },
   {
-    "id": "shake-cedar",
-    "name": "Cedar Shake – Natural",
-    "category": "shake",
-    "brand": "",
-    "description": "New natural red cedar wood shake roof with hand-split texture and varied plank widths.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "shake",
-      "colors": [
-        "#9a6b43",
-        "#55361f",
-        "#c49468"
-      ]
-    }
+    "id": "double-pantile-dark-heather",
+    "name": "Double Pantile Dark Heather",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking double pantile: each tile has two rounded S-waves, laid in straight vertical lines; slightly granular matte surface. Colour: deep red-brown blended with near-black (dark heather).",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "402 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "55 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "48.9 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "210"
+      },
+      {
+        "label": "Product ID",
+        "value": "848520"
+      }
+    ],
+    "images": [
+      "/product-images/double-pantile-dark-heather/1.jpg",
+      "/product-images/double-pantile-dark-heather/2.jpg"
+    ]
   },
   {
-    "id": "shake-aged",
-    "name": "Cedar Shake – Silver Aged",
-    "category": "shake",
-    "brand": "",
-    "description": "Weathered silver-grey aged cedar wood shake roof with hand-split texture.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "shake",
-      "colors": [
-        "#7d7a73",
-        "#45423d",
-        "#a9a59c"
-      ]
-    }
+    "id": "double-pantile-mottled-red",
+    "name": "Double Pantile Mottled Red",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking double pantile: each tile has two rounded S-waves, laid in straight vertical lines; slightly granular matte surface. Colour: muted red-brown with a mottled finish.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "402 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "55 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "48.9 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "210"
+      },
+      {
+        "label": "Product ID",
+        "value": "848521"
+      }
+    ],
+    "images": [
+      "/product-images/double-pantile-mottled-red/1.jpg",
+      "/product-images/double-pantile-mottled-red/2.jpg"
+    ]
   },
   {
-    "id": "metal-black",
-    "name": "Standing Seam – Matte Black",
-    "category": "metal",
-    "brand": "",
-    "description": "Matte black standing seam metal roof with vertical raised seams.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "seam",
-      "colors": [
-        "#26282a",
-        "#0e0f10",
-        "#4c5054"
-      ]
-    }
+    "id": "double-pantile-rustic",
+    "name": "Double Pantile Rustic",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking double pantile: each tile has two rounded S-waves, laid in straight vertical lines; slightly granular matte surface. Colour: red with dark brown-black streaks.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "402 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "55 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "48.9 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "210"
+      },
+      {
+        "label": "Product ID",
+        "value": "848503"
+      }
+    ],
+    "images": [
+      "/product-images/double-pantile-rustic/1.jpg",
+      "/product-images/double-pantile-rustic/2.jpg"
+    ]
   },
   {
-    "id": "metal-zinc",
-    "name": "Standing Seam – Zinc Grey",
-    "category": "metal",
-    "brand": "",
-    "description": "Pre-weathered zinc grey standing seam metal roof with vertical raised seams.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "seam",
-      "colors": [
-        "#7f878e",
-        "#4c5157",
-        "#aab2b9"
-      ]
-    }
+    "id": "double-pantile-terracotta-red",
+    "name": "Double Pantile Terracotta Red",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking double pantile: each tile has two rounded S-waves, laid in straight vertical lines; slightly granular matte surface. Colour: even terracotta red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "402 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "55 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "48.9 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "210"
+      },
+      {
+        "label": "Product ID",
+        "value": "848504"
+      }
+    ],
+    "images": [
+      "/product-images/double-pantile-terracotta-red/1.jpg",
+      "/product-images/double-pantile-terracotta-red/2.jpg"
+    ]
   },
   {
-    "id": "metal-green",
-    "name": "Standing Seam – Forest Green",
-    "category": "metal",
+    "id": "neo-plus-antique-slate",
+    "name": "Neo Plus - Antique Slate",
+    "category": "interlocking-pantile",
     "brand": "",
-    "description": "Forest green painted standing seam metal roof with vertical raised seams.",
-    "specs": [],
-    "images": [],
-    "swatch": {
-      "pattern": "seam",
-      "colors": [
-        "#2f4a3a",
-        "#15241b",
-        "#527461"
-      ]
-    }
+    "description": "Interlocking clay pantile with a pronounced S-shaped wave: wide rounded roll and hollow, laid in straight vertical lines with deep shadows under each course. Colour: dark grey to black with a slight sheen.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 250 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "217 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "357 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "69 mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "264 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "309 mm"
+      },
+      {
+        "label": "Product ID",
+        "value": "1122403"
+      }
+    ],
+    "images": [
+      "/product-images/neo-plus-antique-slate/1.jpg",
+      "/product-images/neo-plus-antique-slate/2.jpg"
+    ]
+  },
+  {
+    "id": "neo-plus-flanders",
+    "name": "Neo Plus - Flanders",
+    "category": "interlocking-pantile",
+    "brand": "",
+    "description": "Interlocking clay pantile with a pronounced S-shaped wave: wide rounded roll and hollow, laid in straight vertical lines with deep shadows under each course. Colour: orange-red with blue-grey flashing.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 250 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "217 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "357 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "69 mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "264 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "309 mm"
+      },
+      {
+        "label": "Product ID",
+        "value": "1122402"
+      }
+    ],
+    "images": [
+      "/product-images/neo-plus-flanders/1.jpg",
+      "/product-images/neo-plus-flanders/2.jpg"
+    ]
+  },
+  {
+    "id": "neo-plus-natural-red",
+    "name": "Neo Plus - Natural Red+",
+    "category": "interlocking-pantile",
+    "brand": "",
+    "description": "Interlocking clay pantile with a pronounced S-shaped wave: wide rounded roll and hollow, laid in straight vertical lines with deep shadows under each course. Colour: warm orange-red with ochre tones.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 250 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "217 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "357 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "69 mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "264 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "309 mm"
+      },
+      {
+        "label": "Product ID",
+        "value": "1122401"
+      }
+    ],
+    "images": [
+      "/product-images/neo-plus-natural-red/1.jpg",
+      "/product-images/neo-plus-natural-red/2.jpg"
+    ]
+  },
+  {
+    "id": "neo-plus-tuscan",
+    "name": "Neo Plus - Tuscan",
+    "category": "interlocking-pantile",
+    "brand": "",
+    "description": "Interlocking clay pantile with a pronounced S-shaped wave: wide rounded roll and hollow, laid in straight vertical lines with deep shadows under each course. Colour: orange with soft grey antiquing.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 250 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "217 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "357 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "69 mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "264 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "309 mm"
+      },
+      {
+        "label": "Product ID",
+        "value": "1122404"
+      }
+    ],
+    "images": [
+      "/product-images/neo-plus-tuscan/1.jpg",
+      "/product-images/neo-plus-tuscan/2.jpg"
+    ]
+  },
+  {
+    "id": "neo-plus-victorian-red",
+    "name": "Neo Plus - Victorian Red",
+    "category": "interlocking-pantile",
+    "brand": "",
+    "description": "Interlocking clay pantile with a pronounced S-shaped wave: wide rounded roll and hollow, laid in straight vertical lines with deep shadows under each course. Colour: orange-red with grey and black aged, lichen-like patches.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 250 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "217 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "357 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "69 mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "264 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "309 mm"
+      },
+      {
+        "label": "Product ID",
+        "value": "2242484"
+      }
+    ],
+    "images": [
+      "/product-images/neo-plus-victorian-red/1.jpg",
+      "/product-images/neo-plus-victorian-red/2.jpg"
+    ]
+  },
+  {
+    "id": "old-english-flanders",
+    "name": "Old English Flanders",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Traditional clay pantile with a deep, flowing S-shaped curve and a cut-off top corner, laid in straight vertical lines. Colour: red-brown with darker flashing.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "365 x 250 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "340 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "45 mm"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "30°"
+      },
+      {
+        "label": "Headlap",
+        "value": "75mm (Fixed Gauge)"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "42.4 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "290 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "290 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "432"
+      },
+      {
+        "label": "Product ID",
+        "value": "1053391"
+      }
+    ],
+    "images": [
+      "/product-images/old-english-flanders/1.jpg",
+      "/product-images/old-english-flanders/2.jpg"
+    ]
+  },
+  {
+    "id": "old-english-natural-red",
+    "name": "Old English Natural Red",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Traditional clay pantile with a deep, flowing S-shaped curve and a cut-off top corner, laid in straight vertical lines. Colour: even orange-red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "365 x 250 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "340 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "45 mm"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "30°"
+      },
+      {
+        "label": "Headlap",
+        "value": "75mm (Fixed Gauge)"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "42.4 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "290 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "290 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "432"
+      },
+      {
+        "label": "Product ID",
+        "value": "1053390"
+      }
+    ],
+    "images": [
+      "/product-images/old-english-natural-red/1.jpg",
+      "/product-images/old-english-natural-red/2.jpg"
+    ]
+  },
+  {
+    "id": "olympus-flanders",
+    "name": "Olympus Flanders",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Interlocking clay pantile with a double-curved pan and rounded roll, laid in straight vertical lines. Colour: red with darker brown flashing.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "408 x 327 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "295 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "382 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "57 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "10.2 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5°"
+      },
+      {
+        "label": "Headlap",
+        "value": "Minimum 75mm; Maximum 120mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "288 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "333 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "210"
+      },
+      {
+        "label": "Product ID",
+        "value": "848569"
+      }
+    ],
+    "images": [
+      "/product-images/olympus-flanders/1.jpg",
+      "/product-images/olympus-flanders/2.jpg"
+    ]
+  },
+  {
+    "id": "olympus-natural-red",
+    "name": "Olympus Natural Red",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Interlocking clay pantile with a double-curved pan and rounded roll, laid in straight vertical lines. Colour: warm orange-red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "408 x 327 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "295 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "382 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "57 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "10.2 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5°"
+      },
+      {
+        "label": "Headlap",
+        "value": "Minimum 75mm; Maximum 120mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "288 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "333 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "210"
+      },
+      {
+        "label": "Product ID",
+        "value": "848560"
+      }
+    ],
+    "images": [
+      "/product-images/olympus-natural-red/1.jpg",
+      "/product-images/olympus-natural-red/2.jpg"
+    ]
+  },
+  {
+    "id": "olympus-tuscan",
+    "name": "Olympus Tuscan",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Interlocking clay pantile with a double-curved pan and rounded roll, laid in straight vertical lines. Colour: red-brown with darker brown tones.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "408 x 327 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "295 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "382 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "57 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "10.2 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5°"
+      },
+      {
+        "label": "Headlap",
+        "value": "Minimum 75mm; Maximum 120mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "288 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "333 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "210"
+      },
+      {
+        "label": "Product ID",
+        "value": "848570"
+      }
+    ],
+    "images": [
+      "/product-images/olympus-tuscan/1.jpg",
+      "/product-images/olympus-tuscan/2.jpg"
+    ]
+  },
+  {
+    "id": "shire-pantile-antique-no2",
+    "name": "Shire Pantile Antique No2",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking pantile with one large, smooth S-shaped wave per tile, laid in straight vertical lines. Colour: dark brown-black with a subtle antique variation.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "360 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "70 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap (smoothfaced colours only); 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848594"
+      }
+    ],
+    "images": [
+      "/product-images/shire-pantile-antique-no2/1.jpg",
+      "/product-images/shire-pantile-antique-no2/2.jpg"
+    ]
+  },
+  {
+    "id": "shire-pantile-brown",
+    "name": "Shire Pantile Brown",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking pantile with one large, smooth S-shaped wave per tile, laid in straight vertical lines. Colour: warm grey-brown.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "360 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "70 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap (smoothfaced colours only); 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848595"
+      }
+    ],
+    "images": [
+      "/product-images/shire-pantile-brown/1.jpg",
+      "/product-images/shire-pantile-brown/2.jpg"
+    ]
+  },
+  {
+    "id": "shire-pantile-charcoal",
+    "name": "Shire Pantile Charcoal",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking pantile with one large, smooth S-shaped wave per tile, laid in straight vertical lines. Colour: charcoal black with a satin sheen.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "360 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "70 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap (smoothfaced colours only); 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848596"
+      }
+    ],
+    "images": [
+      "/product-images/shire-pantile-charcoal/1.jpg",
+      "/product-images/shire-pantile-charcoal/2.jpg"
+    ]
+  },
+  {
+    "id": "shire-pantile-dark-grey",
+    "name": "Shire Pantile Dark Grey",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking pantile with one large, smooth S-shaped wave per tile, laid in straight vertical lines. Colour: dark charcoal grey.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "360 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "70 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap (smoothfaced colours only); 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848597"
+      }
+    ],
+    "images": [
+      "/product-images/shire-pantile-dark-grey/1.jpg",
+      "/product-images/shire-pantile-dark-grey/2.jpg"
+    ]
+  },
+  {
+    "id": "shire-pantile-mottled-red",
+    "name": "Shire Pantile Mottled Red",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking pantile with one large, smooth S-shaped wave per tile, laid in straight vertical lines. Colour: muted red-brown with a mottled finish.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "360 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "70 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap (smoothfaced colours only); 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848598"
+      }
+    ],
+    "images": [
+      "/product-images/shire-pantile-mottled-red/1.jpg",
+      "/product-images/shire-pantile-mottled-red/2.jpg"
+    ]
+  },
+  {
+    "id": "shire-pantile-rustic",
+    "name": "Shire Pantile Rustic",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking pantile with one large, smooth S-shaped wave per tile, laid in straight vertical lines. Colour: red with dark brown-black streaks.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "360 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "70 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap (smoothfaced colours only); 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848508"
+      }
+    ],
+    "images": [
+      "/product-images/shire-pantile-rustic/1.jpg",
+      "/product-images/shire-pantile-rustic/2.jpg"
+    ]
+  },
+  {
+    "id": "shire-pantile-terracotta-red",
+    "name": "Shire Pantile Terracotta Red",
+    "category": "interlocking-pantile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking pantile with one large, smooth S-shaped wave per tile, laid in straight vertical lines. Colour: even terracotta red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "360 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "70 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap (smoothfaced colours only); 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848599"
+      }
+    ],
+    "images": [
+      "/product-images/shire-pantile-terracotta-red/1.jpg",
+      "/product-images/shire-pantile-terracotta-red/2.jpg"
+    ]
+  },
+  {
+    "id": "tempest-44-cottage",
+    "name": "Tempest 44 Cottage",
+    "category": "interlocking-pantile",
+    "brand": "Koramic",
+    "description": "Compact single-Roman clay tile: wide flat pan with a small rounded roll, laid in straight vertical lines, giving a regular grid pattern. Colour: orange with dark grey aged patches.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "304 x 221 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "195 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "282 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "38 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "21 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22°"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "39.9 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "248 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "248 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "660"
+      },
+      {
+        "label": "Product ID",
+        "value": "750734"
+      }
+    ],
+    "images": [
+      "/product-images/tempest-44-cottage/1.jpg",
+      "/product-images/tempest-44-cottage/2.jpg"
+    ]
+  },
+  {
+    "id": "tempest-44-natural-red",
+    "name": "Tempest 44 Natural Red",
+    "category": "interlocking-pantile",
+    "brand": "Koramic",
+    "description": "Compact single-Roman clay tile: wide flat pan with a small rounded roll, laid in straight vertical lines, giving a regular grid pattern. Colour: warm orange-red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "304 x 221 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "195 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "282 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "38 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "21 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22°"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "39.9 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "248 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "248 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "660"
+      },
+      {
+        "label": "Product ID",
+        "value": "750735"
+      }
+    ],
+    "images": [
+      "/product-images/tempest-44-natural-red/1.jpg",
+      "/product-images/tempest-44-natural-red/2.jpg"
+    ]
+  },
+  {
+    "id": "tempest-44-rustic",
+    "name": "Tempest 44 Rustic",
+    "category": "interlocking-pantile",
+    "brand": "Koramic",
+    "description": "Compact single-Roman clay tile: wide flat pan with a small rounded roll, laid in straight vertical lines, giving a regular grid pattern. Colour: brown-red with darker mottling.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "304 x 221 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "195 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "282 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "38 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "21 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22°"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "39.9 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "248 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "248 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "660"
+      },
+      {
+        "label": "Product ID",
+        "value": "750736"
+      }
+    ],
+    "images": [
+      "/product-images/tempest-44-rustic/1.jpg",
+      "/product-images/tempest-44-rustic/2.jpg"
+    ]
+  },
+  {
+    "id": "new-county-natural-red",
+    "name": "New County Natural Red+",
+    "category": "traditional-pantile",
+    "brand": "",
+    "description": "Classic clay pantile with a smooth S-shaped wave, laid in straight vertical lines. Colour: warm orange-red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "382 x 256 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "355 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "65 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "15.5 tiles per m² at 62mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5°"
+      },
+      {
+        "label": "Headlap",
+        "value": "Minimum 62mm; Maximum 77mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "39.7 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "320 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "378"
+      },
+      {
+        "label": "Product ID",
+        "value": "1032832"
+      }
+    ],
+    "images": [
+      "/product-images/new-county-natural-red/1.jpg",
+      "/product-images/new-county-natural-red/2.jpg"
+    ]
+  },
+  {
+    "id": "new-county-pantile-mixed-russet",
+    "name": "New County Pantile Mixed Russet",
+    "category": "traditional-pantile",
+    "brand": "",
+    "description": "Classic clay pantile with a smooth S-shaped wave, laid in straight vertical lines. Colour: red blended with dark grey-purple tones.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "382 x 256 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "355 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "65 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "15.5 tiles per m² at 62mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5°"
+      },
+      {
+        "label": "Headlap",
+        "value": "Minimum 62mm; Maximum 77mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "39.7 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "320 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "378"
+      },
+      {
+        "label": "Product ID",
+        "value": "1032834"
+      }
+    ],
+    "images": [
+      "/product-images/new-county-pantile-mixed-russet/1.jpg",
+      "/product-images/new-county-pantile-mixed-russet/2.jpg"
+    ]
+  },
+  {
+    "id": "old-hollow-451-anthracite",
+    "name": "Old Hollow 451 Anthracite",
+    "category": "traditional-pantile",
+    "brand": "Koramic",
+    "description": "Traditional clay hollow pantile (S-shaped) with a large, smooth wave, laid in straight vertical lines. Colour: dark anthracite grey with a slight sheen.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "348 x 246 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "194 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "325 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "65 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "19.1 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "25°; Headlap (fixed gauge); 75mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "47.8 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "432"
+      },
+      {
+        "label": "Product ID",
+        "value": "750738"
+      }
+    ],
+    "images": [
+      "/product-images/old-hollow-451-anthracite/1.jpg"
+    ]
+  },
+  {
+    "id": "old-hollow-451-black-glazed",
+    "name": "Old Hollow 451 Black Glazed",
+    "category": "traditional-pantile",
+    "brand": "Koramic",
+    "description": "Traditional clay hollow pantile (S-shaped) with a large, smooth wave, laid in straight vertical lines. Colour: glossy black glaze.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "348 x 246 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "194 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "325 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "65 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "18.9 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "25°; Headlap (fixed gauge); 75mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "47.8 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "432"
+      },
+      {
+        "label": "Product ID",
+        "value": "750739"
+      }
+    ],
+    "images": [
+      "/product-images/old-hollow-451-black-glazed/1.jpg"
+    ]
+  },
+  {
+    "id": "old-hollow-451-braised-blue",
+    "name": "Old Hollow 451 Braised Blue",
+    "category": "traditional-pantile",
+    "brand": "Koramic",
+    "description": "Traditional clay hollow pantile (S-shaped) with a large, smooth wave, laid in straight vertical lines. Colour: blue-grey (smoke-fired), with a soft sheen.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "348 x 246 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "194 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "325 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "65 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "18.9 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "25°; Headlap (fixed gauge); 75mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "47.8 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "320"
+      },
+      {
+        "label": "Product ID",
+        "value": "750740"
+      }
+    ],
+    "images": [
+      "/product-images/old-hollow-451-braised-blue/1.jpg",
+      "/product-images/old-hollow-451-braised-blue/2.jpg"
+    ]
+  },
+  {
+    "id": "old-hollow-451-natural-red",
+    "name": "Old Hollow 451 Natural Red",
+    "category": "traditional-pantile",
+    "brand": "Koramic",
+    "description": "Traditional clay hollow pantile (S-shaped) with a large, smooth wave, laid in straight vertical lines. Colour: warm orange-red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "348 x 246 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "194 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "325 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "65 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "18.9 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "25°; Headlap (fixed gauge); 75mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "47.8 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "432"
+      },
+      {
+        "label": "Product ID",
+        "value": "750741"
+      }
+    ],
+    "images": [
+      "/product-images/old-hollow-451-natural-red/1.jpg",
+      "/product-images/old-hollow-451-natural-red/2.jpg"
+    ]
+  },
+  {
+    "id": "old-hollow-451-rustic",
+    "name": "Old Hollow 451 Rustic",
+    "category": "traditional-pantile",
+    "brand": "Koramic",
+    "description": "Traditional clay hollow pantile (S-shaped) with a large, smooth wave, laid in straight vertical lines. Colour: brown-red with dark smudged variation.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "348 x 246 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "194 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "325 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "65 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "18.9 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "25°; Headlap (fixed gauge); 75mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "47.8 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "432"
+      },
+      {
+        "label": "Product ID",
+        "value": "750742"
+      }
+    ],
+    "images": [
+      "/product-images/old-hollow-451-rustic/1.jpg",
+      "/product-images/old-hollow-451-rustic/2.jpg"
+    ]
+  },
+  {
+    "id": "old-hollow-451-victorian",
+    "name": "Old Hollow 451 Victorian",
+    "category": "traditional-pantile",
+    "brand": "Koramic",
+    "description": "Traditional clay hollow pantile (S-shaped) with a large, smooth wave, laid in straight vertical lines. Colour: orange-red with grey-white aged patches.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "348 x 246 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "194 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "325 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "65 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "18.9 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "25°; Headlap (fixed gauge); 75mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "47.8 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "432"
+      },
+      {
+        "label": "Product ID",
+        "value": "750743"
+      }
+    ],
+    "images": [
+      "/product-images/old-hollow-451-victorian/1.jpg",
+      "/product-images/old-hollow-451-victorian/2.jpg"
+    ]
+  },
+  {
+    "id": "old-hollow-451-victorian-braised-blue",
+    "name": "Old Hollow 451 Victorian Braised Blue",
+    "category": "traditional-pantile",
+    "brand": "Koramic",
+    "description": "Traditional clay hollow pantile (S-shaped) with a large, smooth wave, laid in straight vertical lines. Colour: blue-grey with light, aged lichen-like patches.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "348 x 246 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "325 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "65 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "18.9 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "25°; Headlap (fixed gauge); 75mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "47.8 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "273 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "320"
+      },
+      {
+        "label": "Product ID",
+        "value": "750744"
+      }
+    ],
+    "images": [
+      "/product-images/old-hollow-451-victorian-braised-blue/1.jpg",
+      "/product-images/old-hollow-451-victorian-braised-blue/2.jpg"
+    ]
+  },
+  {
+    "id": "double-roman-antique-no-2",
+    "name": "Double Roman Antique No.2",
+    "category": "double-roman",
+    "brand": "Sandtoft",
+    "description": "Concrete Double Roman tile: two wide flat pans per tile separated by a rounded central roll and a roll at the edge, laid in straight vertical lines; slightly granular matte surface. Colour: dark brown-black with a subtle antique variation.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "398 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "50 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "43.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "848522"
+      }
+    ],
+    "images": [
+      "/product-images/double-roman-antique-no-2/1.jpg",
+      "/product-images/double-roman-antique-no-2/2.jpg"
+    ]
+  },
+  {
+    "id": "double-roman-brown",
+    "name": "Double Roman Brown",
+    "category": "double-roman",
+    "brand": "Sandtoft",
+    "description": "Concrete Double Roman tile: two wide flat pans per tile separated by a rounded central roll and a roll at the edge, laid in straight vertical lines; slightly granular matte surface. Colour: warm grey-brown.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "398 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "50 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "43.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "750792"
+      }
+    ],
+    "images": [
+      "/product-images/double-roman-brown/1.jpg",
+      "/product-images/double-roman-brown/2.jpg"
+    ]
+  },
+  {
+    "id": "double-roman-dark-grey",
+    "name": "Double Roman Dark Grey",
+    "category": "double-roman",
+    "brand": "Sandtoft",
+    "description": "Concrete Double Roman tile: two wide flat pans per tile separated by a rounded central roll and a roll at the edge, laid in straight vertical lines; slightly granular matte surface. Colour: dark charcoal grey.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "398 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "50 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "43.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "750794"
+      }
+    ],
+    "images": [
+      "/product-images/double-roman-dark-grey/1.jpg",
+      "/product-images/double-roman-dark-grey/2.jpg"
+    ]
+  },
+  {
+    "id": "double-roman-dark-heather",
+    "name": "Double Roman Dark Heather",
+    "category": "double-roman",
+    "brand": "Sandtoft",
+    "description": "Concrete Double Roman tile: two wide flat pans per tile separated by a rounded central roll and a roll at the edge, laid in straight vertical lines; slightly granular matte surface. Colour: deep red-brown blended with near-black (dark heather).",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "398 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "50 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "43.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "848524"
+      }
+    ],
+    "images": [
+      "/product-images/double-roman-dark-heather/1.jpg"
+    ]
+  },
+  {
+    "id": "double-roman-mottled-red",
+    "name": "Double Roman Mottled Red",
+    "category": "double-roman",
+    "brand": "Sandtoft",
+    "description": "Concrete Double Roman tile: two wide flat pans per tile separated by a rounded central roll and a roll at the edge, laid in straight vertical lines; slightly granular matte surface. Colour: muted red-brown with a mottled finish.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "398 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "50 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "43.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "848525"
+      }
+    ],
+    "images": [
+      "/product-images/double-roman-mottled-red/1.jpg",
+      "/product-images/double-roman-mottled-red/2.jpg"
+    ]
+  },
+  {
+    "id": "double-roman-rustic",
+    "name": "Double Roman Rustic",
+    "category": "double-roman",
+    "brand": "Sandtoft",
+    "description": "Concrete Double Roman tile: two wide flat pans per tile separated by a rounded central roll and a roll at the edge, laid in straight vertical lines; slightly granular matte surface. Colour: red with dark brown-black streaks.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "398 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "50 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "43.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "750797"
+      }
+    ],
+    "images": [
+      "/product-images/double-roman-rustic/1.jpg",
+      "/product-images/double-roman-rustic/2.jpg"
+    ]
+  },
+  {
+    "id": "double-roman-terracotta-red",
+    "name": "Double Roman Terracotta Red",
+    "category": "double-roman",
+    "brand": "Sandtoft",
+    "description": "Concrete Double Roman tile: two wide flat pans per tile separated by a rounded central roll and a roll at the edge, laid in straight vertical lines; slightly granular matte surface. Colour: even terracotta red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "398 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "50 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap; 10.4 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "43.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "848505"
+      }
+    ],
+    "images": [
+      "/product-images/double-roman-terracotta-red/1.jpg",
+      "/product-images/double-roman-terracotta-red/2.jpg"
+    ]
+  },
+  {
+    "id": "modula-chilton-red",
+    "name": "Modula Chilton Red",
+    "category": "double-roman",
+    "brand": "Koramic",
+    "description": "Interlocking clay tile with a low double-roll (Double Roman style) profile: flat pans with gentle rounded rolls, laid in straight vertical lines. Colour: orange-red with brown and darker variation.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "443 x 328 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "416 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "54 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.0 tiles per m² at 75mm headlap; 9.7 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "40.7 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "323 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "368 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "240"
+      },
+      {
+        "label": "Product ID",
+        "value": "750830"
+      }
+    ],
+    "images": [
+      "/product-images/modula-chilton-red/1.jpg",
+      "/product-images/modula-chilton-red/2.jpg"
+    ]
+  },
+  {
+    "id": "modula-natural-red",
+    "name": "Modula Natural Red+",
+    "category": "double-roman",
+    "brand": "Koramic",
+    "description": "Interlocking clay tile with a low double-roll (Double Roman style) profile: flat pans with gentle rounded rolls, laid in straight vertical lines. Colour: bright, even orange-red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "443 x 328 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "416 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "54 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.0 tiles per m² at 75mm headlap; 9.7 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "40.7 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "323 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "368 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "240"
+      },
+      {
+        "label": "Product ID",
+        "value": "750831"
+      }
+    ],
+    "images": [
+      "/product-images/modula-natural-red/1.jpg",
+      "/product-images/modula-natural-red/2.jpg"
+    ]
+  },
+  {
+    "id": "lindum-antique-no-2",
+    "name": "Lindum Antique No.2",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a flat profile divided by raised vertical rolls, giving strong straight vertical ribs; laid in straight lines with a slightly granular matte surface. Colour: dark brown-black with a subtle antique variation.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "401 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "42 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "848553"
+      }
+    ],
+    "images": [
+      "/product-images/lindum-antique-no-2/1.jpg",
+      "/product-images/lindum-antique-no-2/2.jpg"
+    ]
+  },
+  {
+    "id": "lindum-brown",
+    "name": "Lindum Brown",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a flat profile divided by raised vertical rolls, giving strong straight vertical ribs; laid in straight lines with a slightly granular matte surface. Colour: warm grey-brown.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "401 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "42 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "848554"
+      }
+    ],
+    "images": [
+      "/product-images/lindum-brown/1.jpg",
+      "/product-images/lindum-brown/2.jpg"
+    ]
+  },
+  {
+    "id": "lindum-dark-grey",
+    "name": "Lindum Dark Grey",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a flat profile divided by raised vertical rolls, giving strong straight vertical ribs; laid in straight lines with a slightly granular matte surface. Colour: dark charcoal grey.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "401 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "42 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "848555"
+      }
+    ],
+    "images": [
+      "/product-images/lindum-dark-grey/1.jpg",
+      "/product-images/lindum-dark-grey/2.jpg"
+    ]
+  },
+  {
+    "id": "lindum-mottled-red",
+    "name": "Lindum Mottled Red",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a flat profile divided by raised vertical rolls, giving strong straight vertical ribs; laid in straight lines with a slightly granular matte surface. Colour: muted red-brown with a mottled finish.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "401 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "42 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "848556"
+      }
+    ],
+    "images": [
+      "/product-images/lindum-mottled-red/1.jpg",
+      "/product-images/lindum-mottled-red/2.jpg"
+    ]
+  },
+  {
+    "id": "lindum-rustic",
+    "name": "Lindum Rustic",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a flat profile divided by raised vertical rolls, giving strong straight vertical ribs; laid in straight lines with a slightly granular matte surface. Colour: red with dark brown-black streaks.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "401 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "42 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "848506"
+      }
+    ],
+    "images": [
+      "/product-images/lindum-rustic/1.jpg",
+      "/product-images/lindum-rustic/2.jpg"
+    ]
+  },
+  {
+    "id": "lindum-terracotta-red",
+    "name": "Lindum Terracotta Red",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a flat profile divided by raised vertical rolls, giving strong straight vertical ribs; laid in straight lines with a slightly granular matte surface. Colour: even terracotta red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "300 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "401 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "42 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.7 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "216"
+      },
+      {
+        "label": "Product ID",
+        "value": "848557"
+      }
+    ],
+    "images": [
+      "/product-images/lindum-terracotta-red/1.jpg",
+      "/product-images/lindum-terracotta-red/2.jpg"
+    ]
+  },
+  {
+    "id": "standard-pattern-antique-no2",
+    "name": "Standard Pattern Antique No2",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a ribbed profile of several narrow raised rolls, giving fine, closely spaced vertical lines. Colour: dark brown-black with a subtle antique variation.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "355 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "40 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap; 17.9 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "53.7 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848603"
+      }
+    ],
+    "images": [
+      "/product-images/standard-pattern-antique-no2/1.jpg",
+      "/product-images/standard-pattern-antique-no2/2.jpg"
+    ]
+  },
+  {
+    "id": "standard-pattern-brown",
+    "name": "Standard Pattern Brown",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a ribbed profile of several narrow raised rolls, giving fine, closely spaced vertical lines. Colour: warm grey-brown.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "355 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "40 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap; 17.9 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "53.7 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848604"
+      }
+    ],
+    "images": [
+      "/product-images/standard-pattern-brown/1.jpg",
+      "/product-images/standard-pattern-brown/2.jpg"
+    ]
+  },
+  {
+    "id": "standard-pattern-dark-grey",
+    "name": "Standard Pattern Dark Grey",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a ribbed profile of several narrow raised rolls, giving fine, closely spaced vertical lines. Colour: dark charcoal grey.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "355 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "40 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap; 17.9 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "53.7 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848606"
+      }
+    ],
+    "images": [
+      "/product-images/standard-pattern-dark-grey/1.jpg",
+      "/product-images/standard-pattern-dark-grey/2.jpg"
+    ]
+  },
+  {
+    "id": "standard-pattern-mottled-red",
+    "name": "Standard Pattern Mottled Red",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a ribbed profile of several narrow raised rolls, giving fine, closely spaced vertical lines. Colour: muted red-brown with a mottled finish.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "355 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "40 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap; 17.9 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "53.7 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848607"
+      }
+    ],
+    "images": [
+      "/product-images/standard-pattern-mottled-red/1.jpg",
+      "/product-images/standard-pattern-mottled-red/2.jpg"
+    ]
+  },
+  {
+    "id": "standard-pattern-rustic",
+    "name": "Standard Pattern Rustic",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a ribbed profile of several narrow raised rolls, giving fine, closely spaced vertical lines. Colour: red with dark brown-black streaks.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "355 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "40 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap; 17.9 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "53.7 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848608"
+      }
+    ],
+    "images": [
+      "/product-images/standard-pattern-rustic/1.jpg",
+      "/product-images/standard-pattern-rustic/2.jpg"
+    ]
+  },
+  {
+    "id": "standard-pattern-terracotta-red",
+    "name": "Standard Pattern Terracotta Red",
+    "category": "profiled-tile",
+    "brand": "Sandtoft",
+    "description": "Concrete interlocking tile with a ribbed profile of several narrow raised rolls, giving fine, closely spaced vertical lines. Colour: even terracotta red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Concrete"
+      },
+      {
+        "label": "Length × width",
+        "value": "380 x 230 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "200 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "355 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "40 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "16.4 tiles per m² at 75mm headlap; 17.9 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap; 30° for all sandfaced colours regardless of headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "53.7 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "260 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "305 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "360"
+      },
+      {
+        "label": "Product ID",
+        "value": "848609"
+      }
+    ],
+    "images": [
+      "/product-images/standard-pattern-terracotta-red/1.jpg",
+      "/product-images/standard-pattern-terracotta-red/2.jpg"
+    ]
+  },
+  {
+    "id": "20-20-antique-slate",
+    "name": "20/20 Antique Slate",
+    "category": "medium-interlocking",
+    "brand": "Sandtoft",
+    "description": "Medium-format flat interlocking clay tile designed to look like a traditional plain tile or slate: flat face, crisp straight leading edge, small rectangular units laid in broken bond (staggered joints). Colour: dark blue-grey to charcoal, matte, like natural slate.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "330 x 226 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "191 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "300 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "16 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "20.9 tiles per m² at 75mm headlap; 23.2 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "45.4 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "210 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "255 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "480"
+      },
+      {
+        "label": "Product ID",
+        "value": "750707"
+      }
+    ],
+    "images": [
+      "/product-images/20-20-antique-slate/1.jpg",
+      "/product-images/20-20-antique-slate/2.jpg"
+    ]
+  },
+  {
+    "id": "20-20-flanders",
+    "name": "20/20 Flanders",
+    "category": "medium-interlocking",
+    "brand": "Sandtoft",
+    "description": "Medium-format flat interlocking clay tile designed to look like a traditional plain tile or slate: flat face, crisp straight leading edge, small rectangular units laid in broken bond (staggered joints). Colour: red-brown with darker brown-black flashing on the tile ends.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "330 x 226 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "191 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "300 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "16 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "20.9 tiles per m² at 75mm headlap; 23.2 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "45.4 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "210 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "255 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "480"
+      },
+      {
+        "label": "Product ID",
+        "value": "750708"
+      }
+    ],
+    "images": [
+      "/product-images/20-20-flanders/1.jpg",
+      "/product-images/20-20-flanders/2.jpg"
+    ]
+  },
+  {
+    "id": "20-20-natural-red",
+    "name": "20/20 Natural Red",
+    "category": "medium-interlocking",
+    "brand": "Sandtoft",
+    "description": "Medium-format flat interlocking clay tile designed to look like a traditional plain tile or slate: flat face, crisp straight leading edge, small rectangular units laid in broken bond (staggered joints). Colour: even warm orange-red.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "330 x 226 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "191 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "300 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "16 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "20.9 tiles per m² at 75mm headlap; 23.2 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "45.4 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "210 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "255 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "480"
+      },
+      {
+        "label": "Product ID",
+        "value": "750709"
+      }
+    ],
+    "images": [
+      "/product-images/20-20-natural-red/1.jpg",
+      "/product-images/20-20-natural-red/2.jpg"
+    ]
+  },
+  {
+    "id": "20-20-tuscan",
+    "name": "20/20 Tuscan",
+    "category": "medium-interlocking",
+    "brand": "Sandtoft",
+    "description": "Medium-format flat interlocking clay tile designed to look like a traditional plain tile or slate: flat face, crisp straight leading edge, small rectangular units laid in broken bond (staggered joints). Colour: brown with olive and ochre tones, softly blended.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "330 x 226 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "191 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "300 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "16 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "20.9 tiles per m² at 75mm headlap; 23.2 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "15° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "45.4 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "210 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "255 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "480"
+      },
+      {
+        "label": "Product ID",
+        "value": "750710"
+      }
+    ],
+    "images": [
+      "/product-images/20-20-tuscan/1.jpg",
+      "/product-images/20-20-tuscan/2.jpg"
+    ]
+  },
+  {
+    "id": "actua-multiblend",
+    "name": "Actua Multiblend",
+    "category": "large-flat",
+    "brand": "Koramic",
+    "description": "Large-format flat interlocking clay tile with a smooth, completely flat face and straight edges. Laid with vertical joints aligned, giving a clean, modern, almost slate-like grid with thin shadow lines. Colour: red with a blend of darker red-brown tiles.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "472 x 303 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "262 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "440 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "31 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "10.5 tiles per m² at 102mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5°"
+      },
+      {
+        "label": "Minimum headlap",
+        "value": "102mm"
+      },
+      {
+        "label": "Maximum headlap",
+        "value": "162mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "46.2 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "310 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "370 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "240"
+      },
+      {
+        "label": "Product ID",
+        "value": "750750"
+      }
+    ],
+    "images": [
+      "/product-images/actua-multiblend/1.jpg",
+      "/product-images/actua-multiblend/2.jpg"
+    ]
+  },
+  {
+    "id": "actua-slate-engobe",
+    "name": "Actua Slate Engobe",
+    "category": "large-flat",
+    "brand": "Koramic",
+    "description": "Large-format flat interlocking clay tile with a smooth, completely flat face and straight edges. Laid with vertical joints aligned, giving a clean, modern, almost slate-like grid with thin shadow lines. Colour: very dark slate grey, almost black-green, matte engobe.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "472 x 303 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "262 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "440 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "31 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "10.5 tiles per m² at 102mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5°"
+      },
+      {
+        "label": "Minimum headlap",
+        "value": "102mm"
+      },
+      {
+        "label": "Maximum headlap",
+        "value": "162mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "46.2 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "310 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "370 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "240"
+      },
+      {
+        "label": "Product ID",
+        "value": "750752"
+      }
+    ],
+    "images": [
+      "/product-images/actua-slate-engobe/1.jpg",
+      "/product-images/actua-slate-engobe/2.jpg"
+    ]
+  },
+  {
+    "id": "cassius-antique-slate",
+    "name": "Cassius Antique Slate",
+    "category": "large-flat",
+    "brand": "Sandtoft",
+    "description": "Large flat interlocking clay tile with a slate look: smooth flat face, thin straight leading edge, laid in broken bond (staggered joints). Colour: dark blue-grey to charcoal, like natural slate.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "418 x 335 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "307 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "390 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "16 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.5 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5°"
+      },
+      {
+        "label": "Headlap",
+        "value": "minimum 75mm; maximum 120mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "298 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "343 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "240"
+      },
+      {
+        "label": "Product ID",
+        "value": "1064486"
+      }
+    ],
+    "images": [
+      "/product-images/cassius-antique-slate/1.jpg",
+      "/product-images/cassius-antique-slate/2.jpg"
+    ]
+  },
+  {
+    "id": "danum-tle-light-grey",
+    "name": "Danum TLE - Light Grey",
+    "category": "large-flat",
+    "brand": "Sandtoft",
+    "description": "Flat interlocking tile with a thin leading edge (TLE) that gives a slate-like look: smooth flat rectangular face, crisp straight edges, laid in broken bond with clear shadow lines between courses. Colour: light grey.",
+    "specs": [
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "304 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "400 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "24 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.6 tiles per m² at 75mm headlap; 10.3 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "51.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "198"
+      },
+      {
+        "label": "Product ID",
+        "value": "2263763"
+      }
+    ],
+    "images": [
+      "/product-images/danum-tle-light-grey/1.jpg"
+    ]
+  },
+  {
+    "id": "danum-tle-rustic",
+    "name": "Danum TLE - Rustic",
+    "category": "large-flat",
+    "brand": "Sandtoft",
+    "description": "Flat interlocking tile with a thin leading edge (TLE) that gives a slate-like look: smooth flat rectangular face, crisp straight edges, laid in broken bond with clear shadow lines between courses. Colour: red with dark brown streaks and variation.",
+    "specs": [
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "304 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "400 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "24 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.6 tiles per m² at 75mm headlap; 10.3 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "51.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "198"
+      },
+      {
+        "label": "Product ID",
+        "value": "2263743"
+      }
+    ],
+    "images": [
+      "/product-images/danum-tle-rustic/1.jpg"
+    ]
+  },
+  {
+    "id": "danum-tle-terra-red",
+    "name": "Danum TLE - Terra Red",
+    "category": "large-flat",
+    "brand": "Sandtoft",
+    "description": "Flat interlocking tile with a thin leading edge (TLE) that gives a slate-like look: smooth flat rectangular face, crisp straight edges, laid in broken bond with clear shadow lines between courses. Colour: salmon to terracotta red.",
+    "specs": [
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "304 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "400 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "24 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.6 tiles per m² at 75mm headlap; 10.3 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "51.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "198"
+      },
+      {
+        "label": "Product ID",
+        "value": "2263740"
+      }
+    ],
+    "images": [
+      "/product-images/danum-tle-terra-red/1.jpg"
+    ]
+  },
+  {
+    "id": "danum-tle-brown",
+    "name": "Danum TLE Brown",
+    "category": "large-flat",
+    "brand": "Sandtoft",
+    "description": "Flat interlocking tile with a thin leading edge (TLE) that gives a slate-like look: smooth flat rectangular face, crisp straight edges, laid in broken bond with clear shadow lines between courses. Colour: greyish brown.",
+    "specs": [
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "304 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "400 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "24 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.6 tiles per m² at 75mm headlap; 10.3 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "51.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "198"
+      },
+      {
+        "label": "Product ID",
+        "value": "2263754"
+      }
+    ],
+    "images": [
+      "/product-images/danum-tle-brown/1.jpg"
+    ]
+  },
+  {
+    "id": "danum-tle-dark-grey",
+    "name": "Danum TLE Dark Grey",
+    "category": "large-flat",
+    "brand": "Sandtoft",
+    "description": "Flat interlocking tile with a thin leading edge (TLE) that gives a slate-like look: smooth flat rectangular face, crisp straight edges, laid in broken bond with clear shadow lines between courses. Colour: dark grey.",
+    "specs": [
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "304 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "400 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "24 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.6 tiles per m² at 75mm headlap; 10.3 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "51.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "198"
+      },
+      {
+        "label": "Product ID",
+        "value": "2263757"
+      }
+    ],
+    "images": [
+      "/product-images/danum-tle-dark-grey/1.jpg"
+    ]
+  },
+  {
+    "id": "dual-danum-tle-dark-grey",
+    "name": "Dual Danum TLE - Dark Grey",
+    "category": "large-flat",
+    "brand": "Sandtoft",
+    "description": "Flat interlocking tile with a thin leading edge (TLE); each tile is split by a vertical groove so it reads as two small slates, laid in broken bond, giving a fine slate-like pattern with clear shadow lines. Colour: dark grey.",
+    "specs": [
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "304 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "400 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "24 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.6 tiles per m² at 75mm headlap; 10.3 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "51.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "198"
+      },
+      {
+        "label": "Product ID",
+        "value": "2263751"
+      }
+    ],
+    "images": [
+      "/product-images/dual-danum-tle-dark-grey/1.jpg"
+    ]
+  },
+  {
+    "id": "dual-danum-tle-rustic",
+    "name": "Dual Danum TLE - Rustic",
+    "category": "large-flat",
+    "brand": "Sandtoft",
+    "description": "Flat interlocking tile with a thin leading edge (TLE); each tile is split by a vertical groove so it reads as two small slates, laid in broken bond, giving a fine slate-like pattern with clear shadow lines. Colour: red with dark brown streaks and variation.",
+    "specs": [
+      {
+        "label": "Length × width",
+        "value": "420 x 334 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "304 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "400 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "24 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.6 tiles per m² at 75mm headlap; 10.3 tiles per m² at 100mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "17.5° at a minimum of 100mm headlap; 22.5° at a minimum of 75mm headlap"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "51.5 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "300 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "345 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "198"
+      },
+      {
+        "label": "Product ID",
+        "value": "2263748"
+      }
+    ],
+    "images": [
+      "/product-images/dual-danum-tle-rustic/1.jpg"
+    ]
+  },
+  {
+    "id": "rivius-antique-slate",
+    "name": "Rivius Antique Slate",
+    "category": "large-flat",
+    "brand": "Sandtoft",
+    "description": "Large flat interlocking clay tile with a natural slate look: riven (split-stone) surface texture, thin straight leading edge, laid in broken bond. Colour: dark grey like natural slate, with a fine sheen.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "418 x 335 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "307 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "390 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "16 mm"
+      },
+      {
+        "label": "Covering capacity",
+        "value": "9.5 tiles per m² at 75mm headlap"
+      },
+      {
+        "label": "Minimum roof pitch",
+        "value": "22.5°"
+      },
+      {
+        "label": "Headlap",
+        "value": "minimum 75mm; maximum 120mm"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "298 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "343 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "240"
+      },
+      {
+        "label": "Product ID",
+        "value": "1064518"
+      }
+    ],
+    "images": [
+      "/product-images/rivius-antique-slate/1.jpg",
+      "/product-images/rivius-antique-slate/2.jpg"
+    ]
   }
 ]

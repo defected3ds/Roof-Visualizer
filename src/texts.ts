@@ -6,6 +6,8 @@ export interface TextField {
   value: string;
   /** Show a multi-line box in the admin. */
   long?: boolean;
+  /** The value is a photo URL, uploaded in the admin. */
+  image?: boolean;
 }
 
 /** Every text customers see, grouped by screen. Admins can override each one at /admin. */
@@ -13,6 +15,7 @@ export const TEXT_GROUPS: { title: string; fields: TextField[] }[] = [
   {
     title: 'Start screen',
     fields: [
+      { key: 'start.image', label: 'Start screen photo', value: '/hero.jpg', image: true },
       { key: 'start.tag', label: 'Label above the title', value: 'Roof Visualizer' },
       { key: 'start.title', label: 'Title', value: 'See your house with a new roof' },
       {
@@ -66,6 +69,8 @@ export const TEXT_GROUPS: { title: string; fields: TextField[] }[] = [
     ],
   },
 ];
+
+export const IMAGE_TEXT_KEYS = TEXT_GROUPS.flatMap((g) => g.fields.filter((f) => f.image).map((f) => f.key));
 
 export const DEFAULT_TEXTS: Texts = Object.fromEntries(TEXT_GROUPS.flatMap((g) => g.fields.map((f) => [f.key, f.value])));
 

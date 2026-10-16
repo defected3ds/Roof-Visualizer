@@ -17,6 +17,8 @@ import {
   saveCategories,
   saveProduct,
   saveTexts,
+  siteDir,
+  SITE_URL_PREFIX,
   syncFromGitHub,
 } from './server/store';
 import { pickProvider } from './server/providers';
@@ -65,6 +67,13 @@ async function startServer() {
     res.set('Cache-Control', 'public, max-age=604800, immutable').sendFile(file);
   });
   app.use(IMAGE_URL_PREFIX, (_req, res) => res.status(404).end());
+  app.use(SITE_URL_PREFIX, express.static(siteDir, { maxAge: '7d', immutable: true }));
+  app.use(SITE_URL_PREFIX, async (req, res, next) => {
+    const file = await ensureImage(SITE_URL_PREFIX + req.path.replace(/^\//, ''));
+    if (!file) return next();
+    res.set('Cache-Control', 'public, max-age=604800, immutable').sendFile(file);
+  });
+  app.use(SITE_URL_PREFIX, (_req, res) => res.status(404).end());
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, provider: provider.name, locked: Boolean(accessCode) });
