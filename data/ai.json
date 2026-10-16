@@ -4,16 +4,21 @@
     "productData": true,
     "specs": true,
     "productPhotos": true,
-    "depthMap": true,
+    "depthMap": false,
     "roofMask": true
   },
-  "maxProductPhotos": 3,
+  "maxProductPhotos": 2,
   "variants": 1,
   "showEdgeMaps": false,
   "segmentation": {
     "tool": "sam3",
     "keyEnv": "FAL_API_KEY",
     "prompt": "roof"
+  },
+  "depthEstimation": {
+    "tool": "marigold",
+    "keyEnv": "FAL_API_KEY",
+    "quality": "balanced"
   },
   "activeProvider": "gemini",
   "providers": [
@@ -45,10 +50,5 @@
       "model": "krea/v3/edit",
       "keyEnv": "FAL_API_KEY"
     }
-  ],
-  "depthEstimation": {
-    "tool": "marigold",
-    "keyEnv": "FAL_API_KEY",
-    "quality": "balanced"
-  }
+  ]
 }
