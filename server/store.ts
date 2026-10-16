@@ -335,9 +335,9 @@ function cleanProvider(p: Partial<ProviderConfig>, seen: Set<string>): ProviderC
 }
 
 function cleanDepth(d: DepthSettings): DepthSettings {
-  const tool = d.tool === 'marigold' ? 'marigold' : 'browser';
+  const tool = d.tool === 'marigold' || d.tool === 'midas' ? d.tool : 'browser';
   const keyEnv = String(d.keyEnv ?? '').trim().toUpperCase() || 'FAL_API_KEY';
-  if (tool === 'marigold' && !validKeyEnv(keyEnv)) {
+  if (tool !== 'browser' && !validKeyEnv(keyEnv)) {
     throw new Error('Depth map: the key variable must be a name like FAL_API_KEY (ending in KEY or TOKEN)');
   }
   const quality = d.quality === 'fast' || d.quality === 'best' ? d.quality : 'balanced';

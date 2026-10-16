@@ -443,12 +443,13 @@ function DepthTool({
     <div>
       <h2 className="border-b border-line pb-2 text-lg font-bold">Depth map tool</h2>
       <p className="mt-2 text-sm text-muted">
-        How the 3D shape of the photo is read. Marigold gives a finer depth map; if it fails, the app uses the browser model automatically.
+        How the 3D shape of the photo is read. The fal.ai models make a finer map on the server; if one fails, the app uses the browser model automatically.
       </p>
       <div className="mt-4 space-y-3">
         {(
           [
-            ['marigold', 'Marigold on fal.ai', 'Finer depth map, made on the server. fal.ai bills $0.000575 per compute second (see the test for the time).'],
+            ['marigold', 'Marigold on fal.ai', 'Finest detail, made on the server. fal.ai bills $0.000575 per compute second (see the test for the time).'],
+            ['midas', 'MiDaS on fal.ai (fal-ai/imageutils/depth)', 'Classic depth model, made on the server. Usually faster; check the price on the fal.ai model page.'],
             ['browser', 'Depth Anything V2 in the browser', 'Free, runs on the visitor’s device. Coarse map.'],
           ] as const
         ).map(([tool, label, help]) => (
@@ -464,7 +465,7 @@ function DepthTool({
           </label>
         ))}
       </div>
-      {d.tool === 'marigold' && (
+      {d.tool !== 'browser' && (
         <>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-semibold">
@@ -480,15 +481,17 @@ function DepthTool({
                 </span>
               )}
             </label>
-            <label className="block text-sm font-semibold">
-              Quality
-              <select value={d.quality} onChange={(e) => setD({ quality: e.target.value as typeof d.quality })} className={fieldClass}>
-                <option value="fast">Fast (5 steps, 3 predictions)</option>
-                <option value="balanced">Balanced (10 steps, 5 predictions)</option>
-                <option value="best">Best (10 steps, 10 predictions, larger)</option>
-              </select>
-              <span className="mt-1 block text-xs font-normal text-muted">More steps and predictions: finer, slower, a little more expensive.</span>
-            </label>
+            {d.tool === 'marigold' && (
+              <label className="block text-sm font-semibold">
+                Quality
+                <select value={d.quality} onChange={(e) => setD({ quality: e.target.value as typeof d.quality })} className={fieldClass}>
+                  <option value="fast">Fast (5 steps, 3 predictions)</option>
+                  <option value="balanced">Balanced (10 steps, 5 predictions)</option>
+                  <option value="best">Best (10 steps, 10 predictions, larger)</option>
+                </select>
+                <span className="mt-1 block text-xs font-normal text-muted">More steps and predictions: finer, slower, a little more expensive.</span>
+              </label>
+            )}
           </div>
           <TestDepth password={password} depthEstimation={d} />
         </>
@@ -509,7 +512,10 @@ function TestDepth({ password, depthEstimation }: { password: string; depthEstim
       const seconds = res.ms / 1000;
       setState({
         image: await orientedPreview(res.image),
-        info: `Works: ${seconds.toFixed(1)} s, about $${(seconds * 0.000575).toFixed(4)} for this photo.`,
+        info:
+          depthEstimation.tool === 'marigold'
+            ? `Works: ${seconds.toFixed(1)} s, about $${(seconds * 0.000575).toFixed(4)} for this photo.`
+            : `Works: ${seconds.toFixed(1)} s. (Price: see the model page on fal.ai.)`,
       });
     } catch (err: any) {
       setState({ error: err.message });
@@ -518,7 +524,7 @@ function TestDepth({ password, depthEstimation }: { password: string; depthEstim
   return (
     <div className="mt-4">
       <SecondaryButton onClick={test} disabled={state.busy} className="sm:w-72">
-        {state.busy ? 'Testing… (up to 1 min)' : 'Test Marigold on the start photo'}
+        {state.busy ? 'Testing… (up to 1 min)' : `Test ${depthEstimation.tool === 'midas' ? 'MiDaS' : 'Marigold'} on the start photo`}
       </SecondaryButton>
       {state.info && (
         <p className="mt-2 flex items-center gap-1 text-sm font-semibold text-ink">

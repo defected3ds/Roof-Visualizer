@@ -121,7 +121,7 @@ function RoofApp() {
     setProvider(health.provider);
     if (health.analysis) setAnalysis(health.analysis);
     configureRoofMask({ tool: health.maskTool === 'sam3' ? 'sam3' : 'clipseg' });
-    configureDepth({ tool: health.depthTool === 'marigold' ? 'marigold' : 'browser' });
+    configureDepth({ tool: health.depthTool === 'marigold' || health.depthTool === 'midas' ? health.depthTool : 'browser' });
     if (typeof health.edgeMaps === 'boolean') setShowEdgeMaps(health.edgeMaps);
     return health as { locked: boolean; edgeMaps?: boolean; analysis?: typeof analysis; depthTool?: string };
   }
@@ -218,14 +218,14 @@ function RoofApp() {
     const use = live?.analysis ?? analysis;
     analyseWith(base, use).then(async ([d, m]) => {
       setNoAnalysis((use.depth || use.mask) && !d && !m);
-      const depthName = d ? (d.source === 'marigold' ? 'Marigold (fal.ai)' : `browser model${d.fallback ? ` (Marigold failed: ${d.fallback})` : ''}`) : 'none';
+      const depthName = d ? (d.source === 'marigold' ? 'Marigold (fal.ai)' : d.source === 'midas' ? 'MiDaS (fal.ai)' : `browser model${d.fallback ? ` (server depth map failed: ${d.fallback})` : ''}`) : 'none';
       setAnalysisInfo(`Depth map: ${depthName} · Roof mask: ${m ? (m.source === 'sam3' ? 'SAM 3 (fal.ai)' : 'CLIPSeg (browser)') : 'none'}`);
       setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : []), ...(await edges)]);
     });
     // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.
     setWaitingForAnalysis(true);
     const [depthMaps, roofMask] = await Promise.all([
-      use.depth ? depthWithin(base, live?.depthTool === 'marigold' ? 60000 : 20000) : null,
+      use.depth ? depthWithin(base, live?.depthTool === 'marigold' || live?.depthTool === 'midas' ? 60000 : 20000) : null,
       use.mask ? roofMaskWithin(base, 20000) : null,
     ]);
     setWaitingForAnalysis(false);

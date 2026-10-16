@@ -50,36 +50,37 @@ const MARIGOLD_QUALITY = {
 };
 
 /**
- * Depth map with Marigold on fal.ai (fal-ai/imageutils/marigold-depth), through the queue API. Returns the
+ * Depth map on fal.ai through the queue API: Marigold (fal-ai/imageutils/marigold-depth) or MiDaS (fal-ai/imageutils/depth). Returns the
  * grey depth image as a data URL; the browser orients and sharpens it.
  */
 export async function estimateDepth(d: DepthSettings, image: string): Promise<string> {
   const apiKey = process.env[d.keyEnv];
   if (!apiKey) throw new Error(`${d.keyEnv} is not set`);
   const headers = { Authorization: `Key ${apiKey}` };
-  const res = await fetch(`${FAL_QUEUE}/fal-ai/imageutils/marigold-depth`, {
+  const midas = d.tool === 'midas';
+  const res = await fetch(`${FAL_QUEUE}/fal-ai/imageutils/${midas ? 'depth' : 'marigold-depth'}`, {
     method: 'POST',
     headers: { ...headers, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image_url: image, ...MARIGOLD_QUALITY[d.quality] }),
+    body: JSON.stringify(midas ? { image_url: image } : { image_url: image, ...MARIGOLD_QUALITY[d.quality] }),
   });
-  if (!res.ok) throw new Error(`fal.ai Marigold ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) throw new Error(`fal.ai ${midas ? 'MiDaS' : 'Marigold'} ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const job = await res.json();
   await poll(
     async () => {
       const st = await (await fetch(job.status_url, { headers })).json();
       if (st.status === 'COMPLETED') {
-        if (st.error) throw new Error(`fal.ai Marigold failed: ${st.error}`);
+        if (st.error) throw new Error(`fal.ai ${midas ? 'MiDaS' : 'Marigold'} failed: ${st.error}`);
         return true;
       }
       return undefined;
     },
-    'fal.ai Marigold',
+    midas ? 'fal.ai MiDaS' : 'fal.ai Marigold',
     1000,
     120_000,
   );
   const out = await (await fetch(job.response_url, { headers })).json();
   const url: string | undefined = out.image?.url;
-  if (!url) throw new Error(`Marigold returned no image: ${JSON.stringify(out).slice(0, 300)}`);
+  if (!url) throw new Error(`${midas ? 'MiDaS' : 'Marigold'} returned no image: ${JSON.stringify(out).slice(0, 300)}`);
   return url.startsWith('data:') ? url : urlToDataUrl(url);
 }
 

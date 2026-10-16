@@ -102,8 +102,8 @@ export interface AiSettings {
 
 /** How the depth map is made. */
 export interface DepthSettings {
-  /** browser = Depth Anything V2 small on the visitor's device (free, coarse); marigold = Marigold on fal.ai (server, paid). */
-  tool: 'browser' | 'marigold';
+  /** browser = Depth Anything V2 small on the visitor's device (free, coarse); marigold = Marigold and midas = MiDaS, both on fal.ai (server, paid). */
+  tool: 'browser' | 'marigold' | 'midas';
   /** Env variable with the fal.ai key, e.g. FAL_API_KEY. */
   keyEnv: string;
   /** Marigold speed / quality preset. */

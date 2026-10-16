@@ -104,7 +104,7 @@ async function startServer() {
       // Roof mask tool: SAM 3 on the server (needs its fal.ai key), else CLIPSeg in the browser.
       maskTool: ai.segmentation.tool === 'sam3' && hasSegmentationKey(ai.segmentation) ? 'sam3' : 'clipseg',
       // Depth map tool: Marigold on the server (needs its fal.ai key), else Depth Anything in the browser.
-      depthTool: ai.depthEstimation.tool === 'marigold' && hasDepthKey(ai.depthEstimation) ? 'marigold' : 'browser',
+      depthTool: ai.depthEstimation.tool !== 'browser' && hasDepthKey(ai.depthEstimation) ? ai.depthEstimation.tool : 'browser',
       // Line / edge maps on the loading screen (display only).
       edgeMaps: ai.showEdgeMaps,
     });
@@ -169,7 +169,8 @@ async function startServer() {
   admin.post('/test-depth', async (req, res) => {
     const { image, depthEstimation } = (req.body ?? {}) as { image?: string; depthEstimation?: Partial<AiSettings['depthEstimation']> };
     if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
-    const d = { ...getAiSettings().depthEstimation, ...depthEstimation, tool: 'marigold' as const };
+    const d = { ...getAiSettings().depthEstimation, ...depthEstimation };
+    if (d.tool === 'browser') return res.status(400).json({ error: 'Choose Marigold or MiDaS to test it.' });
     if (!hasDepthKey(d)) return res.status(400).json({ error: `The key ${d.keyEnv} is not set on the server (Render → Environment).` });
     const started = Date.now();
     try {
@@ -237,11 +238,11 @@ async function startServer() {
     const image = (req.body as { image?: string }).image;
     if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
     const d = getAiSettings().depthEstimation;
-    if (d.tool !== 'marigold' || !hasDepthKey(d)) return res.status(503).json({ code: 'unavailable', error: 'Marigold is off' });
+    if (d.tool === 'browser' || !hasDepthKey(d)) return res.status(503).json({ code: 'unavailable', error: 'The server depth map is off' });
     try {
       const started = Date.now();
       const depth = await estimateDepth(d, image);
-      console.log(`[depth-map] Marigold ${d.quality} in ${Date.now() - started} ms`);
+      console.log(`[depth-map] ${d.tool === 'midas' ? 'MiDaS' : `Marigold ${d.quality}`} in ${Date.now() - started} ms`);
       res.json({ image: depth });
     } catch (err) {
       console.error('[depth-map] failed:', err);

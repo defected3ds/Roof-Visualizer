@@ -17,8 +17,8 @@ export interface DepthMaps {
   /** The same map in colour, for the loading animation. */
   color: string;
   /** Which tool made it; the browser model is also the fallback when Marigold failed. */
-  source: 'marigold' | 'browser';
-  /** Why Marigold was not used, when it was wanted. */
+  source: 'marigold' | 'midas' | 'browser';
+  /** Why the server depth map was not used, when it was wanted. */
   fallback?: string;
 }
 
@@ -197,7 +197,7 @@ interface RawDepth {
 }
 
 /** Set from /api/health: which tool makes the depth map, and the access code for /api/depth-map. */
-const config = { tool: 'browser' as 'browser' | 'marigold', accessCode: '' };
+const config = { tool: 'browser' as 'browser' | 'marigold' | 'midas', accessCode: '' };
 export function configureDepth(next: Partial<typeof config>) {
   Object.assign(config, next);
 }
@@ -278,16 +278,16 @@ async function run(photo: string): Promise<DepthMaps | null> {
     const img = await loadImage(photo);
     let depth: RawDepth | null = null;
     let fallback: string | undefined;
-    if (config.tool === 'marigold') {
+    if (config.tool !== 'browser') {
       try {
         depth = await serverDepth(img);
       } catch (err) {
-        console.warn('Marigold depth map unavailable, using the browser model:', err);
+        console.warn(`${config.tool} depth map unavailable, using the browser model:`, err);
         fallback = String((err as Error)?.message ?? err).slice(0, 120);
-        reportProblem('depth (Marigold)', err);
+        reportProblem(`depth (${config.tool})`, err);
       }
     }
-    const source: DepthMaps['source'] = depth ? 'marigold' : 'browser';
+    const source: DepthMaps['source'] = depth ? config.tool : 'browser';
     depth ??= await browserDepth(img);
 
     // Final size: the photo's proportions, up to OUTPUT_SIDE. The model's map is coarse (its output is built from
