@@ -9,7 +9,7 @@
   },
   "maxProductPhotos": 3,
   "variants": 1,
-  "activeProvider": "gemini",
+  "activeProvider": "open-ai-gpt-2-5",
   "providers": [
     {
       "id": "gemini",
