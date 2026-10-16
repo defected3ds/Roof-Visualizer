@@ -4,8 +4,8 @@ import { PrimaryButton, SecondaryButton } from '../components/ui';
 import { imageLimit, promptLimit, PROVIDER_TYPES } from '../lib/models';
 import { buildModelPrompt, DEFAULT_SYSTEM_PROMPT, type ImageRoles } from '../lib/prompt';
 import { productThumb } from '../lib/swatch';
-import { orientedPreview } from '../lib/depth';
-import { mergeMasks } from '../lib/roofmask';
+import { configureDepth, depthFor, orientedPreview } from '../lib/depth';
+import { configureRoofMask, mergeMasks, roofMaskWithin } from '../lib/roofmask';
 import type { AiSettings, AiSettingsView, Catalog, ProviderConfig, ProviderType } from '../types';
 import { api, fieldClass, type SaveResult } from './Admin';
 
@@ -152,7 +152,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
                 {PROVIDER_TYPES[p.type].help && <p className="mt-2 text-xs text-muted">Model: {PROVIDER_TYPES[p.type].help}</p>}
                 <p className="mt-1 text-xs text-muted">{supportText(p)}</p>
                 {p.type !== 'demo' && <OwnPrompt provider={p} general={draft.systemPrompt} onChange={(systemPrompt) => setProvider(i, { systemPrompt })} />}
-                {p.type !== 'demo' && <TestModel password={password} provider={p} catalog={catalog} />}
+                {p.type !== 'demo' && <TestModel password={password} provider={p} catalog={catalog} draft={draft} loaded={loaded} />}
               </div>
             );
           })}
@@ -375,19 +375,47 @@ function OwnPrompt({ provider, general, onChange }: { provider: ProviderConfig; 
 }
 
 /** One real generation with this model card (as edited, saving not needed): start photo + a product. */
-function TestModel({ password, provider, catalog }: { password: string; provider: ProviderConfig; catalog: Catalog }) {
+function TestModel({
+  password,
+  provider,
+  catalog,
+  draft,
+  loaded,
+}: {
+  password: string;
+  provider: ProviderConfig;
+  catalog: Catalog;
+  draft: AiSettings;
+  loaded: AiSettingsView;
+}) {
   const withPhotos = catalog.products.filter((p) => p.images.length);
   const [productId, setProductId] = useState(
     (withPhotos.find((p) => /actua multiblend/i.test(p.name)) ?? withPhotos[0] ?? catalog.products[0])?.id ?? '',
   );
-  const [state, setState] = useState<{ busy?: boolean; image?: string; info?: string; error?: string }>({});
+  const [state, setState] = useState<{ busy?: boolean; step?: string; image?: string; info?: string; error?: string }>({});
   async function test() {
     setState({ busy: true });
     try {
       const texts = await (await fetch('/api/texts')).json().catch(() => ({}));
       const photo = await toDataUrl(texts['start.image'] || '/hero.jpg');
-      const res = await api<{ image: string; ms: number; imagesSent: number }>(password, 'POST', '/api/admin/test-model', { provider, image: photo, productId });
-      setState({ image: res.image, info: `Works: ${(res.ms / 1000).toFixed(1)} s, ${res.imagesSent} images sent (photo + product photos).` });
+      // Like a real generation: the depth map and roof mask are made first (when switched on and the model takes them).
+      const headers = { 'X-Admin-Password': password };
+      let depth: string | undefined;
+      let mask: string | undefined;
+      if (imageLimit(provider) > 1 && draft.include.depthMap) {
+        setState({ busy: true, step: 'Making the depth map…' });
+        const tool = draft.depthEstimation.tool !== 'browser' && loaded.depthKey ? draft.depthEstimation.tool : 'browser';
+        configureDepth({ tool, accessCode: '', headers });
+        depth = (await depthFor(photo))?.gray;
+      }
+      if (imageLimit(provider) > 1 && draft.include.roofMask) {
+        setState({ busy: true, step: 'Making the roof mask…' });
+        configureRoofMask({ tool: draft.segmentation.tool === 'sam3' && loaded.segmentationKey ? 'sam3' : 'clipseg', accessCode: '', headers });
+        mask = (await roofMaskWithin(photo, 60000))?.mask;
+      }
+      setState({ busy: true, step: 'Generating…' });
+      const res = await api<{ image: string; ms: number; imagesSent: number; sent: string[] }>(password, 'POST', '/api/admin/test-model', { provider, image: photo, productId, depth, mask });
+      setState({ image: res.image, info: `Works: ${(res.ms / 1000).toFixed(1)} s generating, ${res.imagesSent} images sent (${res.sent.join(', ')}).` });
     } catch (err: any) {
       setState({ error: err.message });
     }
@@ -401,7 +429,7 @@ function TestModel({ password, provider, catalog }: { password: string; provider
           disabled={state.busy || !productId}
           className="rounded-wb border border-brand px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-brand disabled:opacity-50"
         >
-          {state.busy ? 'Generating… (up to 2 min)' : 'Test this model'}
+          {state.busy ? `${state.step ?? 'Working…'} (up to 2 min)` : 'Test this model'}
         </button>
         <span className="text-xs text-muted">on the start photo with</span>
         <select value={productId} onChange={(e) => setProductId(e.target.value)} className="rounded-wb border border-line bg-white px-2 py-1 text-xs">
@@ -411,7 +439,7 @@ function TestModel({ password, provider, catalog }: { password: string; provider
             </option>
           ))}
         </select>
-        <span className="text-xs text-muted">(one paid generation)</span>
+        <span className="text-xs text-muted">(one paid generation, with depth map and roof mask like a real one)</span>
       </div>
       {state.info && (
         <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-ink">

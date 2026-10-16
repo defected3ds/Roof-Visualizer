@@ -70,6 +70,9 @@ async function startServer() {
   const accessCode = process.env.APP_PASSWORD || '';
   const adminPassword = process.env.ADMIN_PASSWORD || '';
   const hasAccess = (req: express.Request) => !accessCode || sameSecret(req.get('x-access-code'), accessCode);
+  // The admin's "Test this model" makes a depth map and roof mask like a real generation, with the admin password.
+  const hasAccessOrAdmin = (req: express.Request) =>
+    hasAccess(req) || (Boolean(adminPassword) && sameSecret(req.get('x-admin-password'), adminPassword));
 
   app.set('trust proxy', 1);
   app.use(express.json({ limit: '40mb' }));
@@ -229,7 +232,7 @@ async function startServer() {
 
   // Depth map with Marigold (fal.ai). The browser falls back to its own model when this fails.
   app.post('/api/depth-map', async (req, res) => {
-    if (!hasAccess(req)) {
+    if (!hasAccessOrAdmin(req)) {
       return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
     }
     if (rateLimited(`depth:${req.ip ?? 'unknown'}`, MASK_LIMIT)) {
@@ -252,7 +255,7 @@ async function startServer() {
 
   // Roof mask with SAM 3 (fal.ai). The browser falls back to CLIPSeg when this fails.
   app.post('/api/roof-mask', async (req, res) => {
-    if (!hasAccess(req)) {
+    if (!hasAccessOrAdmin(req)) {
       return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
     }
     if (rateLimited(`mask:${req.ip ?? 'unknown'}`, MASK_LIMIT)) {
@@ -293,7 +296,13 @@ async function startServer() {
 
   // "Test this model" in AI settings: one real generation with a model card as it is being edited.
   admin.post('/test-model', async (req, res) => {
-    const { provider, image, productId } = (req.body ?? {}) as { provider?: ProviderConfig; image?: string; productId?: string };
+    const { provider, image, productId, depth, mask } = (req.body ?? {}) as {
+      provider?: ProviderConfig;
+      image?: string;
+      productId?: string;
+      depth?: string;
+      mask?: string;
+    };
     const product = productId ? getProduct(productId) : undefined;
     if (!provider || !image?.startsWith('data:image/') || !product) {
       return res.status(400).json({ error: 'Expected { provider, image: dataURL, productId }' });
@@ -301,11 +310,13 @@ async function startServer() {
     const started = Date.now();
     try {
       const cfg = { ...provider, keyEnv: String(provider.keyEnv ?? '').trim().toUpperCase() };
-      const { images, prompts } = await buildRequest(getAiSettings(), cfg, { image, productId: product.id, count: 1 }, product, 1);
+      const built = await buildRequest(getAiSettings(), cfg, { image, productId: product.id, depth, mask, count: 1 }, product, 1);
+      const { images, prompts } = built;
+      const sent = ['house photo', built.depth && 'depth map', built.mask && 'roof mask', built.photos.length && `${built.photos.length} product photo${built.photos.length > 1 ? 's' : ''}`, built.swatch && 'texture sample'].filter(Boolean);
       const results = await createProvider(cfg).generate({ images, prompts });
       if (!results.length) return res.status(502).json({ error: 'The model returned no image.' });
       console.log(`[test-model] ${cfg.label} (${cfg.model}) "${product.name}" ok in ${Date.now() - started}ms`);
-      res.json({ image: results[0], ms: Date.now() - started, imagesSent: images.length });
+      res.json({ image: results[0], ms: Date.now() - started, imagesSent: images.length, sent });
     } catch (err: any) {
       console.error(`[test-model] ${provider.label} failed:`, err);
       res.status(502).json({ error: String(err?.message ?? err).slice(0, 500) });

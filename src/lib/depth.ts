@@ -197,7 +197,7 @@ interface RawDepth {
 }
 
 /** Set from /api/health: which tool makes the depth map, and the access code for /api/depth-map. */
-const config = { tool: 'browser' as 'browser' | 'marigold' | 'midas', accessCode: '' };
+const config = { tool: 'browser' as 'browser' | 'marigold' | 'midas', accessCode: '', headers: {} as Record<string, string> };
 export function configureDepth(next: Partial<typeof config>) {
   Object.assign(config, next);
 }
@@ -224,7 +224,7 @@ async function serverDepth(img: HTMLImageElement): Promise<RawDepth> {
   canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
   const res = await fetch('/api/depth-map', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Access-Code': config.accessCode },
+    headers: { 'Content-Type': 'application/json', 'X-Access-Code': config.accessCode, ...config.headers },
     body: JSON.stringify({ image: canvas.toDataURL('image/jpeg', 0.9) }),
   });
   if (!res.ok) throw new Error(`depth map ${res.status}`);
