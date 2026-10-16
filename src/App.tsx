@@ -89,14 +89,20 @@ function RoofApp() {
 
   const base = history[cursor];
 
+  /** Reads the current settings from the server (also before every generation, so admin changes apply at once). */
+  async function loadSettings() {
+    const health = await (await fetch('/api/health', { cache: 'no-store', signal: AbortSignal.timeout(5000) })).json();
+    setProvider(health.provider);
+    if (health.analysis) setAnalysis(health.analysis);
+    configureRoofMask({ tool: health.maskTool === 'sam3' ? 'sam3' : 'clipseg' });
+    if (typeof health.edgeMaps === 'boolean') setShowEdgeMaps(health.edgeMaps);
+    return health as { locked: boolean; edgeMaps?: boolean; analysis?: typeof analysis };
+  }
+
   useEffect(() => {
     (async () => {
       try {
-        const health = await (await fetch('/api/health')).json();
-        setProvider(health.provider);
-        if (health.analysis) setAnalysis(health.analysis);
-        configureRoofMask({ tool: health.maskTool === 'sam3' ? 'sam3' : 'clipseg' });
-        if (typeof health.edgeMaps === 'boolean') setShowEdgeMaps(health.edgeMaps);
+        const health = await loadSettings();
         if (!health.locked) return setGate('open');
         const saved = storedCode();
         setGate(saved && (await checkCode(saved)) ? 'open' : 'locked');
@@ -170,13 +176,15 @@ function RoofApp() {
     // Previews for the loading animation: depth maps, the detected roof, then edge maps (if switched on in
     // /admin > AI settings). Until the analysis is done the overlay says "Analysing 3D shape".
     setEdgeMaps([]);
-    const edges = showEdgeMaps ? buildEdgeMaps(base).catch(() => [] as string[]) : Promise.resolve([] as string[]);
+    const live = await loadSettings().catch(() => null);
+    const edges = (live?.edgeMaps ?? showEdgeMaps) ? buildEdgeMaps(base).catch(() => [] as string[]) : Promise.resolve([] as string[]);
     analyse(base).then(async ([d, m]) => setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : []), ...(await edges)]));
     // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.
     setWaitingForAnalysis(true);
+    const use = live?.analysis ?? analysis;
     const [depthMaps, roofMask] = await Promise.all([
-      analysis.depth ? depthWithin(base, 20000) : null,
-      analysis.mask ? roofMaskWithin(base, 20000) : null,
+      use.depth ? depthWithin(base, 20000) : null,
+      use.mask ? roofMaskWithin(base, 20000) : null,
     ]);
     setWaitingForAnalysis(false);
     try {

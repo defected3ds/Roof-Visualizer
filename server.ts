@@ -90,6 +90,7 @@ async function startServer() {
   app.use(SITE_URL_PREFIX, (_req, res) => res.status(404).end());
 
   app.get('/api/health', (_req, res) => {
+    res.set('Cache-Control', 'no-store'); // settings can change in the admin at any time
     const cfg = activeConfig();
     const ai = getAiSettings();
     const usesImages = imageLimit(cfg) > 1;
