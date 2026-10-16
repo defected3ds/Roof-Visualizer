@@ -77,6 +77,8 @@ function RoofApp() {
   // Photo analysis (depth map, roof mask) for the current photo; which ones run is set in /admin > AI settings.
   const [analysis, setAnalysis] = useState({ depth: true, mask: true });
   const [showEdgeMaps, setShowEdgeMaps] = useState(true);
+  // True when the depth map and roof mask were wanted but could not be made on this device.
+  const [noAnalysis, setNoAnalysis] = useState(false);
   const [analysing, setAnalysing] = useState<string | null>(null);
   const [waitingForAnalysis, setWaitingForAnalysis] = useState(false);
   const [compare, setCompare] = useState(false);
@@ -178,7 +180,11 @@ function RoofApp() {
     setEdgeMaps([]);
     const live = await loadSettings().catch(() => null);
     const edges = (live?.edgeMaps ?? showEdgeMaps) ? buildEdgeMaps(base).catch(() => [] as string[]) : Promise.resolve([] as string[]);
-    analyse(base).then(async ([d, m]) => setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : []), ...(await edges)]));
+    setNoAnalysis(false);
+    analyse(base).then(async ([d, m]) => {
+      setNoAnalysis((analysis.depth || analysis.mask) && !d && !m);
+      setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : []), ...(await edges)]);
+    });
     // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.
     setWaitingForAnalysis(true);
     const use = live?.analysis ?? analysis;
@@ -368,6 +374,7 @@ function RoofApp() {
           startedAt={startedAt}
           edgeMaps={edgeMaps}
           analysing={generating && waitingForAnalysis && analysing === base}
+          note={noAnalysis ? t('editor.noAnalysis') : undefined}
         />
       </div>
 

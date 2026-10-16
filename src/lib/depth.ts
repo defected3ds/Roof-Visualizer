@@ -3,6 +3,7 @@
  * The library and model are fetched from public CDNs the first time a photo is picked and cached by
  * the browser afterwards, so the app bundle and the server stay unchanged.
  */
+import { reportProblem } from './report';
 const TRANSFORMERS_CDN = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1';
 const MODEL = 'onnx-community/depth-anything-v2-small';
 /** The model works at ~518 px; smaller input keeps phones fast. */
@@ -120,6 +121,7 @@ async function run(photo: string): Promise<DepthMaps | null> {
     return { gray: toUrl(gray), color: toUrl(color) };
   } catch (err) {
     console.warn('Depth estimation unavailable:', err);
+    reportProblem('depth', err);
     return null;
   }
 }

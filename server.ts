@@ -186,6 +186,15 @@ async function startServer() {
   });
   app.use('/api/admin', admin);
 
+  // Failures in the visitor's browser (depth map, roof mask), so they show up in the server log.
+  app.post('/api/client-log', (req, res) => {
+    if (rateLimited(`log:${req.ip ?? 'unknown'}`, 30)) return res.status(429).end();
+    const { kind, message, agent } = (req.body ?? {}) as Record<string, unknown>;
+    const clean = (v: unknown, n: number) => String(v ?? '').replace(/[\r\n]+/g, ' ').slice(0, n);
+    console.warn(`[client] ${clean(kind, 40)} failed: ${clean(message, 300)} | ${clean(agent, 200)}`);
+    res.status(204).end();
+  });
+
   // Roof mask with SAM 3 (fal.ai). The browser falls back to CLIPSeg when this fails.
   app.post('/api/roof-mask', async (req, res) => {
     if (!hasAccess(req)) {

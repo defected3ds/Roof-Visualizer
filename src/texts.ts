@@ -51,6 +51,11 @@ export const TEXT_GROUPS: { title: string; fields: TextField[] }[] = [
       { key: 'editor.accept', label: 'Accept button', value: 'Accept' },
       { key: 'editor.generating', label: 'Text while generating', value: 'Generating images' },
       { key: 'editor.analysing', label: 'Text while the 3D depth map is calculated', value: 'Analysing 3D shape' },
+      {
+        key: 'editor.noAnalysis',
+        label: 'Note when depth map and roof mask could not be made on this device',
+        value: '3D analysis is not available on this device. The roof is generated from the photo only.',
+      },
       { key: 'editor.before', label: 'Before label (compare)', value: 'Before' },
       { key: 'editor.after', label: 'After label (compare)', value: 'After' },
       { key: 'editor.details', label: 'Product details link', value: 'Technical data' },

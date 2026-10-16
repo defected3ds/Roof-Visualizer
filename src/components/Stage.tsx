@@ -12,13 +12,15 @@ interface Props {
   edgeMaps: string[];
   /** True while generation waits for the depth map. */
   analysing?: boolean;
+  /** Shown under the timer, e.g. when the photo analysis failed. */
+  note?: string;
 }
 
 /** Phones: full width at natural height. Desktop: fitted inside the available area. */
 const PHOTO = 'block w-full lg:h-full lg:object-contain';
 
 /** The photo area: current image, swipeable results, before/after slider and the generating overlay. */
-export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, analysing }: Props) {
+export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, analysing, note }: Props) {
   const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState(50);
@@ -82,12 +84,12 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
         </div>
       )}
 
-      {generating && <GeneratingOverlay startedAt={startedAt} edgeMaps={edgeMaps} analysing={analysing} />}
+      {generating && <GeneratingOverlay startedAt={startedAt} edgeMaps={edgeMaps} analysing={analysing} note={note} />}
     </div>
   );
 }
 
-function GeneratingOverlay({ startedAt, edgeMaps, analysing }: { startedAt: number | null; edgeMaps: string[]; analysing?: boolean }) {
+function GeneratingOverlay({ startedAt, edgeMaps, analysing, note }: { startedAt: number | null; edgeMaps: string[]; analysing?: boolean; note?: string }) {
   const t = useT();
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -134,6 +136,7 @@ function GeneratingOverlay({ startedAt, edgeMaps, analysing }: { startedAt: numb
           <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-white">{elapsed.toFixed(1)}s</span>
         </div>
         <p className="text-lg font-semibold text-white drop-shadow">{t(analysing ? 'editor.analysing' : 'editor.generating')}</p>
+        {note && <p className="max-w-xs px-4 text-center text-sm text-white/90 drop-shadow">{note}</p>}
       </div>
     </div>
   );

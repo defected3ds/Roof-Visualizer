@@ -4,6 +4,7 @@
  * browser via transformers.js like the depth map. CLIPSeg masks are approximate.
  */
 import { loadTransformers } from './depth';
+import { reportProblem } from './report';
 
 const MODEL = 'Xenova/clipseg-rd64-refined';
 const PROMPTS = ['roof', 'roof tiles'];
@@ -121,6 +122,7 @@ async function run(photo: string): Promise<RoofMask | null> {
       if (result) return result;
     } catch (err) {
       console.warn('SAM 3 roof mask unavailable, using CLIPSeg:', err);
+      reportProblem('roof mask (SAM 3)', err);
     }
   }
   return runClipSeg(photo);
@@ -175,6 +177,7 @@ async function runClipSeg(photo: string): Promise<RoofMask | null> {
     return { mask, overlay: canvas.toDataURL('image/jpeg', 0.85) };
   } catch (err) {
     console.warn('Roof segmentation unavailable:', err);
+    reportProblem('roof mask (CLIPSeg)', err);
     return null;
   }
 }
