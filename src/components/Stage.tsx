@@ -12,15 +12,13 @@ interface Props {
   edgeMaps: string[];
   /** True while generation waits for the depth map. */
   analysing?: boolean;
-  /** Colour depth map to show over the photo (the "3D" tool button). */
-  depthView?: string;
 }
 
 /** Phones: full width at natural height. Desktop: fitted inside the available area. */
 const PHOTO = 'block w-full lg:h-full lg:object-contain';
 
 /** The photo area: current image, swipeable results, before/after slider and the generating overlay. */
-export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, analysing, depthView }: Props) {
+export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, analysing }: Props) {
   const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState(50);
@@ -81,15 +79,6 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
           {results.map((_, i) => (
             <span key={i} className={`h-1 bg-white transition-all ${i === active ? 'w-8' : 'w-4 opacity-50'}`} />
           ))}
-        </div>
-      )}
-
-      {depthView && (
-        <div className="absolute inset-0">
-          <img src={depthView} alt="" className="absolute inset-0 h-full w-full lg:object-contain" />
-          <span className="absolute left-0 top-3 bg-ink px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-white">
-            {t('editor.depthLabel')}
-          </span>
         </div>
       )}
 

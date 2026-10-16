@@ -2,13 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
-  Box,
   Camera,
   Check,
   Columns2,
   Image as ImageIcon,
   Info,
-  Loader2,
   Lock,
   Maximize,
   Redo2,
@@ -20,7 +18,7 @@ import {
 import { MaterialPicker } from './components/MaterialPicker';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
-import { depthFor, depthWithin, type DepthMaps } from './lib/depth';
+import { depthFor, depthWithin } from './lib/depth';
 import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
@@ -75,8 +73,7 @@ function RoofApp() {
   const [generating, setGenerating] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [edgeMaps, setEdgeMaps] = useState<string[]>([]);
-  const [depth, setDepth] = useState<{ photo: string; status: 'running' | 'ready' | 'failed'; maps?: DepthMaps } | null>(null);
-  const [showDepth, setShowDepth] = useState(false);
+  const [depth, setDepth] = useState<{ photo: string; status: 'running' | 'ready' | 'failed' } | null>(null);
   const [compare, setCompare] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -120,11 +117,10 @@ function RoofApp() {
 
   // Start depth estimation as soon as there is a photo, while the customer picks a product.
   useEffect(() => {
-    setShowDepth(false);
     if (!base) return setDepth(null);
     setDepth({ photo: base, status: 'running' });
     depthFor(base).then((maps) =>
-      setDepth((cur) => (cur?.photo === base ? { photo: base, status: maps ? 'ready' : 'failed', maps: maps ?? undefined } : cur)),
+      setDepth((cur) => (cur?.photo === base ? { photo: base, status: maps ? 'ready' : 'failed' } : cur)),
     );
   }, [base]);
 
@@ -161,7 +157,6 @@ function RoofApp() {
     setStartedAt(Date.now());
     setCompare(false);
     // Structure previews for the loading animation: depth maps (if ready) first, then edge maps.
-    setShowDepth(false);
     setEdgeMaps([]);
     const edges = buildEdgeMaps(base).catch(() => [] as string[]);
     depthFor(base).then(async (d) => setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(await edges)]));
@@ -349,7 +344,6 @@ function RoofApp() {
           startedAt={startedAt}
           edgeMaps={edgeMaps}
           analysing={generating && depth?.status === 'running'}
-          depthView={showDepth && !generating ? depth?.maps?.color : undefined}
         />
       </div>
 
@@ -365,14 +359,6 @@ function RoofApp() {
             active={compare}
           >
             <Columns2 size={20} />
-          </ToolButton>
-          <ToolButton
-            label={depth?.status === 'failed' ? t('editor.depthUnavailable') : t('editor.depth')}
-            onClick={() => setShowDepth((v) => !v)}
-            disabled={busy || depth?.status !== 'ready'}
-            active={showDepth}
-          >
-            {depth?.status === 'running' ? <Loader2 size={20} className="animate-spin" /> : <Box size={20} />}
           </ToolButton>
           <ToolButton label="Full screen" onClick={() => setFullscreen(true)} disabled={busy}>
             <Maximize size={20} />
