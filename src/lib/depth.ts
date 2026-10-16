@@ -342,6 +342,89 @@ async function run(photo: string): Promise<DepthMaps | null> {
   }
 }
 
+const snapped = new WeakMap<DepthMaps, { mask: string; result: Promise<DepthMaps> }>();
+
+/**
+ * Makes the roof edge of a depth map crisp. Depth models blur the edge between the roof and the sky or background
+ * into a soft halo. A sharp roof mask (SAM 3) knows where the roof really ends, so in a narrow band along its
+ * outline the depth is replaced by the nearby depth on the correct side: roof depth inside, background depth outside.
+ * The result is a clean step at the real roof edge. Only use it with a sharp mask, not a rough one.
+ */
+export function snapToMask(depth: DepthMaps, maskUrl: string): Promise<DepthMaps> {
+  const known = snapped.get(depth);
+  if (known && known.mask === maskUrl) return known.result;
+  const result = (async () => {
+    try {
+      const gray = await grayFromImage(depth.gray);
+      const { width: w, height: h } = gray;
+      const mask = document.createElement('canvas');
+      mask.width = w;
+      mask.height = h;
+      const mctx = mask.getContext('2d', { willReadFrequently: true })!;
+      mctx.imageSmoothingQuality = 'high';
+      mctx.drawImage(await loadImage(maskUrl), 0, 0, w, h);
+      const mpx = mctx.getImageData(0, 0, w, h).data;
+      const n = w * h;
+      const inside = new Float32Array(n);
+      for (let i = 0; i < n; i++) inside[i] = mpx[i * 4] > 127 ? 1 : 0;
+      const r = Math.max(5, Math.round(Math.max(w, h) / 90));
+      const frac = boxFilter(inside, w, h, r);
+      // Depth only where we are sure about the side: well inside the roof, or well outside it.
+      const dIn = new Float32Array(n);
+      const wIn = new Float32Array(n);
+      const dOut = new Float32Array(n);
+      const wOut = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        const v = gray.data[i] / 255;
+        if (frac[i] > 0.98) {
+          dIn[i] = v;
+          wIn[i] = 1;
+        } else if (frac[i] < 0.02) {
+          dOut[i] = v;
+          wOut[i] = 1;
+        }
+      }
+      const big = r * 3;
+      const sIn = boxFilter(dIn, w, h, big);
+      const sInW = boxFilter(wIn, w, h, big);
+      const sOut = boxFilter(dOut, w, h, big);
+      const sOutW = boxFilter(wOut, w, h, big);
+      const out = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        let v = gray.data[i] / 255;
+        if (frac[i] >= 0.02 && frac[i] <= 0.98) {
+          const side = inside[i] ? sIn[i] / sInW[i] : sOut[i] / sOutW[i];
+          const weight = inside[i] ? sInW[i] : sOutW[i];
+          if (weight > 1e-4 && Number.isFinite(side)) v = side;
+        }
+        out[i] = v;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d')!;
+      const grayData = ctx.createImageData(w, h);
+      const colorData = ctx.createImageData(w, h);
+      for (let i = 0; i < n; i++) {
+        const v = Math.round(out[i] * 255);
+        grayData.data.set([v, v, v, 255], i * 4);
+        const [cr, cg, cb] = rampColour(v);
+        colorData.data.set([cr, cg, cb, 255], i * 4);
+      }
+      const toUrl = (data: ImageData) => {
+        ctx.putImageData(data, 0, 0);
+        return canvas.toDataURL('image/jpeg', 0.92);
+      };
+      return { ...depth, gray: toUrl(grayData), color: toUrl(colorData) };
+    } catch (err) {
+      console.warn('Could not sharpen the depth map with the roof mask:', err);
+      return depth;
+    }
+  })();
+  snapped.set(depth, { mask: maskUrl, result });
+  return result;
+}
+
 /** Starts (or reuses) depth estimation for a photo. Resolves to null when the device can't run it. */
 export function depthFor(photo: string): Promise<DepthMaps | null> {
   const key = `${config.tool}:${photo}`;

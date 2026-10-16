@@ -20,7 +20,7 @@ import { MaterialPicker } from './components/MaterialPicker';
 import { History, type HistoryItem } from './components/History';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
-import { configureDepth, depthFor, depthWithin } from './lib/depth';
+import { configureDepth, depthFor, depthWithin, snapToMask } from './lib/depth';
 import { configureRoofMask, roofMaskFor, roofMaskWithin } from './lib/roofmask';
 import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
@@ -58,6 +58,11 @@ export default function App() {
       <RoofApp />
     </TextsProvider>
   );
+}
+
+/** With a sharp roof mask (SAM 3) the roof edge of the depth map is made crisp; a rough mask would only make it worse. */
+function sharpDepth(depth: Awaited<ReturnType<typeof depthFor>>, mask: Awaited<ReturnType<typeof roofMaskFor>>) {
+  return depth && mask && mask.source === 'sam3' ? snapToMask(depth, mask.mask) : Promise.resolve(depth);
 }
 
 /** How many earlier generations are kept for the history strip (each holds full-size images in memory). */
@@ -162,8 +167,10 @@ function RoofApp() {
   }, [accessCode]);
 
   // Analyse the photo (depth map, then roof mask) as soon as there is one, while the customer picks a product.
-  const analyseWith = (photo: string, flags: { depth: boolean; mask: boolean }) =>
-    Promise.all([flags.depth ? depthFor(photo) : null, flags.mask ? roofMaskFor(photo) : null]);
+  const analyseWith = async (photo: string, flags: { depth: boolean; mask: boolean }) => {
+    const [d, m] = await Promise.all([flags.depth ? depthFor(photo) : null, flags.mask ? roofMaskFor(photo) : null]);
+    return [await sharpDepth(d, m), m] as const;
+  };
   const analyse = (photo: string) => analyseWith(photo, analysis);
   useEffect(() => {
     if (!base) return setAnalysing(null);
@@ -224,10 +231,11 @@ function RoofApp() {
     });
     // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.
     setWaitingForAnalysis(true);
-    const [depthMaps, roofMask] = await Promise.all([
+    const [depthRaw, roofMask] = await Promise.all([
       use.depth ? depthWithin(base, live?.depthTool === 'marigold' || live?.depthTool === 'midas' ? 60000 : 20000) : null,
       use.mask ? roofMaskWithin(base, 20000) : null,
     ]);
+    const depthMaps = await sharpDepth(depthRaw, roofMask);
     setWaitingForAnalysis(false);
     try {
       const res = await fetch('/api/generate', {
