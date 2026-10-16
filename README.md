@@ -56,7 +56,7 @@ the same effect you see in other roof visualizer apps.
 | Google Gemini | `GEMINI_API_KEY` | `gemini-nano-banana-2.1` | 8 |
 | OpenAI Images | `OPENAI_API_KEY` | `gpt-image-2.5-flare`, `gpt-image-2.5-sunburst`, `gpt-image-1` | 8 |
 | Black Forest Labs (bfl.ai) | `BFL_API_KEY` | `flux-2-pro`, `flux-2-max` (8) or `flux-kontext-pro` (1) | 8 / 1 |
-| fal.ai | `FAL_KEY` (or `FAL_API_KEY`) | `fal-ai/krea/v3/edit`, `fal-ai/nano-banana-pro/edit` (8) or `fal-ai/flux-pro/kontext` (1) | 8 / 1 |
+| fal.ai | `FAL_KEY` (or `FAL_API_KEY`) | `krea/v3/edit`, `fal-ai/nano-banana-pro/edit` (8) or `fal-ai/flux-pro/kontext` (1) | 8 / 1 |
 | kie.ai | `KIE_API_KEY` | `google/nano-banana-edit` | 10 |
 | Replicate | `REPLICATE_API_TOKEN` | `black-forest-labs/flux-kontext-pro` | 1 |
 | Demo | none | none | runs the whole pipeline, returns the photo |

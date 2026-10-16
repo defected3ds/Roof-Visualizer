@@ -24,7 +24,7 @@ export const PROVIDER_TYPES: Record<ProviderType, { label: string; defaultModel:
     label: 'fal.ai',
     defaultModel: 'fal-ai/nano-banana-pro/edit',
     defaultKeyEnv: 'FAL_KEY',
-    help: 'The model id from the fal.ai model page, e.g. fal-ai/krea/v3/edit, fal-ai/nano-banana-pro/edit or fal-ai/flux-pro/kontext.',
+    help: 'The model id from the fal.ai model page, e.g. krea/v3/edit, fal-ai/nano-banana-pro/edit or fal-ai/flux-pro/kontext.',
   },
   kie: {
     label: 'kie.ai',

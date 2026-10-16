@@ -149,6 +149,15 @@ function aspectRatio(dataUrl: string): string {
   return r >= 1 ? `${Math.round(r * 100)}:100` : `100:${Math.round(100 / r)}`;
 }
 
+/** Krea 3 output size: the photo's proportions, at most ~4.2 MP, 256–3200 px per side, multiples of 16. */
+function kreaSize(dataUrl: string): { width: number; height: number } | null {
+  const size = imageSize(dataUrl);
+  if (!size) return null;
+  const scale = Math.min(1, Math.sqrt(4_100_000 / (size.width * size.height)), 3200 / Math.max(size.width, size.height));
+  const fit = (n: number) => Math.min(3200, Math.max(256, Math.round((n * scale) / 16) * 16));
+  return { width: fit(size.width), height: fit(size.height) };
+}
+
 // ---------------------------------------------------------------------------------------------
 // Google Gemini image editing (Nano Banana)
 // ---------------------------------------------------------------------------------------------
@@ -280,6 +289,11 @@ function falProvider(cfg: ProviderConfig, apiKey: string): Provider {
         // Multi-image models take image_urls; also send image_url (the house photo) for models that read only that.
         if (multi) input.image_urls = images;
         input.image_url = images[0];
+        // Krea picks its own output size unless told; keep the house photo's size and proportions.
+        if (/krea/i.test(cfg.model)) {
+          const size = kreaSize(images[0]);
+          if (size) input.image_size = size;
+        }
         const res = await fetch(`${FAL_QUEUE}/${cfg.model}`, {
           method: 'POST',
           headers: { ...headers, 'Content-Type': 'application/json' },
