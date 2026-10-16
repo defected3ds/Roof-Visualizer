@@ -20,7 +20,7 @@
     "keyEnv": "FAL_API_KEY",
     "quality": "balanced"
   },
-  "activeProvider": "fal-krea-v3-edit",
+  "activeProvider": "gemini",
   "providers": [
     {
       "id": "gemini",
