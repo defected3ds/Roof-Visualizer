@@ -28,8 +28,15 @@
       "id": "open-ai-gpt-2-5",
       "label": "Open AI GPT 2.5",
       "type": "openai",
-      "model": "gpt-image-2.5",
+      "model": "gpt-image-2.5-flare",
       "keyEnv": "OPENAI_API_KEY"
+    },
+    {
+      "id": "fal-krea-v3-edit",
+      "label": "fal.ai – Krea v3 Edit",
+      "type": "fal",
+      "model": "fal-ai/krea/v3/edit",
+      "keyEnv": "FAL_API_KEY"
     }
   ]
 }

@@ -54,12 +54,15 @@ the same effect you see in other roof visualizer apps.
 | API type | Key variable | Model example | Images accepted |
 |---|---|---|---|
 | Google Gemini | `GEMINI_API_KEY` | `gemini-nano-banana-2.1` | 8 |
-| OpenAI Images | `OPENAI_API_KEY` | `gpt-image-1` | 8 |
+| OpenAI Images | `OPENAI_API_KEY` | `gpt-image-2.5-flare`, `gpt-image-2.5-sunburst`, `gpt-image-1` | 8 |
 | Black Forest Labs (bfl.ai) | `BFL_API_KEY` | `flux-2-pro`, `flux-2-max` (8) or `flux-kontext-pro` (1) | 8 / 1 |
-| fal.ai | `FAL_KEY` | `fal-ai/nano-banana-pro/edit` (8) or `fal-ai/flux-pro/kontext` (1) | 8 / 1 |
+| fal.ai | `FAL_KEY` (or `FAL_API_KEY`) | `fal-ai/krea/v3/edit`, `fal-ai/nano-banana-pro/edit` (8) or `fal-ai/flux-pro/kontext` (1) | 8 / 1 |
 | kie.ai | `KIE_API_KEY` | `google/nano-banana-edit` | 10 |
 | Replicate | `REPLICATE_API_TOKEN` | `black-forest-labs/flux-kontext-pro` | 1 |
 | Demo | none | none | runs the whole pipeline, returns the photo |
+
+Each model card has **Test this model**: one real generation on the start photo with a chosen product, showing the
+result or the provider's error message.
 
 Images are sent in priority order (house photo, depth map, roof mask, product photos) up to the model's limit
 (`src/lib/models.ts`), and the prompt only describes the images actually sent. `BFL_API_URL` (e.g. the EU endpoint

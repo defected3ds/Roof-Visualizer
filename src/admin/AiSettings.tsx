@@ -150,6 +150,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
                 </div>
                 {PROVIDER_TYPES[p.type].help && <p className="mt-2 text-xs text-muted">Model: {PROVIDER_TYPES[p.type].help}</p>}
                 <p className="mt-1 text-xs text-muted">{supportText(p)}</p>
+                {p.type !== 'demo' && <TestModel password={password} provider={p} catalog={catalog} />}
               </div>
             );
           })}
@@ -323,6 +324,56 @@ function RoofMaskTool({
       )}
       {seg.tool === 'sam3' && <TestRoofMask password={password} segmentation={seg} />}
       {!draft.include.roofMask && <p className="mt-3 text-sm text-brand">The roof mask is switched off under “What the AI receives”.</p>}
+    </div>
+  );
+}
+
+/** One real generation with this model card (as edited, saving not needed): start photo + a product. */
+function TestModel({ password, provider, catalog }: { password: string; provider: ProviderConfig; catalog: Catalog }) {
+  const withPhotos = catalog.products.filter((p) => p.images.length);
+  const [productId, setProductId] = useState(
+    (withPhotos.find((p) => /actua multiblend/i.test(p.name)) ?? withPhotos[0] ?? catalog.products[0])?.id ?? '',
+  );
+  const [state, setState] = useState<{ busy?: boolean; image?: string; info?: string; error?: string }>({});
+  async function test() {
+    setState({ busy: true });
+    try {
+      const texts = await (await fetch('/api/texts')).json().catch(() => ({}));
+      const photo = await toDataUrl(texts['start.image'] || '/hero.jpg');
+      const res = await api<{ image: string; ms: number; imagesSent: number }>(password, 'POST', '/api/admin/test-model', { provider, image: photo, productId });
+      setState({ image: res.image, info: `Works: ${(res.ms / 1000).toFixed(1)} s, ${res.imagesSent} images sent (photo + product photos).` });
+    } catch (err: any) {
+      setState({ error: err.message });
+    }
+  }
+  return (
+    <div className="mt-3 border-t border-line pt-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={test}
+          disabled={state.busy || !productId}
+          className="rounded-wb border border-brand px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-brand disabled:opacity-50"
+        >
+          {state.busy ? 'Generating… (up to 2 min)' : 'Test this model'}
+        </button>
+        <span className="text-xs text-muted">on the start photo with</span>
+        <select value={productId} onChange={(e) => setProductId(e.target.value)} className="rounded-wb border border-line bg-white px-2 py-1 text-xs">
+          {withPhotos.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.brand} {p.name}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-muted">(one paid generation)</span>
+      </div>
+      {state.info && (
+        <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-ink">
+          <Check size={14} /> {state.info}
+        </p>
+      )}
+      {state.error && <p className="mt-2 break-words text-xs font-semibold text-brand">Not working: {state.error}</p>}
+      {state.image && <img src={state.image} alt="Test result" className="mt-2 w-full max-w-md rounded-wb border border-line" />}
     </div>
   );
 }

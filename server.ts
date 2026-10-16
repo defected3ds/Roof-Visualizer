@@ -25,7 +25,7 @@ import {
 } from './server/store';
 import { createProvider, hasKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
 import { buildFinalPrompt, type ImageRoles } from './src/lib/prompt';
-import type { AiSettings, Category, GenerateBody, ProductInput, ProviderConfig, Texts } from './src/types';
+import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_HOUR) || 20;
 const hits = new Map<string, number[]>();
@@ -232,6 +232,45 @@ async function startServer() {
     }
   });
 
+  /** Images in priority order (house photo, depth map, roof mask, product photos), up to what the model accepts, and the prompts. */
+  async function buildRequest(ai: AiSettings, cfg: ProviderConfig, body: GenerateBody, product: Product, variants: number) {
+    const dataUrl = (v?: string) => (v?.startsWith('data:image/') ? v : undefined);
+    let room = imageLimit(cfg) - 1;
+    const take = <T,>(v: T | undefined) => (v && room > 0 ? (room--, v) : undefined);
+    const depth = ai.include.depthMap ? take(dataUrl(body.depth)) : undefined;
+    const mask = ai.include.roofMask ? take(dataUrl(body.mask)) : undefined;
+    const allPhotos = ai.include.productPhotos ? (await referenceImages(product)).slice(0, ai.maxProductPhotos) : [];
+    const photos = allPhotos.slice(0, Math.max(0, room));
+    room -= photos.length;
+    const swatch = ai.include.productPhotos && !allPhotos.length ? take(dataUrl(body.swatch)) : undefined;
+    const roles: ImageRoles = { depth: Boolean(depth), mask: Boolean(mask), productPhotos: photos.length, swatch: Boolean(swatch) };
+    const images = [body.image, depth, mask, ...photos, swatch].filter((x): x is string => Boolean(x));
+    const category = getCategory(product.category);
+    const prompts = Array.from({ length: variants }, (_, v) => buildFinalPrompt(ai, product, category, roles, v));
+    return { images, prompts, depth, mask, photos, swatch };
+  }
+
+  // "Test this model" in AI settings: one real generation with a model card as it is being edited.
+  admin.post('/test-model', async (req, res) => {
+    const { provider, image, productId } = (req.body ?? {}) as { provider?: ProviderConfig; image?: string; productId?: string };
+    const product = productId ? getProduct(productId) : undefined;
+    if (!provider || !image?.startsWith('data:image/') || !product) {
+      return res.status(400).json({ error: 'Expected { provider, image: dataURL, productId }' });
+    }
+    const started = Date.now();
+    try {
+      const cfg = { ...provider, keyEnv: String(provider.keyEnv ?? '').trim().toUpperCase() };
+      const { images, prompts } = await buildRequest(getAiSettings(), cfg, { image, productId: product.id, count: 1 }, product, 1);
+      const results = await createProvider(cfg).generate({ images, prompts });
+      if (!results.length) return res.status(502).json({ error: 'The model returned no image.' });
+      console.log(`[test-model] ${cfg.label} (${cfg.model}) "${product.name}" ok in ${Date.now() - started}ms`);
+      res.json({ image: results[0], ms: Date.now() - started, imagesSent: images.length });
+    } catch (err: any) {
+      console.error(`[test-model] ${provider.label} failed:`, err);
+      res.status(502).json({ error: String(err?.message ?? err).slice(0, 500) });
+    }
+  });
+
   app.post('/api/generate', async (req, res) => {
     if (!hasAccess(req)) {
       return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
@@ -246,20 +285,7 @@ async function startServer() {
     }
     const ai = getAiSettings();
     const cfg = activeConfig();
-    const dataUrl = (v?: string) => (v?.startsWith('data:image/') ? v : undefined);
-    // Images in priority order, up to what the model accepts: house photo, depth map, roof mask, product photos.
-    let room = imageLimit(cfg) - 1;
-    const take = <T,>(v: T | undefined) => (v && room > 0 ? (room--, v) : undefined);
-    const depth = ai.include.depthMap ? take(dataUrl(body.depth)) : undefined;
-    const mask = ai.include.roofMask ? take(dataUrl(body.mask)) : undefined;
-    const allPhotos = ai.include.productPhotos ? (await referenceImages(product)).slice(0, ai.maxProductPhotos) : [];
-    const photos = allPhotos.slice(0, Math.max(0, room));
-    room -= photos.length;
-    const swatch = ai.include.productPhotos && !allPhotos.length ? take(dataUrl(body.swatch)) : undefined;
-    const roles: ImageRoles = { depth: Boolean(depth), mask: Boolean(mask), productPhotos: photos.length, swatch: Boolean(swatch) };
-    const images = [body.image, depth, mask, ...photos, swatch].filter((x): x is string => Boolean(x));
-    const category = getCategory(product.category);
-    const prompts = Array.from({ length: ai.variants }, (_, v) => buildFinalPrompt(ai, product, category, roles, v));
+    const { images, prompts, depth, mask, photos, swatch } = await buildRequest(ai, cfg, body as GenerateBody, product, ai.variants);
 
     const started = Date.now();
     try {

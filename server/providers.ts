@@ -215,7 +215,8 @@ function openaiProvider(cfg: ProviderConfig, apiKey: string): Provider {
         });
         if (!res.ok) throw new Error(`OpenAI error: ${res.status} ${await res.text()}`);
         const out = (await res.json()).data?.[0];
-        return out?.b64_json ? `data:image/png;base64,${out.b64_json}` : null;
+        if (out?.b64_json) return `data:image/png;base64,${out.b64_json}`;
+        return out?.url ? urlToDataUrl(out.url) : null;
       }),
   };
 }
@@ -276,8 +277,9 @@ function falProvider(cfg: ProviderConfig, apiKey: string): Provider {
     generate: ({ images, prompts }) =>
       allVariants(prompts, async (prompt) => {
         const input: Record<string, unknown> = { prompt, num_images: 1, output_format: 'jpeg' };
+        // Multi-image models take image_urls; also send image_url (the house photo) for models that read only that.
         if (multi) input.image_urls = images;
-        else input.image_url = images[0];
+        input.image_url = images[0];
         const res = await fetch(`${FAL_QUEUE}/${cfg.model}`, {
           method: 'POST',
           headers: { ...headers, 'Content-Type': 'application/json' },
