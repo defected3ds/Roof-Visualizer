@@ -35,24 +35,28 @@ export function MaterialPicker({ categories, products, selected, onSelect, disab
 
   return (
     <div className="space-y-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:space-y-0">
-      <div ref={tabRow} className="no-scrollbar flex shrink-0 gap-1 overflow-x-auto border-b border-line px-3 [mask-image:linear-gradient(to_right,black_88%,transparent)] lg:flex-wrap lg:overflow-visible lg:px-4 lg:[mask-image:none]">
-        {[{ id: 'all', name: t('editor.all') }, ...tabs].map((c) => (
-          <button
-            key={c.id}
-            onClick={(e) => choose(c.id, e.currentTarget)}
-            className={`shrink-0 border-b-[3px] px-3 pb-2.5 pt-1 text-[15px] transition ${
-              filter === c.id ? 'border-brand font-semibold text-ink' : 'border-transparent text-muted hover:text-ink'
-            }`}
-          >
-            {/* The hidden bold copy reserves the bold width, so tabs don't shift when the selection changes. */}
-            <span className="grid">
-              <span aria-hidden className="invisible col-start-1 row-start-1 h-0 font-semibold">
-                {c.name}
-              </span>
-              <span className="col-start-1 row-start-1">{c.name}</span>
-            </span>
-          </button>
-        ))}
+      {/* Category chips: one swipeable row on phones, a wrapped block on desktop. Same weight when selected, so nothing shifts. */}
+      <div
+        ref={tabRow}
+        className="no-scrollbar flex shrink-0 gap-2 overflow-x-auto px-4 pb-1 [mask-image:linear-gradient(to_right,black_88%,transparent)] lg:flex-wrap lg:overflow-visible lg:border-b lg:border-line lg:px-5 lg:pb-4 lg:[mask-image:none]"
+      >
+        {[{ id: 'all', name: t('editor.all') }, ...tabs].map((c) => {
+          const on = filter === c.id;
+          const count = c.id === 'all' ? products.length : products.filter((p) => p.category === c.id).length;
+          return (
+            <button
+              key={c.id}
+              onClick={(e) => choose(c.id, e.currentTarget)}
+              aria-pressed={on}
+              className={`flex shrink-0 items-center gap-1.5 rounded-wb border px-3 py-1.5 text-sm font-medium transition ${
+                on ? 'border-brand bg-brand text-white' : 'border-line bg-white text-ink hover:border-brand hover:text-brand'
+              }`}
+            >
+              {c.name}
+              <span className={`text-xs tabular-nums ${on ? 'text-white/75' : 'text-muted'}`}>{count}</span>
+            </button>
+          );
+        })}
       </div>
       {/* Phone: one swipeable row. Desktop: a scrollable grid filling the side panel. */}
       <div ref={productList} className="no-scrollbar flex snap-x gap-3 overflow-x-auto px-4 pb-1 lg:grid lg:min-h-0 lg:flex-1 lg:auto-rows-max lg:grid-cols-3 lg:content-start lg:overflow-y-auto lg:overflow-x-hidden lg:py-4 lg:[scrollbar-width:thin]">
