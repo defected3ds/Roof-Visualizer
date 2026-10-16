@@ -162,8 +162,9 @@ function RoofApp() {
   }, [accessCode]);
 
   // Analyse the photo (depth map, then roof mask) as soon as there is one, while the customer picks a product.
-  const analyse = (photo: string) =>
-    Promise.all([analysis.depth ? depthFor(photo) : null, analysis.mask ? roofMaskFor(photo) : null]);
+  const analyseWith = (photo: string, flags: { depth: boolean; mask: boolean }) =>
+    Promise.all([flags.depth ? depthFor(photo) : null, flags.mask ? roofMaskFor(photo) : null]);
+  const analyse = (photo: string) => analyseWith(photo, analysis);
   useEffect(() => {
     if (!base) return setAnalysing(null);
     setAnalysing(base);
@@ -189,6 +190,8 @@ function RoofApp() {
     if (!file) return;
     try {
       const url = await fileToDataUrl(file);
+      // Pick up the current admin settings first, so a page left open for hours doesn't make maps that are switched off.
+      await loadSettings().catch(() => null);
       setHistory([url]);
       setCursor(0);
       setResults([]);
@@ -211,15 +214,16 @@ function RoofApp() {
     const live = await loadSettings().catch(() => null);
     const edges = (live?.edgeMaps ?? showEdgeMaps) ? buildEdgeMaps(base).catch(() => [] as string[]) : Promise.resolve([] as string[]);
     setNoAnalysis(false);
-    analyse(base).then(async ([d, m]) => {
-      setNoAnalysis((analysis.depth || analysis.mask) && !d && !m);
+    // What the admin has switched on right now (not what this page loaded with): only those maps are made and shown.
+    const use = live?.analysis ?? analysis;
+    analyseWith(base, use).then(async ([d, m]) => {
+      setNoAnalysis((use.depth || use.mask) && !d && !m);
       const depthName = d ? (d.source === 'marigold' ? 'Marigold (fal.ai)' : `browser model${d.fallback ? ` (Marigold failed: ${d.fallback})` : ''}`) : 'none';
       setAnalysisInfo(`Depth map: ${depthName} · Roof mask: ${m ? (m.source === 'sam3' ? 'SAM 3 (fal.ai)' : 'CLIPSeg (browser)') : 'none'}`);
       setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : []), ...(await edges)]);
     });
     // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.
     setWaitingForAnalysis(true);
-    const use = live?.analysis ?? analysis;
     const [depthMaps, roofMask] = await Promise.all([
       use.depth ? depthWithin(base, live?.depthTool === 'marigold' ? 60000 : 20000) : null,
       use.mask ? roofMaskWithin(base, 20000) : null,
