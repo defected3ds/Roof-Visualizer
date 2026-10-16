@@ -4,6 +4,7 @@ import { PrimaryButton, SecondaryButton } from '../components/ui';
 import { imageLimit, PROVIDER_TYPES } from '../lib/models';
 import { buildFinalPrompt, DEFAULT_SYSTEM_PROMPT, type ImageRoles } from '../lib/prompt';
 import { productThumb } from '../lib/swatch';
+import { mergeMasks } from '../lib/roofmask';
 import type { AiSettings, AiSettingsView, Catalog, ProviderConfig, ProviderType } from '../types';
 import { api, fieldClass, type SaveResult } from './Admin';
 
@@ -228,7 +229,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
       </div>
 
       {/* ---- Roof mask tool ---- */}
-      <RoofMaskTool draft={draft} loaded={loaded} set={set} />
+      <RoofMaskTool draft={draft} loaded={loaded} set={set} password={password} />
 
       {/* ---- Loading screen ---- */}
       <div>
@@ -257,7 +258,17 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
   );
 }
 
-function RoofMaskTool({ draft, loaded, set }: { draft: AiSettings; loaded: AiSettingsView; set: (patch: Partial<AiSettings>) => void }) {
+function RoofMaskTool({
+  draft,
+  loaded,
+  set,
+  password,
+}: {
+  draft: AiSettings;
+  loaded: AiSettingsView;
+  set: (patch: Partial<AiSettings>) => void;
+  password: string;
+}) {
   const seg = draft.segmentation;
   const setSeg = (patch: Partial<AiSettings['segmentation']>) => set({ segmentation: { ...seg, ...patch } });
   const keyKnown = loaded.settings.segmentation.keyEnv === seg.keyEnv;
@@ -310,9 +321,58 @@ function RoofMaskTool({ draft, loaded, set }: { draft: AiSettings; loaded: AiSet
           </label>
         </div>
       )}
+      {seg.tool === 'sam3' && <TestRoofMask password={password} segmentation={seg} />}
       {!draft.include.roofMask && <p className="mt-3 text-sm text-brand">The roof mask is switched off under “What the AI receives”.</p>}
     </div>
   );
+}
+
+/** Runs SAM 3 on the start screen photo, so the admin can see that the fal.ai key works and how good the mask is. */
+function TestRoofMask({ password, segmentation }: { password: string; segmentation: AiSettings['segmentation'] }) {
+  const [state, setState] = useState<{ busy?: boolean; overlay?: string; info?: string; error?: string }>({});
+  async function test() {
+    setState({ busy: true });
+    try {
+      const texts = await (await fetch('/api/texts')).json().catch(() => ({}));
+      const photo = await toDataUrl(texts['start.image'] || '/hero.jpg');
+      const res = await api<{ masks: string[]; ms: number }>(password, 'POST', '/api/admin/test-roof-mask', { image: photo, segmentation });
+      const result = await mergeMasks(photo, res.masks);
+      if (!result) return setState({ error: `SAM 3 answered in ${(res.ms / 1000).toFixed(1)} s but found no roof (${res.masks.length} masks).` });
+      setState({ overlay: result.overlay, info: `Works: ${res.masks.length} roof mask(s) in ${(res.ms / 1000).toFixed(1)} s.` });
+    } catch (err: any) {
+      setState({ error: err.message });
+    }
+  }
+  return (
+    <div className="mt-4">
+      <SecondaryButton onClick={test} disabled={state.busy} className="sm:w-64">
+        {state.busy ? 'Testing…' : 'Test SAM 3 on the start photo'}
+      </SecondaryButton>
+      {state.info && (
+        <p className="mt-2 flex items-center gap-1 text-sm font-semibold text-ink">
+          <Check size={14} /> {state.info}
+        </p>
+      )}
+      {state.error && <p className="mt-2 text-sm font-semibold text-brand">Not working: {state.error}</p>}
+      {state.overlay && <img src={state.overlay} alt="Roof found by SAM 3" className="mt-3 w-full max-w-md rounded-wb border border-line" />}
+    </div>
+  );
+}
+
+/** Loads an image URL as a JPEG data URL, at most 1536 px. */
+async function toDataUrl(src: string): Promise<string> {
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error('Could not load the start photo'));
+    i.src = src;
+  });
+  const scale = Math.min(1, 1536 / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.naturalWidth * scale);
+  canvas.height = Math.round(img.naturalHeight * scale);
+  canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.9);
 }
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {

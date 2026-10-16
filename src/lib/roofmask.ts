@@ -66,8 +66,12 @@ async function runSam3(photo: string): Promise<RoofMask | null> {
   });
   if (!res.ok) throw new Error(`roof mask ${res.status}`);
   const { masks } = (await res.json()) as { masks: string[] };
-  if (!masks?.length) return null;
+  return mergeMasks(photo, masks);
+}
 
+/** Merges SAM 3 masks (one per roof found) into one mask plus the red-tinted preview. */
+export async function mergeMasks(photo: string, masks: string[]): Promise<RoofMask | null> {
+  if (!masks?.length) return null;
   const img = await loadImage(photo);
   const { W, H } = maskSize(img);
   const canvas = document.createElement('canvas');

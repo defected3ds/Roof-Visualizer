@@ -163,6 +163,20 @@ async function startServer() {
       res.status(400).json({ error: err.message });
     }
   });
+  // "Test SAM 3" in AI settings: runs the roof mask on a photo with the settings being edited.
+  admin.post('/test-roof-mask', async (req, res) => {
+    const { image, segmentation } = (req.body ?? {}) as { image?: string; segmentation?: Partial<AiSettings['segmentation']> };
+    if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
+    const seg = { ...getAiSettings().segmentation, ...segmentation, tool: 'sam3' as const };
+    if (!hasSegmentationKey(seg)) return res.status(400).json({ error: `The key ${seg.keyEnv} is not set on the server (Render → Environment).` });
+    const started = Date.now();
+    try {
+      const masks = await segmentRoof(seg, image);
+      res.json({ masks, ms: Date.now() - started });
+    } catch (err: any) {
+      res.status(502).json({ error: String(err?.message ?? err).slice(0, 400) });
+    }
+  });
   admin.get('/ai', (_req, res) => {
     const settings = getAiSettings();
     res.json({
