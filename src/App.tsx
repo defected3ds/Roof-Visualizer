@@ -60,9 +60,10 @@ export default function App() {
   );
 }
 
-/** With a sharp roof mask (SAM 3) the roof edge of the depth map is made crisp; a rough mask would only make it worse. */
+/** With a sharp roof mask (SAM 3) the roof edge of the browser depth map is made crisp; a rough mask would only make it worse. */
 function sharpDepth(depth: Awaited<ReturnType<typeof depthFor>>, mask: Awaited<ReturnType<typeof roofMaskFor>>) {
-  return depth && mask && mask.source === 'sam3' ? snapToMask(depth, mask.mask) : Promise.resolve(depth);
+  // Only the coarse browser depth map needs this; the fal.ai maps already have clean edges.
+  return depth && depth.source === 'browser' && mask && mask.source === 'sam3' ? snapToMask(depth, mask.mask) : Promise.resolve(depth);
 }
 
 /** How many earlier generations are kept for the history strip (each holds full-size images in memory). */

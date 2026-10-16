@@ -318,9 +318,14 @@ async function run(photo: string): Promise<DepthMaps | null> {
       coarse[i] = up[i * 4] / 255;
       guide[i] = (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255;
     }
-    const radius = Math.max(4, Math.round(Math.max(w, h) / 128));
-    const sharp = sharpen(coarse, guide, w, h, radius);
-    stretch(sharp);
+    // The browser model's map is coarse and needs sharpening. The fal.ai models (Marigold, MiDaS) already make a
+    // clean map: show it as it is, so the preview looks like the admin test.
+    let sharp: Float32Array = coarse;
+    if (source === 'browser') {
+      const radius = Math.max(4, Math.round(Math.max(w, h) / 128));
+      sharp = sharpen(coarse, guide, w, h, radius);
+      stretch(sharp);
+    }
 
     const gray = wctx.createImageData(w, h);
     const color = wctx.createImageData(w, h);
