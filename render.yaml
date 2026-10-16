@@ -16,3 +16,8 @@ services:
         sync: false
       - key: APP_PASSWORD
         sync: false
+      # Product admin at /admin (see DEPLOY.md, "Manage your products").
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false

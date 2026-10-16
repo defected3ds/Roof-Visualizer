@@ -1,0 +1,258 @@
+[
+  {
+    "id": "barrel-terracotta",
+    "name": "Barrel – Terracotta",
+    "category": "Tile",
+    "brand": "",
+    "description": "Classic orange-red terracotta Spanish barrel (S-profile) clay roof tiles.",
+    "images": [],
+    "swatch": {
+      "pattern": "barrel",
+      "colors": [
+        "#b5532f",
+        "#6e2a14",
+        "#de8a5e"
+      ]
+    }
+  },
+  {
+    "id": "barrel-aged",
+    "name": "Barrel – Aged Mission",
+    "category": "Tile",
+    "brand": "",
+    "description": "Aged, weathered mission-style Spanish barrel clay roof tiles in dark red-brown with darker blended flashing.",
+    "images": [],
+    "swatch": {
+      "pattern": "barrel",
+      "colors": [
+        "#8a4632",
+        "#3e1d14",
+        "#b9765a"
+      ]
+    }
+  },
+  {
+    "id": "barrel-charcoal",
+    "name": "Barrel – Charcoal",
+    "category": "Tile",
+    "brand": "",
+    "description": "Charcoal-black glazed Spanish barrel (S-profile) roof tiles with a subtle sheen.",
+    "images": [],
+    "swatch": {
+      "pattern": "barrel",
+      "colors": [
+        "#3b3b3d",
+        "#161617",
+        "#6a6a6e"
+      ]
+    }
+  },
+  {
+    "id": "flat-red",
+    "name": "Flat Tile – Brick Red",
+    "category": "Tile",
+    "brand": "",
+    "description": "Flat interlocking brick-red clay roof tiles in neat straight courses (European style).",
+    "images": [],
+    "swatch": {
+      "pattern": "flat-tile",
+      "colors": [
+        "#a2412c",
+        "#5a1f12",
+        "#cf6f55"
+      ]
+    }
+  },
+  {
+    "id": "flat-anthracite",
+    "name": "Flat Tile – Anthracite",
+    "category": "Tile",
+    "brand": "",
+    "description": "Modern matte anthracite-grey flat concrete roof tiles in clean straight courses.",
+    "images": [],
+    "swatch": {
+      "pattern": "flat-tile",
+      "colors": [
+        "#34383c",
+        "#141618",
+        "#5e656b"
+      ]
+    }
+  },
+  {
+    "id": "shingle-charcoal",
+    "name": "Architectural – Charcoal",
+    "category": "Shingles",
+    "brand": "",
+    "description": "Dimensional architectural asphalt shingles in blended charcoal grey.",
+    "images": [],
+    "swatch": {
+      "pattern": "shingle",
+      "colors": [
+        "#3d3f42",
+        "#1c1d1f",
+        "#6b6e72"
+      ]
+    }
+  },
+  {
+    "id": "shingle-weathered",
+    "name": "Architectural – Weathered Wood",
+    "category": "Shingles",
+    "brand": "",
+    "description": "Dimensional architectural asphalt shingles in a weathered-wood brown-grey blend.",
+    "images": [],
+    "swatch": {
+      "pattern": "shingle",
+      "colors": [
+        "#6e6457",
+        "#3b342c",
+        "#9b8f80"
+      ]
+    }
+  },
+  {
+    "id": "shingle-brown",
+    "name": "Architectural – Autumn Brown",
+    "category": "Shingles",
+    "brand": "",
+    "description": "Dimensional architectural asphalt shingles in warm autumn brown blend.",
+    "images": [],
+    "swatch": {
+      "pattern": "shingle",
+      "colors": [
+        "#6b4a33",
+        "#35231a",
+        "#9a7255"
+      ]
+    }
+  },
+  {
+    "id": "slate-natural",
+    "name": "Natural Slate – Grey",
+    "category": "Slate",
+    "brand": "",
+    "description": "Natural split blue-grey slate roof tiles with slightly irregular edges and subtle colour variation.",
+    "images": [],
+    "swatch": {
+      "pattern": "slate",
+      "colors": [
+        "#4a5056",
+        "#22262a",
+        "#757d85"
+      ]
+    }
+  },
+  {
+    "id": "slate-black",
+    "name": "Natural Slate – Black",
+    "category": "Slate",
+    "brand": "",
+    "description": "Natural black slate roof tiles with a fine riven texture and soft sheen.",
+    "images": [],
+    "swatch": {
+      "pattern": "slate",
+      "colors": [
+        "#2a2c2f",
+        "#0f1011",
+        "#4d5156"
+      ]
+    }
+  },
+  {
+    "id": "slate-multi",
+    "name": "Slate – Multi Blend",
+    "category": "Slate",
+    "brand": "",
+    "description": "Mixed slate roof in a blend of grey, purple and rust-toned natural slates.",
+    "images": [],
+    "swatch": {
+      "pattern": "slate",
+      "colors": [
+        "#5b5a5e",
+        "#2b2a2d",
+        "#8b7466"
+      ]
+    }
+  },
+  {
+    "id": "shake-cedar",
+    "name": "Cedar Shake – Natural",
+    "category": "Shake",
+    "brand": "",
+    "description": "New natural red cedar wood shake roof with hand-split texture and varied plank widths.",
+    "images": [],
+    "swatch": {
+      "pattern": "shake",
+      "colors": [
+        "#9a6b43",
+        "#55361f",
+        "#c49468"
+      ]
+    }
+  },
+  {
+    "id": "shake-aged",
+    "name": "Cedar Shake – Silver Aged",
+    "category": "Shake",
+    "brand": "",
+    "description": "Weathered silver-grey aged cedar wood shake roof with hand-split texture.",
+    "images": [],
+    "swatch": {
+      "pattern": "shake",
+      "colors": [
+        "#7d7a73",
+        "#45423d",
+        "#a9a59c"
+      ]
+    }
+  },
+  {
+    "id": "metal-black",
+    "name": "Standing Seam – Matte Black",
+    "category": "Metal",
+    "brand": "",
+    "description": "Matte black standing seam metal roof with vertical raised seams.",
+    "images": [],
+    "swatch": {
+      "pattern": "seam",
+      "colors": [
+        "#26282a",
+        "#0e0f10",
+        "#4c5054"
+      ]
+    }
+  },
+  {
+    "id": "metal-zinc",
+    "name": "Standing Seam – Zinc Grey",
+    "category": "Metal",
+    "brand": "",
+    "description": "Pre-weathered zinc grey standing seam metal roof with vertical raised seams.",
+    "images": [],
+    "swatch": {
+      "pattern": "seam",
+      "colors": [
+        "#7f878e",
+        "#4c5157",
+        "#aab2b9"
+      ]
+    }
+  },
+  {
+    "id": "metal-green",
+    "name": "Standing Seam – Forest Green",
+    "category": "Metal",
+    "brand": "",
+    "description": "Forest green painted standing seam metal roof with vertical raised seams.",
+    "images": [],
+    "swatch": {
+      "pattern": "seam",
+      "colors": [
+        "#2f4a3a",
+        "#15241b",
+        "#527461"
+      ]
+    }
+  }
+]

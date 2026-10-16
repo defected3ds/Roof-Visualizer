@@ -1,5 +1,16 @@
 import { GoogleGenAI } from '@google/genai';
-import type { GenerateRequest } from '../src/types';
+import type { Product } from '../src/types';
+
+export interface GenerateRequest {
+  /** The house photo as a data URL. */
+  image: string;
+  product: Product;
+  /** Product photos (or a drawn texture) as data URLs, sent to the model after the house photo. */
+  references: string[];
+  /** True when the references are real product photos rather than a drawn texture. */
+  photoReferences: boolean;
+  count: number;
+}
 
 export interface Provider {
   name: string;
@@ -12,16 +23,23 @@ export interface Provider {
  * dedicated apps enforces. Modern instruction-following image editors respect it well.
  */
 export function buildPrompt(req: GenerateRequest, variant: number): string {
-  const { material } = req;
+  const { product } = req;
+  const label = [product.brand, product.name].filter(Boolean).join(' ');
   const lines = [
-    `Edit this photo of a house: replace ONLY the roof covering with ${material.prompt} (${material.category.toLowerCase()} roofing, product "${material.name}").`,
+    `Edit this photo of a house (the first image): replace ONLY the roof covering with the ${product.category.toLowerCase()} roofing product "${label}".`,
+    `Product details: ${product.description}`,
     'Keep everything else pixel-identical: the same camera angle, framing, walls, windows, doors, chimneys, gutters, trim, sky, trees, people and lighting.',
     'Preserve the exact roof geometry: ridges, hips, valleys, dormers, eaves and pitch must not move or change shape.',
     'Lay the new material in correct perspective following each roof plane, with realistic scale, course lines, ridge caps, shadows and weathering matching the photo light.',
     'The result must look like a real, unedited photograph, not a render.',
   ];
-  if (req.swatch) {
-    lines.push('The second image is a texture sample of the material: match its colour, profile and pattern.');
+  if (req.references.length > 0) {
+    const which = req.references.length === 1 ? 'The second image is' : `Images 2 to ${req.references.length + 1} are`;
+    lines.push(
+      req.photoReferences
+        ? `${which} reference photos of this exact product: reproduce its shape and profile, colour and colour variation, surface finish and size as faithfully as possible. Use them only as a material reference, never copy their background or composition.`
+        : `${which} a texture sample of the material: match its colour, profile and pattern.`,
+    );
   }
   if (variant > 0) {
     lines.push(`Variation ${variant + 1}: allow natural, subtle differences in colour blend and weathering.`);
@@ -49,7 +67,7 @@ function geminiProvider(apiKey: string): Provider {
 
   async function once(req: GenerateRequest, variant: number): Promise<string | null> {
     const parts: any[] = [{ inlineData: splitDataUrl(req.image) }];
-    if (req.swatch) parts.push({ inlineData: splitDataUrl(req.swatch) });
+    for (const ref of req.references) parts.push({ inlineData: splitDataUrl(ref) });
     parts.push({ text: buildPrompt(req, variant) });
 
     let lastErr: unknown;
@@ -135,7 +153,8 @@ function replicateProvider(token: string): Provider {
       const results = await Promise.allSettled(
         Array.from({ length: req.count }, (_, i) =>
           predict({
-            prompt: buildPrompt({ ...req, swatch: undefined }, i),
+            // FLUX Kontext takes a single image, so the product is described in text only.
+            prompt: buildPrompt({ ...req, references: [] }, i),
             input_image: imageUrl,
             aspect_ratio: 'match_input_image',
             output_format: 'jpg',

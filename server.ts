@@ -1,8 +1,19 @@
 import 'dotenv/config';
+import crypto from 'crypto';
 import express from 'express';
 import path from 'path';
+import { githubConfig } from './server/github';
+import {
+  deleteProduct,
+  getProduct,
+  IMAGE_URL_PREFIX,
+  imageDir,
+  listProducts,
+  referenceImages,
+  saveProduct,
+} from './server/products';
 import { pickProvider } from './server/providers';
-import type { GenerateRequest } from './src/types';
+import type { GenerateBody, ProductInput } from './src/types';
 
 const MAX_VARIANTS = 4;
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
@@ -21,15 +32,24 @@ function rateLimited(ip: string): boolean {
   return false;
 }
 
+function sameSecret(given: string | undefined, expected: string): boolean {
+  const a = crypto.createHash('sha256').update(given ?? '').digest();
+  const b = crypto.createHash('sha256').update(expected).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+
 async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
   const provider = pickProvider();
 
   const accessCode = process.env.APP_PASSWORD || '';
+  const adminPassword = process.env.ADMIN_PASSWORD || '';
+  const hasAccess = (req: express.Request) => !accessCode || sameSecret(req.get('x-access-code'), accessCode);
 
   app.set('trust proxy', 1);
-  app.use(express.json({ limit: '30mb' }));
+  app.use(express.json({ limit: '40mb' }));
+  app.use(IMAGE_URL_PREFIX, express.static(imageDir, { maxAge: '7d', immutable: true }));
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, provider: provider.name, locked: Boolean(accessCode) });
@@ -37,34 +57,72 @@ async function startServer() {
 
   // Lets the app check a code before showing the editor.
   app.post('/api/unlock', (req, res) => {
-    if (!accessCode || req.get('x-access-code') === accessCode) return res.json({ ok: true });
+    if (hasAccess(req)) return res.json({ ok: true });
     res.status(401).json({ error: 'Wrong access code.' });
   });
 
+  app.get('/api/products', (req, res) => {
+    const isAdmin = Boolean(adminPassword) && sameSecret(req.get('x-admin-password'), adminPassword);
+    if (!hasAccess(req) && !isAdmin) return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
+    res.json(listProducts());
+  });
+
+  // ---- Product admin (/admin), protected by ADMIN_PASSWORD -------------------------------
+  const admin = express.Router();
+  admin.use((req, res, next) => {
+    if (!adminPassword) {
+      return res.status(503).json({ error: 'Product admin is switched off. Set ADMIN_PASSWORD on the server to use it.' });
+    }
+    if (!sameSecret(req.get('x-admin-password'), adminPassword)) {
+      return res.status(401).json({ error: 'Wrong admin password.' });
+    }
+    next();
+  });
+  admin.post('/login', (_req, res) => res.json({ ok: true, githubSync: Boolean(githubConfig()) }));
+  admin.post('/products', async (req, res) => {
+    try {
+      res.json(await saveProduct(req.body as ProductInput));
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  admin.delete('/products/:id', async (req, res) => {
+    try {
+      res.json(await deleteProduct(req.params.id));
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  app.use('/api/admin', admin);
+
   app.post('/api/generate', async (req, res) => {
-    if (accessCode && req.get('x-access-code') !== accessCode) {
+    if (!hasAccess(req)) {
       return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
     }
     if (rateLimited(req.ip ?? 'unknown')) {
       return res.status(429).json({ error: `Limit reached (${RATE_LIMIT} generations per hour). Try again later.` });
     }
-    const body = req.body as Partial<GenerateRequest>;
-    if (!body.image?.startsWith('data:image/') || !body.material?.prompt) {
-      return res.status(400).json({ error: 'Expected { image: dataURL, material: { prompt } }' });
+    const body = req.body as Partial<GenerateBody>;
+    const product = body.productId ? getProduct(body.productId) : undefined;
+    if (!body.image?.startsWith('data:image/') || !product) {
+      return res.status(400).json({ error: 'Expected { image: dataURL, productId } with a known product' });
     }
     const count = Math.min(Math.max(Number(body.count) || 3, 1), MAX_VARIANTS);
+    const photos = referenceImages(product);
+    const swatch = body.swatch?.startsWith('data:image/') ? [body.swatch] : [];
     const started = Date.now();
     try {
       const images = await provider.generate({
         image: body.image,
-        swatch: body.swatch,
-        material: body.material,
+        product,
+        references: photos.length ? photos : swatch,
+        photoReferences: photos.length > 0,
         count,
       });
       if (images.length === 0) {
         return res.status(502).json({ error: 'The model returned no images. Try again or pick another photo.' });
       }
-      console.log(`[generate] ${provider.name} "${body.material.name}" -> ${images.length} images in ${Date.now() - started}ms`);
+      console.log(`[generate] ${provider.name} "${product.name}" (${photos.length} product photos) -> ${images.length} images in ${Date.now() - started}ms`);
       res.json({ images, provider: provider.name });
     } catch (err: any) {
       console.error('[generate] failed:', err);

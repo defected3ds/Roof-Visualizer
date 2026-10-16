@@ -17,10 +17,11 @@ import {
 } from 'lucide-react';
 import { MaterialPicker } from './components/MaterialPicker';
 import { Stage } from './components/Stage';
-import { MATERIALS } from './materials';
+import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
+import { CATEGORIES } from './materials';
 import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
-import { renderSwatch } from './lib/swatch';
-import type { GenerateResponse, Material } from './types';
+import { productThumb, renderSwatch } from './lib/swatch';
+import type { GenerateResponse, Product } from './types';
 
 const VARIANTS = 3;
 const CODE_KEY = 'roof-visualizer:access-code';
@@ -52,7 +53,8 @@ export default function App() {
   const [accessCode, setAccessCode] = useState(storedCode);
   const [history, setHistory] = useState<string[]>([]);
   const [cursor, setCursor] = useState(0);
-  const [material, setMaterial] = useState<Material>(MATERIALS[1]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productId, setProductId] = useState<string | null>(null);
   const [results, setResults] = useState<string[]>([]);
   const [active, setActive] = useState(0);
   const [generating, setGenerating] = useState(false);
@@ -83,6 +85,21 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (gate !== 'open') return;
+    fetch('/api/products', { headers: { 'X-Access-Code': accessCode } })
+      .then(async (res) => {
+        if (res.status === 401) {
+          storeCode('');
+          setGate('locked');
+          return;
+        }
+        if (!res.ok) throw new Error('Could not load the product catalog');
+        setProducts(await res.json());
+      })
+      .catch((err) => setToast(err.message));
+  }, [gate, accessCode]);
+
+  useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(t);
@@ -110,7 +127,7 @@ export default function App() {
   }
 
   async function generate() {
-    if (!base || generating) return;
+    if (!base || !product || generating) return;
     setGenerating(true);
     setStartedAt(Date.now());
     setCompare(false);
@@ -121,8 +138,8 @@ export default function App() {
         headers: { 'Content-Type': 'application/json', 'X-Access-Code': accessCode },
         body: JSON.stringify({
           image: base,
-          swatch: renderSwatch(material, 384),
-          material: { name: material.name, category: material.category, prompt: material.prompt },
+          productId: product.id,
+          swatch: product.images.length ? undefined : renderSwatch(product, 384),
           count: VARIANTS,
         }),
       });
@@ -166,6 +183,7 @@ export default function App() {
     setCursor((c) => Math.min(history.length - 1, Math.max(0, c + delta)));
   }
 
+  const product = products.find((p) => p.id === productId) ?? products.find((p) => p.category === 'Tile') ?? products[0];
   const current = results[active] ?? base;
   const busy = generating;
 
@@ -202,10 +220,10 @@ export default function App() {
               while everything else stays as it is.
             </p>
             <div className="mt-8 grid grid-cols-4 gap-2">
-              {MATERIALS.filter((_, i) => i % 4 === 1).map((m) => (
-                <figure key={m.id} className="overflow-hidden rounded-wb border border-line">
-                  <img src={renderSwatch(m, 160)} alt="" className="aspect-square w-full object-cover" />
-                  <figcaption className="px-1.5 py-1 text-[11px] text-muted">{m.category}</figcaption>
+              {CATEGORIES.flatMap((c) => products.find((p) => p.category === c) ?? []).slice(0, 4).map((p) => (
+                <figure key={p.id} className="overflow-hidden rounded-wb border border-line">
+                  <img src={productThumb(p, 160)} alt="" className="aspect-square w-full object-cover" />
+                  <figcaption className="px-1.5 py-1 text-[11px] text-muted">{p.category}</figcaption>
                 </figure>
               ))}
             </div>
@@ -230,6 +248,9 @@ export default function App() {
               <ImageIcon size={20} /> Choose from gallery
             </SecondaryButton>
             {provider === 'demo' && <p className="pt-1 text-center text-xs text-muted">Demo mode: no AI key configured on the server.</p>}
+            <a href="/admin" className="block pt-2 text-center text-xs text-muted underline-offset-2 hover:underline">
+              Manage products
+            </a>
           </div>
         </div>
       </Shell>
@@ -255,7 +276,7 @@ export default function App() {
         }
         right={
           <button
-            onClick={() => shareImage(current, `new-roof-${material.id}`)}
+            onClick={() => shareImage(current, `new-roof-${product?.id ?? 'result'}`)}
             disabled={busy}
             className="-mr-2 p-2 text-brand disabled:opacity-30"
             aria-label="Share"
@@ -267,7 +288,7 @@ export default function App() {
 
       <div className="flex items-baseline justify-between px-5 pb-3 pt-5">
         <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted">New roof</p>
-        <p className="truncate pl-4 text-sm font-semibold text-ink">{material.name}</p>
+        <p className="truncate pl-4 text-sm font-semibold text-ink">{product?.name}</p>
       </div>
       <div className="flex flex-1 items-center">
         <Stage
@@ -310,12 +331,16 @@ export default function App() {
       </div>
 
       <section className="border-t border-line bg-paper pb-6 pt-3">
-        <MaterialPicker selected={material} onSelect={setMaterial} disabled={busy} />
+        {product ? (
+          <MaterialPicker products={products} selected={product} onSelect={(p) => setProductId(p.id)} disabled={busy} />
+        ) : (
+          <p className="px-5 py-6 text-center text-sm text-muted">No products yet. Add some at /admin.</p>
+        )}
         <div className="mt-5 grid grid-cols-2 gap-3 px-5">
           <SecondaryButton onClick={accept} disabled={busy || results.length === 0}>
             <Check size={20} /> Accept
           </SecondaryButton>
-          <PrimaryButton onClick={generate} disabled={busy}>
+          <PrimaryButton onClick={generate} disabled={busy || !product}>
             <RefreshCw size={20} className={busy ? 'animate-spin' : ''} /> Generate
           </PrimaryButton>
         </div>
@@ -393,50 +418,6 @@ function LoginScreen({ onUnlock }: { onUnlock: (code: string) => void }) {
         </PrimaryButton>
       </form>
     </Shell>
-  );
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return <main className="mx-auto flex min-h-dvh max-w-xl flex-col bg-white text-ink">{children}</main>;
-}
-
-function Header({ left, right }: { left?: React.ReactNode; right?: React.ReactNode }) {
-  return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-line bg-white px-5">
-      {left}
-      <span className="flex items-center gap-1.5" aria-label="wienerberger">
-        <img src="/w-symbol.png" alt="" className="h-7 w-7" />
-        <img src="/wienerberger-logo.svg" alt="wienerberger" className="h-[17px] w-auto" />
-      </span>
-      <span className="flex-1" />
-      {right}
-    </header>
-  );
-}
-
-function Tag({ children }: { children: React.ReactNode }) {
-  return <span className="inline-block rounded-wb bg-brand px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">{children}</span>;
-}
-
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
-
-function PrimaryButton({ className = '', ...props }: ButtonProps) {
-  return (
-    <button
-      type="button"
-      {...props}
-      className={`flex w-full items-center justify-center gap-2 rounded-wb bg-brand py-4 text-[15px] font-bold uppercase tracking-wide text-white transition hover:bg-brand-dark disabled:bg-line disabled:text-muted ${className}`}
-    />
-  );
-}
-
-function SecondaryButton({ className = '', ...props }: ButtonProps) {
-  return (
-    <button
-      type="button"
-      {...props}
-      className={`flex w-full items-center justify-center gap-2 rounded-wb border-2 border-brand bg-white py-[14px] text-[15px] font-bold uppercase tracking-wide text-brand transition hover:bg-brand hover:text-white disabled:border-line disabled:text-muted disabled:hover:bg-white ${className}`}
-    />
   );
 }
 

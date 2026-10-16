@@ -38,3 +38,38 @@ You get a public link like `https://roof-visualizer.onrender.com`. No coding nee
   (`[gemini] using model gemini-nano-banana-2.1`).
 - **Remove the access code** (fully public app): delete `APP_PASSWORD` in Environment. Only do this with the
   rate limit in place and a spending cap on your Gemini billing account.
+
+## Manage your products (/admin)
+
+The app has a back office at **`/admin`** (e.g. `https://roof-visualizer.onrender.com/admin`, or the small
+"Manage products" link on the start screen). There you add, edit and delete roof products: photos, name, brand,
+category and a description the AI uses.
+
+It needs two more environment variables in Render (service → **Environment** → **Edit** → **+ Add**):
+
+| Key | Value |
+|---|---|
+| `ADMIN_PASSWORD` | a password for the admin, different from `APP_PASSWORD` |
+| `GITHUB_TOKEN` | a GitHub token, see below |
+
+**Why GitHub?** Render's free plan wipes uploaded files every time the app restarts. With `GITHUB_TOKEN` set, every
+product you save is also stored in this GitHub repo (`data/products.json` and `data/product-images/`), and Render
+redeploys with it a few minutes later. You also get a full history of every change. Without the token, products
+you add disappear at the next restart (the admin page warns you).
+
+**Create the GitHub token (once):**
+
+1. Open https://github.com/settings/personal-access-tokens/new (GitHub → your photo → Settings →
+   Developer settings → Personal access tokens → **Fine-grained tokens** → **Generate new token**).
+2. Name: `roof-visualizer admin`. Expiration: choose a date (you will need a new token after it).
+3. **Repository access** → **Only select repositories** → `roof-visualizer`.
+4. **Permissions** → **Repository permissions** → **Contents** → **Read and write**.
+5. **Generate token**, copy it (starts with `github_pat_`) and paste it as `GITHUB_TOKEN` in Render.
+
+**Tips for good results**
+
+- Photos matter most. Upload a straight-on close-up of the tiles laid on a roof, a photo of a finished roof
+  with the product, and a single tile. The first 3 photos are sent to the AI with every generation.
+- Describe the product the way a roofer would: shape/profile, exact colour and colour variation, surface
+  (matte, engobed, glazed), size or tiles per m², laying pattern, ridge tiles. Skip marketing words.
+- After saving, the product is available immediately; Render then redeploys (about 3 minutes) to make it permanent.

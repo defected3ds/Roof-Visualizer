@@ -46,12 +46,15 @@ the same effect you see in other roof visualizer apps.
 
 Set `AI_PROVIDER=gemini|replicate|demo` to force one when several keys are set.
 
-## Customising materials
+## Products
 
-`src/materials.ts` lists the catalog. Each entry has a display name, category, the **prompt** sent to the model
-(this matters most), and colours/pattern for the procedurally drawn swatch (`src/lib/swatch.ts`). To show
-real products, put the manufacturer's colour names in and describe them precisely; you can also replace
-`renderSwatch` with real product photos.
+Products live in `data/products.json` with photos in `data/product-images/`, and are managed in the app at
+**`/admin`** (protected by `ADMIN_PASSWORD`). Each product has a name, brand, category, a description for the AI
+and up to 6 photos; the first 3 photos are sent to the image model as references with every generation. Products
+without photos use a drawn texture (`src/lib/swatch.ts`).
+
+On hosts with a throwaway disk (Render), set `GITHUB_TOKEN` so admin changes are committed back to the repo
+(`server/github.ts`); see DEPLOY.md.
 
 ## Ideas for next steps
 

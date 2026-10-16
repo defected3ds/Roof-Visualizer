@@ -1,22 +1,24 @@
 import { useMemo, useState } from 'react';
-import { CATEGORIES, MATERIALS } from '../materials';
-import { renderSwatch } from '../lib/swatch';
-import type { Category, Material } from '../types';
+import { CATEGORIES } from '../materials';
+import { productThumb } from '../lib/swatch';
+import type { Category, Product } from '../types';
 
 interface Props {
-  selected: Material;
-  onSelect: (m: Material) => void;
+  products: Product[];
+  selected: Product;
+  onSelect: (p: Product) => void;
   disabled?: boolean;
 }
 
-export function MaterialPicker({ selected, onSelect, disabled }: Props) {
+export function MaterialPicker({ products, selected, onSelect, disabled }: Props) {
   const [filter, setFilter] = useState<Category | 'All'>(selected.category);
-  const items = useMemo(() => (filter === 'All' ? MATERIALS : MATERIALS.filter((m) => m.category === filter)), [filter]);
+  const categories = CATEGORIES.filter((c) => products.some((p) => p.category === c));
+  const items = useMemo(() => (filter === 'All' ? products : products.filter((p) => p.category === filter)), [filter, products]);
 
   return (
     <div className="space-y-4">
       <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line px-3">
-        {(['All', ...CATEGORIES] as const).map((c) => (
+        {(['All', ...categories] as const).map((c) => (
           <button
             key={c}
             onClick={() => setFilter(c)}
@@ -29,20 +31,21 @@ export function MaterialPicker({ selected, onSelect, disabled }: Props) {
         ))}
       </div>
       <div className="no-scrollbar flex snap-x gap-3 overflow-x-auto px-4 pb-1">
-        {items.map((m) => {
-          const active = m.id === selected.id;
+        {items.map((p) => {
+          const active = p.id === selected.id;
           return (
             <button
-              key={m.id}
+              key={p.id}
               disabled={disabled}
-              onClick={() => onSelect(m)}
+              onClick={() => onSelect(p)}
               className={`flex w-32 shrink-0 snap-start flex-col overflow-hidden rounded-wb border bg-white text-left transition disabled:opacity-60 ${
                 active ? 'border-brand shadow-[0_0_0_1px_var(--color-brand)]' : 'border-line hover:shadow-md'
               }`}
             >
-              <img src={renderSwatch(m)} alt="" className="aspect-square w-full object-cover" />
-              <span className={`min-h-[3.25rem] px-2.5 py-2 text-[13px] leading-snug ${active ? 'font-semibold text-brand' : 'text-ink'}`}>
-                {m.name}
+              <img src={productThumb(p)} alt="" loading="lazy" className="aspect-square w-full object-cover" />
+              <span className="min-h-[3.25rem] px-2.5 py-2 text-[13px] leading-snug">
+                {p.brand && <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted">{p.brand}</span>}
+                <span className={active ? 'font-semibold text-brand' : 'text-ink'}>{p.name}</span>
               </span>
             </button>
           );

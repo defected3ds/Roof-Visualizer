@@ -1,4 +1,6 @@
-import type { Material } from '../types';
+import type { Product } from '../types';
+
+const FALLBACK: NonNullable<Product['swatch']> = { pattern: 'flat-tile', colors: ['#8a8a8a', '#4a4a4a', '#b5b5b5'] };
 
 const cache = new Map<string, string>();
 
@@ -20,21 +22,22 @@ function speckle(ctx: CanvasRenderingContext2D, size: number, rnd: () => number,
   }
 }
 
-/** Paints a roofing texture sample. Used both as the picker thumbnail and as the model's texture reference. */
-export function renderSwatch(material: Material, size = 320): string {
-  const key = `${material.id}:${size}`;
+/** Drawn texture for products without photos; also sent to the model as a texture sample. */
+export function renderSwatch(product: Product, size = 320): string {
+  const swatch = product.swatch ?? FALLBACK;
+  const key = `${product.id}:${size}`;
   const hit = cache.get(key);
   if (hit) return hit;
 
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d')!;
-  const [base, dark, light] = material.colors;
-  const rnd = seededRandom(material.id);
+  const [base, dark, light] = swatch.colors;
+  const rnd = seededRandom(product.id);
   ctx.fillStyle = dark;
   ctx.fillRect(0, 0, size, size);
 
-  switch (material.pattern) {
+  switch (swatch.pattern) {
     case 'barrel': {
       const rowH = size / 4;
       const colW = size / 5;
@@ -61,7 +64,7 @@ export function renderSwatch(material: Material, size = 320): string {
     }
     case 'flat-tile':
     case 'slate': {
-      const isSlate = material.pattern === 'slate';
+      const isSlate = swatch.pattern === 'slate';
       const rows = isSlate ? 7 : 6;
       const cols = isSlate ? 4 : 5;
       const rowH = size / rows;
@@ -161,4 +164,9 @@ export function renderSwatch(material: Material, size = 320): string {
   const url = canvas.toDataURL('image/jpeg', 0.88);
   cache.set(key, url);
   return url;
+}
+
+/** Thumbnail for a product: its first photo, or the drawn texture. */
+export function productThumb(product: Product, size = 320): string {
+  return product.images[0] ?? renderSwatch(product, size);
 }
