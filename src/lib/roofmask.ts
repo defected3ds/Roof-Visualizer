@@ -17,6 +17,8 @@ export interface RoofMask {
   mask: string;
   /** The photo with the roof tinted red, for the loading animation. */
   overlay: string;
+  /** Which tool made it. */
+  source: 'sam3' | 'clipseg';
 }
 
 /** Set from /api/health: which tool to use, and the access code for /api/roof-mask. */
@@ -89,11 +91,12 @@ export async function mergeMasks(photo: string, masks: string[]): Promise<RoofMa
       if (v > roof[i]) roof[i] = v;
     }
   }
-  return paint(img, W, H, roof);
+  const result = paint(img, W, H, roof);
+  return result && { ...result, source: 'sam3' };
 }
 
 /** Black-and-white mask for the AI and a red-tinted photo for the loading animation. */
-function paint(img: HTMLImageElement, W: number, H: number, roof: Uint8ClampedArray): RoofMask | null {
+function paint(img: HTMLImageElement, W: number, H: number, roof: Uint8ClampedArray): Omit<RoofMask, 'source'> | null {
   let roofPixels = 0;
   for (const v of roof) if (v > 127) roofPixels++;
   // No roof found (e.g. a photo without a house): don't send a misleading empty mask.
@@ -178,7 +181,7 @@ async function runClipSeg(photo: string): Promise<RoofMask | null> {
     sctx.putImageData(tint, 0, 0);
     ctx.drawImage(img, 0, 0, W, H);
     ctx.drawImage(small, 0, 0, W, H);
-    return { mask, overlay: canvas.toDataURL('image/jpeg', 0.85) };
+    return { mask, overlay: canvas.toDataURL('image/jpeg', 0.85), source: 'clipseg' };
   } catch (err) {
     console.warn('Roof segmentation unavailable:', err);
     reportProblem('roof mask (CLIPSeg)', err);

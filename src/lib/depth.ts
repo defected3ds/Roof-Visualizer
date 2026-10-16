@@ -16,6 +16,10 @@ export interface DepthMaps {
   gray: string;
   /** The same map in colour, for the loading animation. */
   color: string;
+  /** Which tool made it; the browser model is also the fallback when Marigold failed. */
+  source: 'marigold' | 'browser';
+  /** Why Marigold was not used, when it was wanted. */
+  fallback?: string;
 }
 
 let estimator: Promise<any> | null = null;
@@ -273,14 +277,17 @@ async function run(photo: string): Promise<DepthMaps | null> {
   try {
     const img = await loadImage(photo);
     let depth: RawDepth | null = null;
+    let fallback: string | undefined;
     if (config.tool === 'marigold') {
       try {
         depth = await serverDepth(img);
       } catch (err) {
         console.warn('Marigold depth map unavailable, using the browser model:', err);
+        fallback = String((err as Error)?.message ?? err).slice(0, 120);
         reportProblem('depth (Marigold)', err);
       }
     }
+    const source: DepthMaps['source'] = depth ? 'marigold' : 'browser';
     depth ??= await browserDepth(img);
 
     // Final size: the photo's proportions, up to OUTPUT_SIDE. The model's map is coarse (its output is built from
@@ -327,7 +334,7 @@ async function run(photo: string): Promise<DepthMaps | null> {
       wctx.putImageData(data, 0, 0);
       return work.toDataURL('image/jpeg', 0.92);
     };
-    return { gray: toUrl(gray), color: toUrl(color) };
+    return { gray: toUrl(gray), color: toUrl(color), source, fallback };
   } catch (err) {
     console.warn('Depth estimation unavailable:', err);
     reportProblem('depth', err);

@@ -14,13 +14,15 @@ interface Props {
   analysing?: boolean;
   /** Shown under the timer, e.g. when the photo analysis failed. */
   note?: string;
+  /** Technical line (which tools made the maps), only passed in debug mode. */
+  info?: string;
 }
 
 /** Phones: full width at natural height. Desktop: fitted inside the available area. */
 const PHOTO = 'block w-full lg:h-full lg:object-contain';
 
 /** The photo area: current image, swipeable results, before/after slider and the generating overlay. */
-export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, analysing, note }: Props) {
+export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, analysing, note, info }: Props) {
   const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState(50);
@@ -92,7 +94,7 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
         </div>
       )}
 
-      {generating && <GeneratingOverlay startedAt={startedAt} edgeMaps={edgeMaps} analysing={analysing} note={note} ratio={ratio} />}
+      {generating && <GeneratingOverlay startedAt={startedAt} edgeMaps={edgeMaps} analysing={analysing} note={note} info={info} ratio={ratio} />}
     </div>
   );
 }
@@ -102,12 +104,14 @@ function GeneratingOverlay({
   edgeMaps,
   analysing,
   note,
+  info,
   ratio,
 }: {
   startedAt: number | null;
   edgeMaps: string[];
   analysing?: boolean;
   note?: string;
+  info?: string;
   ratio: number | null;
 }) {
   const t = useT();
@@ -177,6 +181,7 @@ function GeneratingOverlay({
         </div>
         <p className="text-lg font-semibold text-white drop-shadow">{t(analysing ? 'editor.analysing' : 'editor.generating')}</p>
         {note && <p className="max-w-xs px-4 text-center text-sm text-white/90 drop-shadow">{note}</p>}
+        {info && <p className="max-w-sm px-4 text-center text-xs text-white/80 drop-shadow">{info}</p>}
       </div>
       </div>
     </div>
