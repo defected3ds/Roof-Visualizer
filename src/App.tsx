@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
+  ArrowRight,
   Camera,
   Check,
   Columns2,
   Image as ImageIcon,
   Info,
+  Lock,
   Maximize,
   Redo2,
   RefreshCw,
@@ -31,7 +33,23 @@ function storedCode(): string {
   }
 }
 
+function storeCode(code: string) {
+  try {
+    if (code) localStorage.setItem(CODE_KEY, code);
+    else localStorage.removeItem(CODE_KEY);
+  } catch {}
+}
+
+async function checkCode(code: string): Promise<boolean> {
+  const res = await fetch('/api/unlock', { method: 'POST', headers: { 'X-Access-Code': code } });
+  return res.ok;
+}
+
+type Gate = 'checking' | 'locked' | 'open';
+
 export default function App() {
+  const [gate, setGate] = useState<Gate>('checking');
+  const [accessCode, setAccessCode] = useState(storedCode);
   const [history, setHistory] = useState<string[]>([]);
   const [cursor, setCursor] = useState(0);
   const [material, setMaterial] = useState<Material>(MATERIALS[1]);
@@ -44,8 +62,6 @@ export default function App() {
   const [fullscreen, setFullscreen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [provider, setProvider] = useState<string | null>(null);
-  const [accessCode, setAccessCode] = useState(storedCode);
-  const [askCode, setAskCode] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const tipShown = useRef(false);
@@ -53,10 +69,17 @@ export default function App() {
   const base = history[cursor];
 
   useEffect(() => {
-    fetch('/api/health')
-      .then((r) => r.json())
-      .then((d) => setProvider(d.provider))
-      .catch(() => {});
+    (async () => {
+      try {
+        const health = await (await fetch('/api/health')).json();
+        setProvider(health.provider);
+        if (!health.locked) return setGate('open');
+        const saved = storedCode();
+        setGate(saved && (await checkCode(saved)) ? 'open' : 'locked');
+      } catch {
+        setGate('open');
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -64,6 +87,12 @@ export default function App() {
     const t = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(t);
   }, [toast]);
+
+  function unlocked(code: string) {
+    storeCode(code);
+    setAccessCode(code);
+    setGate('open');
+  }
 
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -78,14 +107,6 @@ export default function App() {
     } catch (err: any) {
       setToast(err.message);
     }
-  }
-
-  function saveCode(code: string) {
-    setAccessCode(code);
-    setAskCode(false);
-    try {
-      localStorage.setItem(CODE_KEY, code);
-    } catch {}
   }
 
   async function generate() {
@@ -107,17 +128,19 @@ export default function App() {
       });
       const data = (await res.json()) as GenerateResponse & { error?: string };
       if (res.status === 401) {
-        setAskCode(true);
+        // The access code was changed on the server: sign in again.
+        storeCode('');
+        setGate('locked');
         return;
       }
       if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
       setResults(data.images);
       setActive(0);
       if (data.provider === 'demo') {
-        setToast('Demo mode: add GEMINI_API_KEY or REPLICATE_API_TOKEN to .env to generate real roofs.');
+        setToast('Demo mode: add GEMINI_API_KEY or REPLICATE_API_TOKEN on the server to generate real roofs.');
       } else if (data.images.length > 1 && !tipShown.current) {
         tipShown.current = true;
-        setToast('Tip: Each generation produces several images. Swipe to see the other results.');
+        setToast('Each generation gives several results. Swipe to see the others.');
       }
     } catch (err: any) {
       setToast(err.message || 'Something went wrong');
@@ -146,6 +169,18 @@ export default function App() {
   const current = results[active] ?? base;
   const busy = generating;
 
+  if (gate === 'checking') {
+    return (
+      <Shell>
+        <Header />
+      </Shell>
+    );
+  }
+
+  if (gate === 'locked') {
+    return <LoginScreen onUnlock={unlocked} />;
+  }
+
   const pickers = (
     <>
       <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={onPick} />
@@ -155,73 +190,82 @@ export default function App() {
 
   if (!base) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-between bg-neutral-950 px-6 pb-10 pt-16 text-white">
+      <Shell>
         {pickers}
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">Roof Visualizer</p>
-          <h1 className="mt-3 text-4xl font-bold leading-tight">See your house with a new roof.</h1>
-          <p className="mt-4 text-white/70">
-            Take or upload a photo of a house, choose tile, slate, shingles, shake or metal, and AI will re-roof it while keeping
-            everything else the same.
-          </p>
-          <div className="mt-10 grid grid-cols-4 gap-2">
-            {MATERIALS.filter((_, i) => i % 4 === 1).map((m) => (
-              <img key={m.id} src={renderSwatch(m, 160)} alt={m.name} className="aspect-square rounded-xl object-cover" />
-            ))}
+        <Header />
+        <div className="flex flex-1 flex-col justify-between px-5 pb-8 pt-8">
+          <div>
+            <Tag>Roof Visualizer</Tag>
+            <h1 className="mt-4 text-[40px] font-light leading-[1.1]">See your house with a new roof</h1>
+            <p className="mt-5 text-lg font-light leading-relaxed text-mist">
+              Take a photo of a house, choose clay tiles, slate, shingles, shake or metal, and see the new roof in seconds,
+              while everything else stays as it is.
+            </p>
+            <div className="mt-8 grid grid-cols-4 gap-1">
+              {MATERIALS.filter((_, i) => i % 4 === 1).map((m) => (
+                <img key={m.id} src={renderSwatch(m, 160)} alt={m.name} className="aspect-square object-cover" />
+              ))}
+            </div>
+            <ol className="mt-8 divide-y divide-line border-y border-line">
+              {[
+                'Photograph the house from the street, with the roof clearly visible.',
+                'Choose a roofing material.',
+                'Generate, swipe through the results and accept the one you like.',
+              ].map((text, i) => (
+                <li key={i} className="flex gap-4 py-3.5 text-[15px] text-mist">
+                  <span className="w-5 shrink-0 font-semibold text-white">{i + 1}</span>
+                  {text}
+                </li>
+              ))}
+            </ol>
           </div>
-          <ol className="mt-10 space-y-3 text-white/80">
-            <li>1. Photograph the house from the street, roof clearly visible.</li>
-            <li>2. Pick a roofing material.</li>
-            <li>3. Generate, swipe through the results, and accept the one you like.</li>
-          </ol>
+          <div className="mt-8 space-y-3">
+            <PrimaryButton onClick={() => cameraInput.current?.click()}>
+              <Camera size={20} /> Take a photo
+            </PrimaryButton>
+            <SecondaryButton onClick={() => fileInput.current?.click()}>
+              <ImageIcon size={20} /> Choose from gallery
+            </SecondaryButton>
+            {provider === 'demo' && <p className="pt-1 text-center text-xs text-muted">Demo mode: no AI key configured on the server.</p>}
+          </div>
         </div>
-        <div className="mt-10 space-y-3">
-          <button
-            onClick={() => cameraInput.current?.click()}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-200 py-4 text-lg font-semibold text-slate-900"
-          >
-            <Camera size={22} /> Take a photo
-          </button>
-          <button
-            onClick={() => fileInput.current?.click()}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 py-4 text-lg font-semibold"
-          >
-            <ImageIcon size={22} /> Choose from gallery
-          </button>
-          {provider === 'demo' && (
-            <p className="text-center text-xs text-amber-300/90">Demo mode — no AI key configured on the server.</p>
-          )}
-        </div>
-      </main>
+      </Shell>
     );
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col bg-neutral-950 text-white">
+    <Shell>
       {pickers}
-      <header className="flex items-center justify-between px-4 pb-2 pt-4">
-        <button
-          onClick={() => {
-            if (busy) return;
-            setHistory([]);
-            setResults([]);
-          }}
-          className="rounded-full p-2 hover:bg-white/10"
-          aria-label="Back"
-        >
-          <ArrowLeft size={26} />
-        </button>
-        <button
-          onClick={() => shareImage(current, `new-roof-${material.id}`)}
-          disabled={busy}
-          className="rounded-2xl bg-slate-500/60 px-6 py-3 transition hover:bg-slate-500/80 disabled:opacity-40"
-          aria-label="Share"
-        >
-          <Share size={22} />
-        </button>
-      </header>
+      <Header
+        left={
+          <button
+            onClick={() => {
+              if (busy) return;
+              setHistory([]);
+              setResults([]);
+            }}
+            className="-ml-2 p-2 text-ink"
+            aria-label="Back"
+          >
+            <ArrowLeft size={24} />
+          </button>
+        }
+        right={
+          <button
+            onClick={() => shareImage(current, `new-roof-${material.id}`)}
+            disabled={busy}
+            className="-mr-2 p-2 text-ink disabled:opacity-30"
+            aria-label="Share"
+          >
+            <Share size={22} />
+          </button>
+        }
+      />
 
-      <p className="pb-2 pt-4 text-center text-sm font-medium">New Roof</p>
+      <div className="flex items-baseline justify-between px-5 pb-3 pt-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-mist">New roof</p>
+        <p className="truncate pl-4 text-sm text-white">{material.name}</p>
+      </div>
       <div className="flex flex-1 items-center">
         <Stage
           base={base}
@@ -235,10 +279,10 @@ export default function App() {
         />
       </div>
 
-      <div className="flex items-center justify-between px-4 py-4">
-        <div className="flex gap-3">
+      <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex gap-2">
           <ToolButton label="Change photo" onClick={() => fileInput.current?.click()} disabled={busy}>
-            <ImageIcon size={22} />
+            <ImageIcon size={20} />
           </ToolButton>
           <ToolButton
             label="Compare before/after"
@@ -246,67 +290,147 @@ export default function App() {
             disabled={busy || results.length === 0}
             active={compare}
           >
-            <Columns2 size={22} />
+            <Columns2 size={20} />
           </ToolButton>
           <ToolButton label="Full screen" onClick={() => setFullscreen(true)} disabled={busy}>
-            <Maximize size={22} />
+            <Maximize size={20} />
           </ToolButton>
         </div>
-        <div className="flex overflow-hidden rounded-full bg-white/10">
-          <button
-            onClick={() => step(-1)}
-            disabled={busy || (cursor === 0 && results.length === 0)}
-            className="px-4 py-3 disabled:opacity-30"
-            aria-label="Undo"
-          >
-            <Undo2 size={22} />
-          </button>
-          <span className="w-px bg-white/20" />
-          <button onClick={() => step(1)} disabled={busy || cursor >= history.length - 1} className="px-4 py-3 disabled:opacity-30" aria-label="Redo">
-            <Redo2 size={22} />
-          </button>
+        <div className="flex gap-2">
+          <ToolButton label="Undo" onClick={() => step(-1)} disabled={busy || (cursor === 0 && results.length === 0)}>
+            <Undo2 size={20} />
+          </ToolButton>
+          <ToolButton label="Redo" onClick={() => step(1)} disabled={busy || cursor >= history.length - 1}>
+            <Redo2 size={20} />
+          </ToolButton>
         </div>
       </div>
 
-      <section className="rounded-t-3xl bg-neutral-900 pb-6 pt-5">
+      <section className="bg-panel pb-6 pt-3">
         <MaterialPicker selected={material} onSelect={setMaterial} disabled={busy} />
-        <div className="mt-5 grid grid-cols-2 gap-3 px-4">
-          <button
-            onClick={accept}
-            disabled={busy || results.length === 0}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-sky-200 py-4 text-lg font-semibold text-slate-900 transition disabled:bg-slate-600/50 disabled:text-slate-400"
-          >
-            <Check size={22} /> Accept
-          </button>
-          <button
-            onClick={generate}
-            disabled={busy}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-neutral-100 py-4 text-lg font-semibold text-slate-900 transition disabled:bg-neutral-600/60 disabled:text-neutral-400"
-          >
-            <RefreshCw size={22} className={busy ? 'animate-spin' : ''} /> Generate
-          </button>
+        <div className="mt-5 grid grid-cols-2 gap-3 px-5">
+          <SecondaryButton onClick={accept} disabled={busy || results.length === 0}>
+            <Check size={20} /> Accept
+          </SecondaryButton>
+          <PrimaryButton onClick={generate} disabled={busy}>
+            <RefreshCw size={20} className={busy ? 'animate-spin' : ''} /> Generate
+          </PrimaryButton>
         </div>
       </section>
 
       {toast && (
-        <div className="fixed inset-x-4 bottom-28 z-20 mx-auto flex max-w-lg items-center gap-4 rounded-2xl bg-neutral-700/95 p-4 shadow-xl">
-          <Info className="shrink-0 text-white/80" size={28} />
-          <p className="flex-1 text-[15px] font-medium leading-snug">{toast}</p>
-          <button onClick={() => setToast(null)} aria-label="Dismiss" className="text-white/60">
+        <div className="fixed inset-x-4 bottom-28 z-20 mx-auto flex max-w-lg items-start gap-3 border-l-4 border-brand bg-white p-4 text-ink shadow-2xl">
+          <Info className="mt-0.5 shrink-0 text-brand" size={20} />
+          <p className="flex-1 text-[15px] leading-snug">{toast}</p>
+          <button onClick={() => setToast(null)} aria-label="Dismiss" className="text-muted">
             <X size={18} />
           </button>
         </div>
       )}
 
-      {askCode && <AccessCodeDialog initial={accessCode} onSave={saveCode} onCancel={() => setAskCode(false)} />}
-
       {fullscreen && (
-        <button className="fixed inset-0 z-30 flex items-center justify-center bg-black" onClick={() => setFullscreen(false)}>
+        <button className="fixed inset-0 z-30 flex items-center justify-center bg-ink" onClick={() => setFullscreen(false)}>
           <img src={current} alt="Full screen" className="max-h-full max-w-full object-contain" />
           <X className="absolute right-4 top-4 text-white" size={28} />
         </button>
       )}
-    </main>
+    </Shell>
+  );
+}
+
+function LoginScreen({ onUnlock }: { onUnlock: (code: string) => void }) {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [checking, setChecking] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const value = code.trim();
+    if (!value) return;
+    setChecking(true);
+    setError('');
+    try {
+      if (await checkCode(value)) onUnlock(value);
+      else setError('That access code is not correct.');
+    } catch {
+      setError('Could not reach the server. Check your connection and try again.');
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  return (
+    <Shell>
+      <Header />
+      <form onSubmit={submit} className="flex flex-1 flex-col justify-between px-5 pb-8 pt-8">
+        <div>
+          <Tag>Roof Visualizer</Tag>
+          <h1 className="mt-4 text-[36px] font-light leading-[1.1]">Sign in to continue</h1>
+          <p className="mt-4 font-light leading-relaxed text-mist">Enter the access code you received from wienerberger.</p>
+          <label className="mt-10 block text-xs font-semibold uppercase tracking-[0.12em] text-mist" htmlFor="code">
+            Access code
+          </label>
+          <div className="mt-2 flex items-center gap-3 border-b-2 border-white pb-2">
+            <Lock size={18} className="text-mist" />
+            <input
+              id="code"
+              autoFocus
+              type="password"
+              autoComplete="current-password"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className="flex-1 bg-transparent text-lg text-white outline-none placeholder:text-muted"
+              placeholder="••••••••"
+            />
+          </div>
+          {error && <p className="mt-3 text-sm text-[#ef987a]">{error}</p>}
+        </div>
+        <PrimaryButton type="submit" disabled={checking || !code.trim()}>
+          {checking ? 'Checking…' : 'Sign in'} <ArrowRight size={20} />
+        </PrimaryButton>
+      </form>
+    </Shell>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return <main className="mx-auto flex min-h-dvh max-w-xl flex-col bg-ink text-white">{children}</main>;
+}
+
+function Header({ left, right }: { left?: React.ReactNode; right?: React.ReactNode }) {
+  return (
+    <header className="sticky top-0 z-10 flex h-14 items-center gap-3 bg-white px-5">
+      {left}
+      <img src="/wienerberger-logo.svg" alt="wienerberger" className="h-[18px] w-auto" />
+      <span className="flex-1" />
+      {right}
+    </header>
+  );
+}
+
+function Tag({ children }: { children: React.ReactNode }) {
+  return <span className="inline-block bg-brand px-2 py-1 text-sm font-semibold text-white">{children}</span>;
+}
+
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
+
+function PrimaryButton({ className = '', ...props }: ButtonProps) {
+  return (
+    <button
+      type="button"
+      {...props}
+      className={`flex w-full items-center justify-center gap-2 bg-brand py-4 text-[17px] font-semibold text-white transition hover:bg-brand-dark disabled:bg-line disabled:text-muted ${className}`}
+    />
+  );
+}
+
+function SecondaryButton({ className = '', ...props }: ButtonProps) {
+  return (
+    <button
+      type="button"
+      {...props}
+      className={`flex w-full items-center justify-center gap-2 border border-white py-4 text-[17px] font-semibold text-white transition hover:bg-white hover:text-ink disabled:border-line disabled:text-muted disabled:hover:bg-transparent ${className}`}
+    />
   );
 }
 
@@ -329,47 +453,11 @@ function ToolButton({
       disabled={disabled}
       aria-label={label}
       title={label}
-      className={`flex h-12 w-12 items-center justify-center rounded-full transition disabled:opacity-30 ${
-        active ? 'bg-sky-200 text-slate-900' : 'bg-white/10 hover:bg-white/15'
+      className={`flex h-11 w-11 items-center justify-center border transition disabled:opacity-30 ${
+        active ? 'border-white bg-white text-ink' : 'border-line text-white hover:border-white'
       }`}
     >
       {children}
     </button>
-  );
-}
-
-function AccessCodeDialog({ initial, onSave, onCancel }: { initial: string; onSave: (code: string) => void; onCancel: () => void }) {
-  const [value, setValue] = useState(initial);
-  return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-6">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSave(value.trim());
-        }}
-        className="w-full max-w-sm space-y-4 rounded-3xl bg-neutral-800 p-6"
-      >
-        <h2 className="text-lg font-semibold">Enter access code</h2>
-        <p className="text-sm text-white/70">
-          {initial ? 'That code was not accepted. ' : ''}Ask the owner of this app for the access code.
-        </p>
-        <input
-          autoFocus
-          type="password"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          className="w-full rounded-xl bg-neutral-900 px-4 py-3 text-white outline-none ring-sky-300 focus:ring-2"
-          placeholder="Access code"
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <button type="button" onClick={onCancel} className="rounded-xl bg-white/10 py-3 font-medium">
-            Cancel
-          </button>
-          <button type="submit" className="rounded-xl bg-sky-200 py-3 font-semibold text-slate-900">
-            Save
-          </button>
-        </div>
-      </form>
-    </div>
   );
 }

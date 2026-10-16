@@ -1,9 +1,48 @@
 @import "tailwindcss";
 
+/*
+ * wienerberger look: dark aubergine surfaces, brick-red accent, square corners.
+ * Slate Pro is the brand typeface (licensed, so not bundled). It is used when installed on the
+ * device; to serve it to everyone, add the licensed .woff2 files to public/fonts/ and append
+ * `, url('/fonts/<file>.woff2') format('woff2')` to each src below. Otherwise Open Sans, the
+ * brand's secondary font, is used.
+ */
+@font-face {
+  font-family: 'Slate Pro';
+  font-weight: 300;
+  font-display: swap;
+  src: local('Slate Pro Light'), local('SlatePro-Light');
+}
+@font-face {
+  font-family: 'Slate Pro';
+  font-weight: 400;
+  font-display: swap;
+  src: local('Slate Pro Book'), local('SlatePro-Book');
+}
+@font-face {
+  font-family: 'Slate Pro';
+  font-weight: 500 700;
+  font-display: swap;
+  src: local('Slate Pro Medium'), local('SlatePro-Medium');
+}
+
+@theme {
+  --font-sans: 'Slate Pro', 'Open Sans', system-ui, sans-serif;
+  --color-brand: #760e10;
+  --color-brand-dark: #5c0b0c;
+  --color-ink: #26222d;
+  --color-panel: #3c3842;
+  --color-line: #585462;
+  --color-muted: #9694a1;
+  --color-mist: #c2c0ca;
+  --color-paper: #f0eeed;
+}
+
 html,
 body {
-  background: #0a0a0a;
-  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--color-ink);
+  color: #fff;
+  font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
 }
 

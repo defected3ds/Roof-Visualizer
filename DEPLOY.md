@@ -23,8 +23,8 @@ You get a public link like `https://roof-visualizer.onrender.com`. No coding nee
    - `APP_PASSWORD` → type the access code you made up
 4. Click **Deploy Blueprint** / **Apply**. The first build takes 3–5 minutes.
 5. Open the **roof-visualizer** service. Your link is at the top of the page (`https://….onrender.com`).
-6. Open the link on your phone, upload a house photo, press **Generate**, and enter your access code once.
-   The phone remembers it.
+6. Open the link on your phone. The app opens on a **Sign in** screen: enter your access code once and the
+   phone remembers it. Share the link and the code only with people who should use the app.
 
 ## Good to know
 

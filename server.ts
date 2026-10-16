@@ -35,6 +35,12 @@ async function startServer() {
     res.json({ ok: true, provider: provider.name, locked: Boolean(accessCode) });
   });
 
+  // Lets the app check a code before showing the editor.
+  app.post('/api/unlock', (req, res) => {
+    if (!accessCode || req.get('x-access-code') === accessCode) return res.json({ ok: true });
+    res.status(401).json({ error: 'Wrong access code.' });
+  });
+
   app.post('/api/generate', async (req, res) => {
     if (accessCode && req.get('x-access-code') !== accessCode) {
       return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });

@@ -15,13 +15,13 @@ export function MaterialPicker({ selected, onSelect, disabled }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="no-scrollbar flex gap-2 overflow-x-auto px-4">
+      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line px-3">
         {(['All', ...CATEGORIES] as const).map((c) => (
           <button
             key={c}
             onClick={() => setFilter(c)}
-            className={`shrink-0 rounded-2xl px-5 py-2.5 text-[15px] font-medium transition ${
-              filter === c ? 'bg-sky-200 text-slate-900' : 'bg-white/10 text-white/80 hover:bg-white/15'
+            className={`shrink-0 border-b-2 px-3 pb-2 pt-1 text-[15px] transition ${
+              filter === c ? 'border-white font-semibold text-white' : 'border-transparent text-mist hover:text-white'
             }`}
           >
             {c}
@@ -36,14 +36,15 @@ export function MaterialPicker({ selected, onSelect, disabled }: Props) {
               key={m.id}
               disabled={disabled}
               onClick={() => onSelect(m)}
-              className={`relative aspect-[4/5] w-32 shrink-0 snap-start overflow-hidden rounded-2xl ring-offset-2 ring-offset-neutral-900 transition disabled:opacity-60 ${
-                active ? 'ring-[3px] ring-white' : 'ring-0'
+              className={`relative aspect-[4/5] w-32 shrink-0 snap-start overflow-hidden outline-offset-2 transition disabled:opacity-60 ${
+                active ? 'outline-2 outline-white' : 'outline-0'
               }`}
             >
               <img src={renderSwatch(m)} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent px-2 pb-2.5 pt-8 text-center text-[13px] leading-tight text-white">
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink via-ink/70 to-transparent px-2 pb-2.5 pt-8 text-left text-[13px] leading-tight text-white">
                 <span className={active ? 'font-semibold' : ''}>{m.name}</span>
               </span>
+              {active && <span className="absolute inset-x-0 top-0 h-1 bg-brand" />}
             </button>
           );
         })}
