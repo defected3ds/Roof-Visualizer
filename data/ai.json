@@ -9,8 +9,8 @@
   },
   "maxProductPhotos": 3,
   "variants": 1,
-  "showEdgeMaps": true,
-  "activeProvider": "open-ai-gpt-2-5",
+  "showEdgeMaps": false,
+  "activeProvider": "gemini",
   "providers": [
     {
       "id": "gemini",
