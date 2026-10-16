@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { commitFiles, githubConfig, type FileChange } from './github';
+import { commitFiles, githubConfig, readRepoFile, type FileChange } from './github';
 import { DEFAULT_TEXTS } from '../src/texts';
 import type { Category, Product, ProductInput, Spec, Texts } from '../src/types';
 
@@ -28,15 +28,51 @@ function readJson<T>(rel: string, fallback: T): T {
   return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : fallback;
 }
 
-let categories: Category[] = readJson(FILES.categories, []);
-// Older catalogs stored the category name ("Tile") instead of its id ("tile").
-const categoryId = (value: string) => categories.find((c) => c.id === value || c.name.toLowerCase() === value?.toLowerCase())?.id ?? value;
-let products: Product[] = readJson<Product[]>(FILES.products, []).map((p) => ({
-  ...p,
-  category: categoryId(p.category),
-  specs: p.specs ?? [],
-}));
-let texts: Texts = readJson(FILES.texts, {});
+let categories: Category[] = [];
+let products: Product[] = [];
+let texts: Texts = {};
+
+function load() {
+  categories = readJson(FILES.categories, []);
+  // Older catalogs stored the category name ("Tile") instead of its id ("tile").
+  const categoryId = (value: string) =>
+    categories.find((c) => c.id === value || c.name.toLowerCase() === value?.toLowerCase())?.id ?? value;
+  products = readJson<Product[]>(FILES.products, []).map((p) => ({ ...p, category: categoryId(p.category), specs: p.specs ?? [] }));
+  texts = readJson(FILES.texts, {});
+}
+load();
+
+/**
+ * Pulls the latest catalog from GitHub at startup. Hosts like Render restart from the last
+ * deployed commit, which can be older than the latest admin save; this makes saves stick
+ * even when no redeploy happened. Product photos are fetched on demand (see ensureImage).
+ */
+export async function syncFromGitHub() {
+  if (!githubConfig()) return;
+  try {
+    for (const rel of Object.values(FILES)) {
+      const content = await readRepoFile(rel);
+      if (content) fs.writeFileSync(path.join(ROOT, rel), content);
+    }
+    load();
+    console.log(`[store] Loaded catalog from GitHub: ${categories.length} categories, ${products.length} products`);
+  } catch (err) {
+    console.error('[store] Could not load the catalog from GitHub, using the deployed copy:', err);
+  }
+}
+
+/** Makes sure a product photo is on disk, downloading it from GitHub if this server doesn't have it yet. */
+export async function ensureImage(url: string): Promise<string | null> {
+  if (!url.startsWith(IMAGE_URL_PREFIX) || url.includes('..')) return null;
+  const rel = urlToRepoPath(url);
+  const abs = path.join(ROOT, rel);
+  if (fs.existsSync(abs)) return abs;
+  const content = await readRepoFile(rel).catch(() => null);
+  if (!content) return null;
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  fs.writeFileSync(abs, content);
+  return abs;
+}
 
 // Saves run one after another so concurrent edits can't interleave commits.
 let queue: Promise<unknown> = Promise.resolve();
@@ -70,10 +106,10 @@ function urlToRepoPath(url: string) {
 const json = (value: unknown) => Buffer.from(JSON.stringify(value, null, 2) + '\n');
 
 /** Product photos as data URLs, for sending to the model. */
-export function referenceImages(product: Product): string[] {
-  return product.images.slice(0, MAX_REFERENCES).flatMap((url) => {
-    const file = path.join(ROOT, urlToRepoPath(url));
-    if (!fs.existsSync(file)) return [];
+export async function referenceImages(product: Product): Promise<string[]> {
+  const files = await Promise.all(product.images.slice(0, MAX_REFERENCES).map(ensureImage));
+  return files.flatMap((file) => {
+    if (!file) return [];
     const ext = path.extname(file).slice(1).toLowerCase();
     const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
     return [`data:${mime};base64,${fs.readFileSync(file).toString('base64')}`];

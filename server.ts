@@ -5,6 +5,7 @@ import path from 'path';
 import { githubConfig } from './server/github';
 import {
   deleteProduct,
+  ensureImage,
   getCategory,
   getProduct,
   getTexts,
@@ -16,6 +17,7 @@ import {
   saveCategories,
   saveProduct,
   saveTexts,
+  syncFromGitHub,
 } from './server/store';
 import { pickProvider } from './server/providers';
 import type { Category, GenerateBody, ProductInput, Texts } from './src/types';
@@ -44,6 +46,7 @@ function sameSecret(given: string | undefined, expected: string): boolean {
 }
 
 async function startServer() {
+  await syncFromGitHub();
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
   const provider = pickProvider();
@@ -55,6 +58,13 @@ async function startServer() {
   app.set('trust proxy', 1);
   app.use(express.json({ limit: '40mb' }));
   app.use(IMAGE_URL_PREFIX, express.static(imageDir, { maxAge: '7d', immutable: true }));
+  // Photos added after the last deploy are fetched from GitHub on first request.
+  app.use(IMAGE_URL_PREFIX, async (req, res, next) => {
+    const file = await ensureImage(IMAGE_URL_PREFIX + req.path.replace(/^\//, ''));
+    if (!file) return next();
+    res.set('Cache-Control', 'public, max-age=604800, immutable').sendFile(file);
+  });
+  app.use(IMAGE_URL_PREFIX, (_req, res) => res.status(404).end());
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, provider: provider.name, locked: Boolean(accessCode) });
@@ -130,7 +140,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Expected { image: dataURL, productId } with a known product' });
     }
     const count = Math.min(Math.max(Number(body.count) || 3, 1), MAX_VARIANTS);
-    const photos = referenceImages(product);
+    const photos = await referenceImages(product);
     const swatch = body.swatch?.startsWith('data:image/') ? [body.swatch] : [];
     const started = Date.now();
     try {
@@ -152,6 +162,8 @@ async function startServer() {
       res.status(500).json({ error: err?.message || 'Generation failed' });
     }
   });
+
+  app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 
   if (process.env.NODE_ENV === 'production') {
     const distPath = path.join(process.cwd(), 'dist');

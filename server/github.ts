@@ -55,3 +55,16 @@ export async function commitFiles(changes: FileChange[], message: string): Promi
   await gh('PATCH', `/git/refs/heads/${encodeURIComponent(branch)}`, { sha: commit.sha });
   return commit.sha;
 }
+
+/** Reads one file from the repo branch; null when it doesn't exist. */
+export async function readRepoFile(path: string): Promise<Buffer | null> {
+  const cfg = githubConfig();
+  if (!cfg) return null;
+  const url = `${API}/repos/${cfg.repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(cfg.branch)}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${cfg.token}`, Accept: 'application/vnd.github.raw', 'X-GitHub-Api-Version': '2022-11-28' },
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`GitHub read ${path} failed: ${res.status} ${await res.text()}`);
+  return Buffer.from(await res.arrayBuffer());
+}

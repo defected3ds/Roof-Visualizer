@@ -38,7 +38,7 @@ for (const photo of photos) {
   for (const id of materialIds) {
     const product = getProduct(id);
     if (!product) throw new Error(`Unknown product "${id}"`);
-    const references = referenceImages(product);
+    const references = await referenceImages(product);
     const started = Date.now();
     try {
       const images = await provider.generate({ image, product, category: getCategory(product.category), references, photoReferences: references.length > 0, count });

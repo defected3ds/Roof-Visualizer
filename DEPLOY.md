@@ -30,7 +30,10 @@ You get a public link like `https://roof-visualizer.onrender.com`. No coding nee
 
 - **Free plan:** the app goes to sleep after 15 minutes without visitors. The next visit takes about a minute to
   wake it up, then it is fast again. To avoid that, upgrade the service to the *Starter* plan in Render (about $7/month).
-- **Updates:** every new push to this branch redeploys automatically.
+- **Updates:** Render deploys new code only if **Auto-Deploy** is on (service → **Settings** → **Build & Deploy** →
+  **Auto-Deploy: On Commit**). Otherwise use **Manual Deploy → Deploy latest commit** after each update.
+- **Products, categories and texts** are loaded from GitHub every time the app starts (with `GITHUB_TOKEN`), so admin
+  changes never depend on a redeploy.
 - **Change the key or access code:** service → **Environment** → edit → **Save changes**. Render restarts the app.
 - **Limit per visitor:** 20 generations per hour by default. Change it with an environment variable
   `RATE_LIMIT_PER_HOUR`.
@@ -59,8 +62,7 @@ It needs two more environment variables in Render (service → **Environment** �
 | `GITHUB_TOKEN` | a GitHub token, see below |
 
 **Why GitHub?** Render's free plan wipes uploaded files every time the app restarts. With `GITHUB_TOKEN` set, every
-product you save is also stored in this GitHub repo (`data/products.json` and `data/product-images/`), and Render
-redeploys with it a few minutes later. You also get a full history of every change. Without the token, products
+product you save is also stored in this GitHub repo (`data/`), and the app reloads it from there whenever it starts. You also get a full history of every change. Without the token, products
 you add disappear at the next restart (the admin page warns you).
 
 **Create the GitHub token (once):**
@@ -78,4 +80,4 @@ you add disappear at the next restart (the admin page warns you).
   with the product, and a single tile. The first 3 photos are sent to the AI with every generation.
 - Describe the product the way a roofer would: shape/profile, exact colour and colour variation, surface
   (matte, engobed, glazed), size or tiles per m², laying pattern, ridge tiles. Skip marketing words.
-- After saving, the product is available immediately; Render then redeploys (about 3 minutes) to make it permanent.
+- After saving, the product is available immediately and stored in GitHub, so it survives restarts.
