@@ -10,13 +10,17 @@ interface Props {
   generating: boolean;
   startedAt: number | null;
   edgeMaps: string[];
+  /** True while generation waits for the depth map. */
+  analysing?: boolean;
+  /** Colour depth map to show over the photo (the "3D" tool button). */
+  depthView?: string;
 }
 
 /** Phones: full width at natural height. Desktop: fitted inside the available area. */
 const PHOTO = 'block w-full lg:h-full lg:object-contain';
 
 /** The photo area: current image, swipeable results, before/after slider and the generating overlay. */
-export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps }: Props) {
+export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, analysing, depthView }: Props) {
   const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState(50);
@@ -80,12 +84,21 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
         </div>
       )}
 
-      {generating && <GeneratingOverlay startedAt={startedAt} edgeMaps={edgeMaps} />}
+      {depthView && (
+        <div className="absolute inset-0">
+          <img src={depthView} alt="" className="absolute inset-0 h-full w-full lg:object-contain" />
+          <span className="absolute left-0 top-3 bg-ink px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-white">
+            {t('editor.depthLabel')}
+          </span>
+        </div>
+      )}
+
+      {generating && <GeneratingOverlay startedAt={startedAt} edgeMaps={edgeMaps} analysing={analysing} />}
     </div>
   );
 }
 
-function GeneratingOverlay({ startedAt, edgeMaps }: { startedAt: number | null; edgeMaps: string[] }) {
+function GeneratingOverlay({ startedAt, edgeMaps, analysing }: { startedAt: number | null; edgeMaps: string[]; analysing?: boolean }) {
   const t = useT();
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -93,8 +106,11 @@ function GeneratingOverlay({ startedAt, edgeMaps }: { startedAt: number | null; 
     return () => clearInterval(t);
   }, []);
   const elapsed = startedAt ? (now - startedAt) / 1000 : 0;
-  // Cycle through the structure maps, then fade back to the photo, like "analysing" the house.
-  const stage = Math.floor(elapsed / 3.5) % (edgeMaps.length + 1);
+  // Cycle through the structure maps (depth first), then fade back to the photo, like "analysing" the house.
+  // Counting from when the maps arrived keeps the sequence starting at the depth map.
+  const [mapsSince, setMapsSince] = useState(0);
+  useEffect(() => setMapsSince(Date.now()), [edgeMaps]);
+  const stage = Math.floor((now - mapsSince) / 3500) % (edgeMaps.length + 1);
   const r = 26;
   const circ = 2 * Math.PI * r;
   const progress = (elapsed % 12) / 12;
@@ -110,6 +126,7 @@ function GeneratingOverlay({ startedAt, edgeMaps }: { startedAt: number | null; 
           style={{ opacity: stage === i ? 1 : 0 }}
         />
       ))}
+      {analysing && <div className="depth-scan pointer-events-none absolute inset-x-0 h-1/4" />}
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/45">
         <div className="relative h-16 w-16">
           <svg viewBox="0 0 64 64" className="h-full w-full -rotate-90">
@@ -127,7 +144,7 @@ function GeneratingOverlay({ startedAt, edgeMaps }: { startedAt: number | null; 
           </svg>
           <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-white">{elapsed.toFixed(1)}s</span>
         </div>
-        <p className="text-lg font-semibold text-white drop-shadow">{t('editor.generating')}</p>
+        <p className="text-lg font-semibold text-white drop-shadow">{t(analysing ? 'editor.analysing' : 'editor.generating')}</p>
       </div>
     </div>
   );

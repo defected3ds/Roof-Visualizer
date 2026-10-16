@@ -26,3 +26,17 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Scanning line shown while the 3D depth map is being calculated. */
+.depth-scan {
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.35) 85%, rgba(255, 255, 255, 0.9));
+  animation: depth-scan 1.8s ease-in-out infinite;
+}
+@keyframes depth-scan {
+  from {
+    top: -25%;
+  }
+  to {
+    top: 100%;
+  }
+}

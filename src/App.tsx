@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
+  Box,
   Camera,
   Check,
   Columns2,
   Image as ImageIcon,
   Info,
+  Loader2,
   Lock,
   Maximize,
   Redo2,
@@ -18,7 +20,7 @@ import {
 import { MaterialPicker } from './components/MaterialPicker';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
-import { depthFor, depthWithin } from './lib/depth';
+import { depthFor, depthWithin, type DepthMaps } from './lib/depth';
 import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT } from './lib/texts';
@@ -72,6 +74,8 @@ function RoofApp() {
   const [generating, setGenerating] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [edgeMaps, setEdgeMaps] = useState<string[]>([]);
+  const [depth, setDepth] = useState<{ photo: string; status: 'running' | 'ready' | 'failed'; maps?: DepthMaps } | null>(null);
+  const [showDepth, setShowDepth] = useState(false);
   const [compare, setCompare] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -115,7 +119,12 @@ function RoofApp() {
 
   // Start depth estimation as soon as there is a photo, while the customer picks a product.
   useEffect(() => {
-    if (base) depthFor(base);
+    setShowDepth(false);
+    if (!base) return setDepth(null);
+    setDepth({ photo: base, status: 'running' });
+    depthFor(base).then((maps) =>
+      setDepth((cur) => (cur?.photo === base ? { photo: base, status: maps ? 'ready' : 'failed', maps: maps ?? undefined } : cur)),
+    );
   }, [base]);
 
   useEffect(() => {
@@ -151,12 +160,14 @@ function RoofApp() {
     setStartedAt(Date.now());
     setCompare(false);
     // Structure previews for the loading animation: depth maps (if ready) first, then edge maps.
+    setShowDepth(false);
     setEdgeMaps([]);
     const edges = buildEdgeMaps(base).catch(() => [] as string[]);
     depthFor(base).then(async (d) => setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(await edges)]));
-    edges.then((e) => setEdgeMaps((cur) => (cur.length ? cur : e)));
+    // Until the depth map is ready the overlay shows "Analysing 3D shape"; edge maps fill in if it fails.
+    edges.then((e) => depthFor(base).then((d) => !d && setEdgeMaps(e)));
     // The depth map helps the AI understand the roof's 3D shape; don't wait long for slow phones.
-    const depth = await depthWithin(base, 12000);
+    const depthMaps = await depthWithin(base, 12000);
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -165,7 +176,7 @@ function RoofApp() {
           image: base,
           productId: product.id,
           swatch: product.images.length ? undefined : renderSwatch(product, 384),
-          depth: depth?.gray,
+          depth: depthMaps?.gray,
           count: VARIANTS,
         }),
       });
@@ -337,6 +348,8 @@ function RoofApp() {
           generating={generating}
           startedAt={startedAt}
           edgeMaps={edgeMaps}
+          analysing={generating && depth?.status === 'running'}
+          depthView={showDepth && !generating ? depth?.maps?.color : undefined}
         />
       </div>
 
@@ -352,6 +365,14 @@ function RoofApp() {
             active={compare}
           >
             <Columns2 size={20} />
+          </ToolButton>
+          <ToolButton
+            label={depth?.status === 'failed' ? t('editor.depthUnavailable') : t('editor.depth')}
+            onClick={() => setShowDepth((v) => !v)}
+            disabled={busy || depth?.status !== 'ready'}
+            active={showDepth}
+          >
+            {depth?.status === 'running' ? <Loader2 size={20} className="animate-spin" /> : <Box size={20} />}
           </ToolButton>
           <ToolButton label="Full screen" onClick={() => setFullscreen(true)} disabled={busy}>
             <Maximize size={20} />

@@ -16,22 +16,38 @@ export interface DepthMaps {
 }
 
 let estimator: Promise<any> | null = null;
+/** Set once WebGPU has failed on this device, so later photos go straight to WebAssembly. */
+let gpuBroken = false;
 const cache = new Map<string, Promise<DepthMaps | null>>();
 
 function loadEstimator() {
   estimator ??= (async () => {
     const { pipeline } = await import(/* @vite-ignore */ TRANSFORMERS_CDN);
-    if ('gpu' in navigator) {
+    if ('gpu' in navigator && !gpuBroken) {
       try {
         return await pipeline('depth-estimation', MODEL, { device: 'webgpu', dtype: 'fp16' });
       } catch {
-        // No usable GPU adapter: fall back to WebAssembly.
+        gpuBroken = true; // No usable GPU adapter: fall back to WebAssembly.
       }
     }
     return pipeline('depth-estimation', MODEL, { device: 'wasm', dtype: 'q8' });
   })();
   estimator.catch(() => (estimator = null));
   return estimator;
+}
+
+/** Runs the model; if the GPU path fails while running (some phones), retries once on WebAssembly. */
+async function estimate(input: string) {
+  const model = await loadEstimator();
+  try {
+    return await model(input);
+  } catch (err) {
+    if (gpuBroken) throw err;
+    console.warn('WebGPU depth estimation failed, retrying with WebAssembly:', err);
+    gpuBroken = true;
+    estimator = null;
+    return (await loadEstimator())(input);
+  }
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -72,7 +88,6 @@ async function run(photo: string): Promise<DepthMaps | null> {
     const ctx = canvas.getContext('2d')!;
     ctx.drawImage(img, 0, 0, w, h);
 
-    const estimate = await loadEstimator();
     const { depth } = await estimate(canvas.toDataURL('image/jpeg', 0.9));
 
     // The model returns a map at its own resolution; draw it back at the photo's proportions.
