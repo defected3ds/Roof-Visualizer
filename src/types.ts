@@ -58,7 +58,7 @@ export interface GenerateResponse {
   provider: string;
 }
 
-export type ProviderType = 'gemini' | 'openai' | 'replicate' | 'demo';
+export type ProviderType = 'gemini' | 'openai' | 'bfl' | 'fal' | 'kie' | 'replicate' | 'demo';
 
 /** One image-model API the admin can switch to. API keys never live here, only the name of the env variable. */
 export interface ProviderConfig {

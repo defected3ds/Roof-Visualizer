@@ -1,28 +1,31 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, Plus, RotateCcw, Trash2, TriangleAlert } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from '../components/ui';
+import { imageLimit, PROVIDER_TYPES } from '../lib/models';
 import { buildFinalPrompt, DEFAULT_SYSTEM_PROMPT, type ImageRoles } from '../lib/prompt';
 import { productThumb } from '../lib/swatch';
 import type { AiSettings, AiSettingsView, Catalog, ProviderConfig, ProviderType } from '../types';
 import { api, fieldClass, type SaveResult } from './Admin';
 
-type TypeInfo = Record<ProviderType, { label: string; images: 'all' | 'photo-only' | 'none'; defaultModel: string; defaultKeyEnv: string }>;
+/** What a model receives, from its image limit (see src/lib/models.ts). */
+function supportText(cfg: ProviderConfig): string {
+  if (cfg.type === 'demo') return 'Does not call any AI: runs the whole pipeline (depth map, roof mask, prompt) but returns the photo unchanged.';
+  const n = imageLimit(cfg);
+  return n === 1
+    ? 'Takes one image: receives the house photo and the text prompt only (no depth map, roof mask or product photos).'
+    : `Takes up to ${n} images: house photo, depth map, roof mask and product photos (in that order of priority).`;
+}
 
-const IMAGE_SUPPORT: Record<TypeInfo[ProviderType]['images'], string> = {
-  all: 'Receives the photo, depth map, roof mask and product photos.',
-  'photo-only': 'Receives the house photo and the text prompt only (no depth map, roof mask or product photos).',
-  none: 'Does not call any AI: runs the whole pipeline (depth map, roof mask, prompt) but returns the photo unchanged.',
-};
 
 /** Admin tab: system prompt, what the AI receives, and which image model is active. */
 export function AiSettingsEditor({ password, catalog, onSaved }: { password: string; catalog: Catalog; onSaved: (r: SaveResult) => void }) {
-  const [loaded, setLoaded] = useState<(AiSettingsView & { types: TypeInfo }) | null>(null);
+  const [loaded, setLoaded] = useState<AiSettingsView | null>(null);
   const [draft, setDraft] = useState<AiSettings | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api<AiSettingsView & { types: TypeInfo }>(password, 'GET', '/api/admin/ai')
+    api<AiSettingsView>(password, 'GET', '/api/admin/ai')
       .then((res) => {
         setLoaded(res);
         setDraft(res.settings);
@@ -53,7 +56,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
   }
 
   const active = draft.providers.find((p) => p.id === draft.activeProvider) ?? draft.providers[0];
-  const activeImages = loaded.types[active.type]?.images === 'photo-only' ? 'photo-only' : 'all';
+  const activeLimit = imageLimit(active);
 
   return (
     <section className="mt-6 space-y-10">
@@ -115,14 +118,14 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
                       value={p.type}
                       onChange={(e) => {
                         const type = e.target.value as ProviderType;
-                        const info = loaded.types[type];
+                        const info = PROVIDER_TYPES[type];
                         setProvider(i, { type, model: info.defaultModel, keyEnv: info.defaultKeyEnv });
                       }}
                       className={fieldClass}
                     >
-                      {(Object.keys(loaded.types) as ProviderType[]).map((t) => (
+                      {(Object.keys(PROVIDER_TYPES) as ProviderType[]).map((t) => (
                         <option key={t} value={t}>
-                          {loaded.types[t].label}
+                          {PROVIDER_TYPES[t].label}
                         </option>
                       ))}
                     </select>
@@ -144,7 +147,8 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
                     </>
                   )}
                 </div>
-                <p className="mt-2 text-xs text-muted">{IMAGE_SUPPORT[loaded.types[p.type]?.images ?? 'all']}</p>
+                {PROVIDER_TYPES[p.type].help && <p className="mt-2 text-xs text-muted">Model: {PROVIDER_TYPES[p.type].help}</p>}
+                <p className="mt-1 text-xs text-muted">{supportText(p)}</p>
               </div>
             );
           })}
@@ -155,7 +159,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
             set({
               providers: [
                 ...draft.providers,
-                { id: '', label: 'New image model', type: 'gemini', model: loaded.types.gemini.defaultModel, keyEnv: loaded.types.gemini.defaultKeyEnv },
+                { id: '', label: 'New image model', type: 'gemini', model: PROVIDER_TYPES.gemini.defaultModel, keyEnv: PROVIDER_TYPES.gemini.defaultKeyEnv },
               ],
             })
           }
@@ -218,12 +222,12 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
             </select>
           </label>
         </div>
-        {activeImages !== 'all' && (
+        {activeLimit === 1 && (
           <p className="mt-3 text-sm text-brand">The active model ({active.label}) only receives the house photo and the text prompt.</p>
         )}
       </div>
 
-      <FinalPromptPreview draft={draft} catalog={catalog} imagesSupported={activeImages === 'all'} />
+      <FinalPromptPreview draft={draft} catalog={catalog} limit={activeLimit} />
 
       {error && <p className="text-sm font-semibold text-brand">{error}</p>}
       <div className="sticky bottom-0 flex gap-3 border-t border-line bg-white py-4">
@@ -251,20 +255,23 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 }
 
 /** General prompt + product data = final prompt, for any product, exactly as the model will receive it. */
-function FinalPromptPreview({ draft, catalog, imagesSupported }: { draft: AiSettings; catalog: Catalog; imagesSupported: boolean }) {
+function FinalPromptPreview({ draft, catalog, limit }: { draft: AiSettings; catalog: Catalog; limit: number }) {
   const [productId, setProductId] = useState(catalog.products.find((p) => p.images.length)?.id ?? catalog.products[0]?.id ?? '');
   const product = catalog.products.find((p) => p.id === productId);
   const category = catalog.categories.find((c) => c.id === product?.category);
 
   const roles: ImageRoles = useMemo(() => {
-    const photos = imagesSupported && draft.include.productPhotos ? Math.min(draft.maxProductPhotos, product?.images.length ?? 0) : 0;
-    return {
-      depth: imagesSupported && draft.include.depthMap,
-      mask: imagesSupported && draft.include.roofMask,
-      productPhotos: photos,
-      swatch: imagesSupported && draft.include.productPhotos && photos === 0,
-    };
-  }, [draft, product, imagesSupported]);
+    // Same priority as the server: house photo, depth map, roof mask, product photos, until the model's limit.
+    let room = limit - 1;
+    const take = (wanted: boolean) => (wanted && room > 0 ? (room--, true) : false);
+    const depth = take(draft.include.depthMap);
+    const mask = take(draft.include.roofMask);
+    const available = draft.include.productPhotos ? Math.min(draft.maxProductPhotos, product?.images.length ?? 0) : 0;
+    const photos = Math.min(available, Math.max(0, room));
+    room -= photos;
+    const swatch = take(draft.include.productPhotos && (product?.images.length ?? 0) === 0);
+    return { depth, mask, productPhotos: photos, swatch };
+  }, [draft, product, limit]);
 
   if (!product) return null;
   const prompt = buildFinalPrompt(draft, product, category, roles);

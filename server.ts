@@ -23,7 +23,7 @@ import {
   SITE_URL_PREFIX,
   syncFromGitHub,
 } from './server/store';
-import { createProvider, hasKey, PROVIDER_TYPES, type Provider } from './server/providers';
+import { createProvider, hasKey, imageLimit, PROVIDER_TYPES, type Provider } from './server/providers';
 import { buildFinalPrompt, type ImageRoles } from './src/lib/prompt';
 import type { AiSettings, Category, GenerateBody, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
@@ -89,7 +89,7 @@ async function startServer() {
   app.get('/api/health', (_req, res) => {
     const cfg = activeConfig();
     const ai = getAiSettings();
-    const usesImages = PROVIDER_TYPES[cfg.type].images !== 'photo-only';
+    const usesImages = imageLimit(cfg) > 1;
     res.json({
       ok: true,
       provider: cfg.type,
@@ -188,14 +188,15 @@ async function startServer() {
     const ai = getAiSettings();
     const cfg = activeConfig();
     const dataUrl = (v?: string) => (v?.startsWith('data:image/') ? v : undefined);
-    // Demo goes through the full pipeline too, so the analysis can be tried without an API key.
-    const accepts = PROVIDER_TYPES[cfg.type].images === 'photo-only' ? 'photo-only' : 'all';
-
-    // Images in the order the prompt describes them: house photo, depth map, roof mask, product photos.
-    const depth = ai.include.depthMap && accepts === 'all' ? dataUrl(body.depth) : undefined;
-    const mask = ai.include.roofMask && accepts === 'all' ? dataUrl(body.mask) : undefined;
-    const photos = ai.include.productPhotos && accepts === 'all' ? (await referenceImages(product)).slice(0, ai.maxProductPhotos) : [];
-    const swatch = ai.include.productPhotos && accepts === 'all' && !photos.length ? dataUrl(body.swatch) : undefined;
+    // Images in priority order, up to what the model accepts: house photo, depth map, roof mask, product photos.
+    let room = imageLimit(cfg) - 1;
+    const take = <T,>(v: T | undefined) => (v && room > 0 ? (room--, v) : undefined);
+    const depth = ai.include.depthMap ? take(dataUrl(body.depth)) : undefined;
+    const mask = ai.include.roofMask ? take(dataUrl(body.mask)) : undefined;
+    const allPhotos = ai.include.productPhotos ? (await referenceImages(product)).slice(0, ai.maxProductPhotos) : [];
+    const photos = allPhotos.slice(0, Math.max(0, room));
+    room -= photos.length;
+    const swatch = ai.include.productPhotos && !allPhotos.length ? take(dataUrl(body.swatch)) : undefined;
     const roles: ImageRoles = { depth: Boolean(depth), mask: Boolean(mask), productPhotos: photos.length, swatch: Boolean(swatch) };
     const images = [body.image, depth, mask, ...photos, swatch].filter((x): x is string => Boolean(x));
     const category = getCategory(product.category);

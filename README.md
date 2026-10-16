@@ -49,15 +49,22 @@ the same effect you see in other roof visualizer apps.
   roof mask, and the number of results per generation.
 - **Image models:** any number of entries of these API types, one of them active:
 
-| API type | Model example | Receives |
-|---|---|---|
-| Google Gemini | `gemini-nano-banana-2.1` | photo, depth map, roof mask, product photos |
-| OpenAI Images | `gpt-image-1` | photo, depth map, roof mask, product photos |
-| Replicate | `black-forest-labs/flux-kontext-pro` | photo and text only |
-| Demo | none | runs the whole pipeline, returns the photo |
+| API type | Key variable | Model example | Images accepted |
+|---|---|---|---|
+| Google Gemini | `GEMINI_API_KEY` | `gemini-nano-banana-2.1` | 8 |
+| OpenAI Images | `OPENAI_API_KEY` | `gpt-image-1` | 8 |
+| Black Forest Labs (bfl.ai) | `BFL_API_KEY` | `flux-2-pro`, `flux-2-max` (8) or `flux-kontext-pro` (1) | 8 / 1 |
+| fal.ai | `FAL_KEY` | `fal-ai/nano-banana-pro/edit` (8) or `fal-ai/flux-pro/kontext` (1) | 8 / 1 |
+| kie.ai | `KIE_API_KEY` | `google/nano-banana-edit` | 10 |
+| Replicate | `REPLICATE_API_TOKEN` | `black-forest-labs/flux-kontext-pro` | 1 |
+| Demo | none | none | runs the whole pipeline, returns the photo |
+
+Images are sent in priority order (house photo, depth map, roof mask, product photos) up to the model's limit
+(`src/lib/models.ts`), and the prompt only describes the images actually sent. `BFL_API_URL` (e.g. the EU endpoint
+`https://api.eu.bfl.ai`), `FAL_QUEUE_URL` and `KIE_API_URL` override the API addresses.
 
 API keys are never stored in the settings (they are committed to GitHub); each model names the environment variable
-that holds its key (e.g. `GEMINI_API_KEY`, `OPENAI_API_KEY`, `REPLICATE_API_TOKEN`). Before the first save the
+that holds its key (see the table). Before the first save the
 active model is chosen as before (`AI_PROVIDER`, else the first model with a key).
 
 **Roof mask:** CLIPSeg (`Xenova/clipseg-rd64-refined`, prompts "roof" / "roof tiles") runs in the browser next to the
