@@ -318,7 +318,9 @@ function cleanProvider(p: Partial<ProviderConfig>, seen: Set<string>): ProviderC
   const type = p.type && p.type in PROVIDER_TYPES ? p.type : null;
   if (!type) throw new Error('Choose an API type for every model');
   const label = String(p.label ?? '').trim() || PROVIDER_TYPES[type].label;
-  const model = String(p.model ?? '').trim();
+  let model = String(p.model ?? '').trim();
+  // Krea 3 lives at krea/v3/... on fal.ai, not under fal-ai/ (that path answers "Path /v3/edit not found").
+  if (type === 'fal') model = model.replace(/^fal-ai\/krea\/v3\//i, 'krea/v3/');
   if (type !== 'demo' && !model) throw new Error(`"${label}" needs a model name`);
   const keyEnv = type === 'demo' ? '' : String(p.keyEnv ?? '').trim().toUpperCase();
   if (type !== 'demo' && !validKeyEnv(keyEnv)) {

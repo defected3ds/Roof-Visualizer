@@ -281,6 +281,8 @@ const FAL_QUEUE = process.env.FAL_QUEUE_URL || 'https://queue.fal.run';
 function falProvider(cfg: ProviderConfig, apiKey: string): Provider {
   const headers = { Authorization: `Key ${apiKey}` };
   const multi = imageLimitFor(cfg) > 1;
+  // Krea 3 is krea/v3/... on fal.ai; fal-ai/krea/v3/... answers "Path /v3/edit not found".
+  const model = cfg.model.replace(/^fal-ai\/krea\/v3\//i, 'krea/v3/');
   return {
     name: cfg.label,
     generate: ({ images, prompts }) =>
@@ -294,7 +296,7 @@ function falProvider(cfg: ProviderConfig, apiKey: string): Provider {
           const size = kreaSize(images[0]);
           if (size) input.image_size = size;
         }
-        const res = await fetch(`${FAL_QUEUE}/${cfg.model}`, {
+        const res = await fetch(`${FAL_QUEUE}/${model}`, {
           method: 'POST',
           headers: { ...headers, 'Content-Type': 'application/json' },
           body: JSON.stringify(input),
