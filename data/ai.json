@@ -32,6 +32,13 @@
       "keyEnv": "OPENAI_API_KEY"
     },
     {
+      "id": "openai-gpt-image-2-5-sunburst",
+      "label": "OpenAI – GPT Image 2.5 Sunburst",
+      "type": "openai",
+      "model": "gpt-image-2.5-sunburst",
+      "keyEnv": "OPENAI_API_KEY"
+    },
+    {
       "id": "fal-krea-v3-edit",
       "label": "fal.ai – Krea v3 Edit",
       "type": "fal",
