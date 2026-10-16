@@ -10,6 +10,11 @@
   "maxProductPhotos": 3,
   "variants": 1,
   "showEdgeMaps": false,
+  "segmentation": {
+    "tool": "sam3",
+    "keyEnv": "FAL_API_KEY",
+    "prompt": "roof"
+  },
   "activeProvider": "gemini",
   "providers": [
     {
