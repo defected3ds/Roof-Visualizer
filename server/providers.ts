@@ -1,66 +1,56 @@
 import { GoogleGenAI } from '@google/genai';
-import type { Category, Product } from '../src/types';
+import { DEFAULT_SYSTEM_PROMPT } from '../src/lib/prompt';
+import type { AiSettings, ProviderConfig, ProviderType } from '../src/types';
 
-export interface GenerateRequest {
-  /** The house photo as a data URL. */
-  image: string;
-  product: Product;
-  category?: Category;
-  /** Product photos (or a drawn texture) as data URLs, sent to the model after the house photo. */
-  references: string[];
-  /** True when the references are real product photos rather than a drawn texture. */
-  photoReferences: boolean;
-  /** Depth map of the house photo (brighter = closer), sent right after the photo to convey 3D shape. */
-  depth?: string;
-  count: number;
+/** What every image model receives: the ordered images (house photo first) and one prompt per variant. */
+export interface ModelInput {
+  images: string[];
+  prompts: string[];
 }
 
 export interface Provider {
   name: string;
-  generate(req: GenerateRequest): Promise<string[]>;
+  generate(input: ModelInput): Promise<string[]>;
 }
 
-/**
- * The instruction that does the real work. It tells the model to treat the photo as fixed
- * and change only the roof covering, which is what the edge-map / inpaint pipeline of
- * dedicated apps enforces. Modern instruction-following image editors respect it well.
- */
-export function buildPrompt(req: GenerateRequest, variant: number): string {
-  const { product, category } = req;
-  const label = [product.brand, product.name].filter(Boolean).join(' ');
-  const kind = category ? ` ${category.name.toLowerCase()}` : '';
-  const lines = [
-    `Edit this photo of a house (the first image): replace ONLY the roof covering with the${kind} roofing product "${label}".`,
-    ...(category?.description ? [`Product type: ${category.description}`] : []),
-    `Product details: ${product.description}`,
-    ...(product.specs.length
-      ? [`Technical data (use it for the correct tile size, proportions and colour): ${product.specs.map((s) => `${s.label}: ${s.value}`).join('; ')}.`]
-      : []),
-    'Keep everything else pixel-identical: the same camera angle, framing, walls, windows, doors, chimneys, gutters, trim, sky, trees, people and lighting.',
-    'Preserve the exact roof geometry: ridges, hips, valleys, dormers, eaves and pitch must not move or change shape.',
-    'Lay the new material in correct perspective following each roof plane, with realistic scale, course lines, ridge caps, shadows and weathering matching the photo light.',
-    'The result must look like a real, unedited photograph, not a render.',
+/** Which inputs each kind of API can use; shown in the admin. */
+export const PROVIDER_TYPES: Record<ProviderType, { label: string; images: 'all' | 'photo-only' | 'none'; defaultModel: string; defaultKeyEnv: string }> = {
+  gemini: { label: 'Google Gemini', images: 'all', defaultModel: 'gemini-nano-banana-2.1', defaultKeyEnv: 'GEMINI_API_KEY' },
+  openai: { label: 'OpenAI Images', images: 'all', defaultModel: 'gpt-image-1', defaultKeyEnv: 'OPENAI_API_KEY' },
+  replicate: { label: 'Replicate', images: 'photo-only', defaultModel: 'black-forest-labs/flux-kontext-pro', defaultKeyEnv: 'REPLICATE_API_TOKEN' },
+  demo: { label: 'Demo (no AI)', images: 'none', defaultModel: '', defaultKeyEnv: '' },
+};
+
+/** Env variable names a provider may read its key from; never the app's own secrets. */
+const KEY_ENV = /^[A-Z][A-Z0-9_]*(KEY|TOKEN)$/;
+const RESERVED_ENV = new Set(['GITHUB_TOKEN']);
+
+export function validKeyEnv(name: string) {
+  return KEY_ENV.test(name) && !RESERVED_ENV.has(name);
+}
+
+export function hasKey(cfg: ProviderConfig): boolean {
+  return cfg.type === 'demo' || (validKeyEnv(cfg.keyEnv) && Boolean(process.env[cfg.keyEnv]));
+}
+
+export function defaultAiSettings(): AiSettings {
+  const providers: ProviderConfig[] = [
+    { id: 'gemini', label: 'Google Gemini – Nano Banana 2.1', type: 'gemini', model: 'gemini-nano-banana-2.1', keyEnv: 'GEMINI_API_KEY' },
+    { id: 'openai', label: 'OpenAI – GPT Image', type: 'openai', model: 'gpt-image-1', keyEnv: 'OPENAI_API_KEY' },
+    { id: 'replicate', label: 'Replicate – FLUX.1 Kontext Pro', type: 'replicate', model: 'black-forest-labs/flux-kontext-pro', keyEnv: 'REPLICATE_API_TOKEN' },
+    { id: 'demo', label: 'Demo – returns the photo unchanged', type: 'demo', model: '', keyEnv: '' },
   ];
-  let next = 2;
-  if (req.depth) {
-    lines.push(
-      `Image ${next} is a depth map of the house photo (brighter = closer to the camera). Use it only to understand the 3D shape: which surfaces are roof, the orientation and pitch of each roof plane, and where ridges, hips, valleys and eaves are. Lay the tile courses so they follow those planes in perspective. Never draw the depth map into the result.`,
-    );
-    next += 1;
-  }
-  if (req.references.length > 0) {
-    const last = next + req.references.length - 1;
-    const which = req.references.length === 1 ? `Image ${next} is` : `Images ${next} to ${last} are`;
-    lines.push(
-      req.photoReferences
-        ? `${which} reference photos of this exact product: reproduce its shape and profile, colour and colour variation, surface finish and size as faithfully as possible. Use them only as a material reference, never copy their background or composition.`
-        : `${which} a texture sample of the material: match its colour, profile and pattern.`,
-    );
-  }
-  if (variant > 0) {
-    lines.push(`Variation ${variant + 1}: allow natural, subtle differences in colour blend and weathering.`);
-  }
-  return lines.join(' ');
+  // Before the admin saves a choice, keep the old behaviour: AI_PROVIDER, else the first provider with a key.
+  const forced = providers.find((p) => p.type === process.env.AI_PROVIDER);
+  const active = forced ?? providers.find((p) => p.type !== 'demo' && hasKey(p)) ?? providers[3];
+  return {
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    include: { productData: true, specs: true, productPhotos: true, depthMap: true, roofMask: true },
+    maxProductPhotos: 3,
+    variants: 3,
+    activeProvider: active.id,
+    providers,
+  };
 }
 
 function splitDataUrl(dataUrl: string) {
@@ -69,66 +59,93 @@ function splitDataUrl(dataUrl: string) {
   return { mimeType: match[1], data: match[2] };
 }
 
-// ---------------------------------------------------------------------------
-// Gemini image editing (default when GEMINI_API_KEY is set)
-// ---------------------------------------------------------------------------
+/** Runs one call per prompt in parallel; fails only when every call failed. */
+async function allVariants(prompts: string[], once: (prompt: string) => Promise<string | null>): Promise<string[]> {
+  const results = await Promise.allSettled(prompts.map(once));
+  const images = results.flatMap((r) => (r.status === 'fulfilled' && r.value ? [r.value] : []));
+  const firstError = results.find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined;
+  if (images.length === 0 && firstError) throw firstError.reason;
+  return images;
+}
 
-// Nano Banana 2.1 first; older image models only if the key has no access to it.
-const DEFAULT_GEMINI_MODELS = ['gemini-nano-banana-2.1', 'gemini-3.1-flash-image', 'gemini-2.5-flash-image'];
+// ---------------------------------------------------------------------------------------------
+// Google Gemini image editing (Nano Banana)
+// ---------------------------------------------------------------------------------------------
 
-function geminiProvider(apiKey: string): Provider {
+const GEMINI_FALLBACKS = ['gemini-nano-banana-2.1', 'gemini-3.1-flash-image', 'gemini-2.5-flash-image'];
+
+function geminiProvider(cfg: ProviderConfig, apiKey: string): Provider {
   const ai = new GoogleGenAI({ apiKey });
-  const models = process.env.GEMINI_IMAGE_MODEL ? [process.env.GEMINI_IMAGE_MODEL] : DEFAULT_GEMINI_MODELS;
+  // Older image models are tried only when the configured one doesn't exist for this key.
+  const models = [cfg.model, ...GEMINI_FALLBACKS.filter((m) => m !== cfg.model)];
   let workingModel: string | null = null;
 
-  async function once(req: GenerateRequest, variant: number): Promise<string | null> {
-    const parts: any[] = [{ inlineData: splitDataUrl(req.image) }];
-    if (req.depth) parts.push({ inlineData: splitDataUrl(req.depth) });
-    for (const ref of req.references) parts.push({ inlineData: splitDataUrl(ref) });
-    parts.push({ text: buildPrompt(req, variant) });
-
-    let lastErr: unknown;
-    for (const model of workingModel ? [workingModel] : models) {
-      try {
-        const res = await ai.models.generateContent({
-          model,
-          contents: [{ role: 'user', parts }],
-          config: { responseModalities: ['IMAGE', 'TEXT'] },
-        });
-        if (workingModel !== model) console.log(`[gemini] using model ${model}`);
-        workingModel = model;
-        const out = res.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
-        return out?.inlineData ? `data:${out.inlineData.mimeType || 'image/png'};base64,${out.inlineData.data}` : null;
-      } catch (err: any) {
-        lastErr = err;
-        console.warn(`[gemini] model ${model} failed: ${err?.message}`);
-        // Fall through to the next model only when this one doesn't exist for the key.
-        if (!/not found|404|not supported/i.test(String(err?.message))) throw err;
-      }
-    }
-    throw lastErr;
-  }
-
   return {
-    name: 'gemini',
-    async generate(req) {
-      const results = await Promise.allSettled(Array.from({ length: req.count }, (_, i) => once(req, i)));
-      const images = results.flatMap((r) => (r.status === 'fulfilled' && r.value ? [r.value] : []));
-      const firstError = results.find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined;
-      if (images.length === 0 && firstError) throw firstError.reason;
-      return images;
-    },
+    name: cfg.label,
+    generate: ({ images, prompts }) =>
+      allVariants(prompts, async (prompt) => {
+        const parts: any[] = images.map((img) => ({ inlineData: splitDataUrl(img) }));
+        parts.push({ text: prompt });
+        let lastErr: unknown;
+        for (const model of workingModel ? [workingModel] : models) {
+          try {
+            const res = await ai.models.generateContent({
+              model,
+              contents: [{ role: 'user', parts }],
+              config: { responseModalities: ['IMAGE', 'TEXT'] },
+            });
+            if (workingModel !== model) console.log(`[gemini] using model ${model}`);
+            workingModel = model;
+            const out = res.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
+            return out?.inlineData ? `data:${out.inlineData.mimeType || 'image/png'};base64,${out.inlineData.data}` : null;
+          } catch (err: any) {
+            lastErr = err;
+            console.warn(`[gemini] model ${model} failed: ${err?.message}`);
+            if (!/not found|404|not supported/i.test(String(err?.message))) throw err;
+          }
+        }
+        throw lastErr;
+      }),
   };
 }
 
-// ---------------------------------------------------------------------------
-// Replicate: FLUX.1 Kontext (instruction-based image editing)
-// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------
+// OpenAI image edits (GPT Image): several input images, first one is the photo to edit
+// ---------------------------------------------------------------------------------------------
+
+function openaiProvider(cfg: ProviderConfig, apiKey: string): Provider {
+  return {
+    name: cfg.label,
+    generate: ({ images, prompts }) =>
+      allVariants(prompts, async (prompt) => {
+        const form = new FormData();
+        form.append('model', cfg.model);
+        form.append('prompt', prompt);
+        form.append('n', '1');
+        form.append('size', 'auto');
+        images.forEach((img, i) => {
+          const { mimeType, data } = splitDataUrl(img);
+          form.append('image[]', new Blob([Buffer.from(data, 'base64')], { type: mimeType }), `image-${i + 1}.${mimeType.split('/')[1]}`);
+        });
+        const res = await fetch('https://api.openai.com/v1/images/edits', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${apiKey}` },
+          body: form,
+        });
+        if (!res.ok) throw new Error(`OpenAI error: ${res.status} ${await res.text()}`);
+        const out = (await res.json()).data?.[0];
+        return out?.b64_json ? `data:image/png;base64,${out.b64_json}` : null;
+      }),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Replicate (e.g. FLUX.1 Kontext): takes the house photo and the text prompt only
+// ---------------------------------------------------------------------------------------------
 
 const REPLICATE_API = 'https://api.replicate.com/v1';
 
-function replicateProvider(token: string): Provider {
-  const model = process.env.REPLICATE_MODEL || 'black-forest-labs/flux-kontext-pro';
+function replicateProvider(cfg: ProviderConfig, token: string): Provider {
   const headers = { Authorization: `Bearer ${token}` };
 
   async function upload(dataUrl: string): Promise<string> {
@@ -141,7 +158,7 @@ function replicateProvider(token: string): Provider {
   }
 
   async function predict(input: Record<string, unknown>): Promise<string> {
-    let res = await fetch(`${REPLICATE_API}/models/${model}/predictions`, {
+    let res = await fetch(`${REPLICATE_API}/models/${cfg.model}/predictions`, {
       method: 'POST',
       headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'wait=60' },
       body: JSON.stringify({ input }),
@@ -164,46 +181,47 @@ function replicateProvider(token: string): Provider {
   }
 
   return {
-    name: 'replicate',
-    async generate(req) {
-      const imageUrl = await upload(req.image);
-      const results = await Promise.allSettled(
-        Array.from({ length: req.count }, (_, i) =>
-          predict({
-            // FLUX Kontext takes a single image, so the product is described in text only.
-            prompt: buildPrompt({ ...req, references: [], depth: undefined }, i),
-            input_image: imageUrl,
-            aspect_ratio: 'match_input_image',
-            output_format: 'jpg',
-            seed: Math.floor(Math.random() * 1e9),
-          }),
-        ),
+    name: cfg.label,
+    async generate({ images, prompts }) {
+      const imageUrl = await upload(images[0]);
+      return allVariants(prompts, (prompt) =>
+        predict({
+          prompt,
+          input_image: imageUrl,
+          aspect_ratio: 'match_input_image',
+          output_format: 'jpg',
+          seed: Math.floor(Math.random() * 1e9),
+        }),
       );
-      const images = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
-      const firstError = results.find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined;
-      if (images.length === 0 && firstError) throw firstError.reason;
-      return images;
     },
   };
 }
 
-// ---------------------------------------------------------------------------
-// Demo mode: no API key configured. Echoes the photo so the whole UI can be tried.
-// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------
+// Demo: no API key needed; returns the photo so the whole app can be tried.
+// ---------------------------------------------------------------------------------------------
 
-const demoProvider: Provider = {
-  name: 'demo',
-  async generate(req) {
-    await new Promise((r) => setTimeout(r, 4000));
-    return Array.from({ length: req.count }, () => req.image);
-  },
-};
+function demoProvider(cfg: ProviderConfig): Provider {
+  return {
+    name: cfg.label,
+    async generate({ images, prompts }) {
+      await new Promise((r) => setTimeout(r, 4000));
+      return prompts.map(() => images[0]);
+    },
+  };
+}
 
-export function pickProvider(): Provider {
-  const { AI_PROVIDER, GEMINI_API_KEY, REPLICATE_API_TOKEN } = process.env;
-  if (AI_PROVIDER === 'demo') return demoProvider;
-  if (AI_PROVIDER === 'replicate' && REPLICATE_API_TOKEN) return replicateProvider(REPLICATE_API_TOKEN);
-  if (GEMINI_API_KEY) return geminiProvider(GEMINI_API_KEY);
-  if (REPLICATE_API_TOKEN) return replicateProvider(REPLICATE_API_TOKEN);
-  return demoProvider;
+/** Builds the provider for a config. Throws when its API key isn't set on the server. */
+export function createProvider(cfg: ProviderConfig): Provider {
+  if (cfg.type === 'demo') return demoProvider(cfg);
+  if (!hasKey(cfg)) throw Object.assign(new Error(`API key missing: set ${cfg.keyEnv} on the server`), { code: 'unavailable' });
+  const key = process.env[cfg.keyEnv]!;
+  switch (cfg.type) {
+    case 'gemini':
+      return geminiProvider(cfg, key);
+    case 'openai':
+      return openaiProvider(cfg, key);
+    case 'replicate':
+      return replicateProvider(cfg, key);
+  }
 }

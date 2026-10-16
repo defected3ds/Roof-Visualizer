@@ -32,23 +32,36 @@ photo ─► browser: EXIF-rotate + resize to ≤1536px, render material swatch
       ─► 3 images ─► swipe / compare / accept (accepted image becomes the new base)
 ```
 
-**Depth:** as soon as a photo is picked, the browser estimates a depth map with Depth Anything V2 (small) via
-transformers.js (`src/lib/depth.ts`; library and model load from public CDNs and are cached). The grey depth map is
-sent to the model with the photo so it understands the roof planes and pitch; generation waits for it at most 12 s.
+**Depth and roof mask:** as soon as a photo is picked, the browser estimates a depth map (Depth Anything V2 small)
+and a roof mask (CLIPSeg) via transformers.js (`src/lib/depth.ts`, `src/lib/roofmask.ts`; library and models load
+from public CDNs and are cached). Both are sent to the model with the photo; generation waits for them at most 20 s.
 
 While waiting, the app shows the depth maps and line / edge / soft-edge maps of the photo (computed in the browser with
 Sobel + non-max suppression). These are the same kinds of structure maps that ControlNet pipelines use, and
 the same effect you see in other roof visualizer apps.
 
-### AI backends (`server/providers.ts`)
+### AI settings (`/admin` > AI settings, saved in `data/ai.json`)
 
-| Provider | Env | Model | Notes |
-|---|---|---|---|
-| Gemini (default) | `GEMINI_API_KEY` | Nano Banana 2.1 (`gemini-nano-banana-2.1`), fallback `gemini-3.1-flash-image` / `gemini-2.5-flash-image` | Uses the swatch image as a texture reference |
-| Replicate | `REPLICATE_API_TOKEN` | `black-forest-labs/flux-kontext-pro` | Instruction-based editing; text prompt only |
-| Demo | none | none | Echoes the photo |
+- **System prompt:** the general instructions. `{{product}}` and `{{images}}` mark where the selected product's
+  data and the guide to the attached images go (`src/lib/prompt.ts` builds the final prompt; the admin shows a
+  live preview of it for any product).
+- **What the AI receives:** switches for product description, technical data, product photos (1–3), depth map and
+  roof mask, and the number of results per generation.
+- **Image models:** any number of entries of these API types, one of them active:
 
-Set `AI_PROVIDER=gemini|replicate|demo` to force one when several keys are set.
+| API type | Model example | Receives |
+|---|---|---|
+| Google Gemini | `gemini-nano-banana-2.1` | photo, depth map, roof mask, product photos |
+| OpenAI Images | `gpt-image-1` | photo, depth map, roof mask, product photos |
+| Replicate | `black-forest-labs/flux-kontext-pro` | photo and text only |
+| Demo | none | runs the whole pipeline, returns the photo |
+
+API keys are never stored in the settings (they are committed to GitHub); each model names the environment variable
+that holds its key (e.g. `GEMINI_API_KEY`, `OPENAI_API_KEY`, `REPLICATE_API_TOKEN`). Before the first save the
+active model is chosen as before (`AI_PROVIDER`, else the first model with a key).
+
+**Roof mask:** CLIPSeg (`Xenova/clipseg-rd64-refined`, prompts "roof" / "roof tiles") runs in the browser next to the
+depth map (`src/lib/roofmask.ts`). It is approximate; the prompt tells the model to follow the real roof edges.
 
 ## Products
 

@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { commitFiles, githubConfig, readRepoFile, type FileChange } from './github';
 import { DEFAULT_TEXTS, IMAGE_TEXT_KEYS } from '../src/texts';
-import type { Category, Product, ProductInput, Spec, Texts } from '../src/types';
+import { defaultAiSettings, validKeyEnv, PROVIDER_TYPES } from './providers';
+import type { AiSettings, Category, Product, ProductInput, ProviderConfig, Spec, Texts } from '../src/types';
 
 /**
  * Catalog data (categories, products, product photos, app texts) lives in data/ in the repo.
@@ -13,6 +14,7 @@ const FILES = {
   categories: 'data/categories.json',
   products: 'data/products.json',
   texts: 'data/texts.json',
+  ai: 'data/ai.json',
 };
 const IMAGE_DIR = 'data/product-images';
 const MAX_IMAGES = 6;
@@ -35,6 +37,8 @@ function readJson<T>(rel: string, fallback: T): T {
 let categories: Category[] = [];
 let products: Product[] = [];
 let texts: Texts = {};
+/** Saved AI settings, or null to use the defaults (see providers.ts). */
+let aiSettings: AiSettings | null = null;
 
 function load() {
   categories = readJson(FILES.categories, []);
@@ -43,6 +47,7 @@ function load() {
     categories.find((c) => c.id === value || c.name.toLowerCase() === value?.toLowerCase())?.id ?? value;
   products = readJson<Product[]>(FILES.products, []).map((p) => ({ ...p, category: categoryId(p.category), specs: p.specs ?? [] }));
   texts = readJson(FILES.texts, {});
+  aiSettings = readJson<AiSettings | null>(FILES.ai, null);
 }
 load();
 
@@ -60,7 +65,8 @@ export async function syncFromGitHub() {
       const content = await readRepoFile(rel);
       if (!content) continue;
       const parsed = JSON.parse(content.toString('utf8'));
-      const valid = name === 'texts' ? parsed && typeof parsed === 'object' && !Array.isArray(parsed) : Array.isArray(parsed);
+      const valid =
+        name === 'texts' || name === 'ai' ? parsed && typeof parsed === 'object' && !Array.isArray(parsed) : Array.isArray(parsed);
       if (!valid) throw new Error(`${rel} on GitHub is not a valid ${name} file`);
       downloads.push([rel, content]);
     }
@@ -290,5 +296,64 @@ export function saveTexts(input: Texts): Promise<SaveResult & { texts: Texts }> 
     const result = await persist(changes, 'Update app texts');
     texts = next;
     return { ...result, texts };
+  });
+}
+
+// ---- AI settings ----------------------------------------------------------------------------
+
+/** Saved settings merged over the defaults, so new options get sensible values. */
+export function getAiSettings(): AiSettings {
+  const defaults = defaultAiSettings();
+  if (!aiSettings) return defaults;
+  return {
+    ...defaults,
+    ...aiSettings,
+    include: { ...defaults.include, ...aiSettings.include },
+    providers: aiSettings.providers?.length ? aiSettings.providers : defaults.providers,
+  };
+}
+
+function cleanProvider(p: Partial<ProviderConfig>, seen: Set<string>): ProviderConfig {
+  const type = p.type && p.type in PROVIDER_TYPES ? p.type : null;
+  if (!type) throw new Error('Choose an API type for every model');
+  const label = String(p.label ?? '').trim() || PROVIDER_TYPES[type].label;
+  const model = String(p.model ?? '').trim();
+  if (type !== 'demo' && !model) throw new Error(`"${label}" needs a model name`);
+  const keyEnv = type === 'demo' ? '' : String(p.keyEnv ?? '').trim().toUpperCase();
+  if (type !== 'demo' && !validKeyEnv(keyEnv)) {
+    throw new Error(`"${label}": the key variable must be a name like GEMINI_API_KEY (ending in KEY or TOKEN)`);
+  }
+  let id = String(p.id ?? '').trim() || slug(label);
+  while (seen.has(id)) id = `${slug(label)}-${Math.random().toString(36).slice(2, 6)}`;
+  seen.add(id);
+  return { id, label, type, model, keyEnv };
+}
+
+export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult & { settings: AiSettings }> {
+  return serialized(async () => {
+    const current = getAiSettings();
+    const seen = new Set<string>();
+    const providers = (input.providers ?? current.providers).map((p) => cleanProvider(p, seen));
+    if (providers.length === 0) throw new Error('Keep at least one image model');
+    const activeProvider = providers.some((p) => p.id === input.activeProvider) ? input.activeProvider! : providers[0].id;
+    const clamp = (n: unknown, lo: number, hi: number, d: number) => Math.min(hi, Math.max(lo, Math.round(Number(n)) || d));
+    const next: AiSettings = {
+      systemPrompt: String(input.systemPrompt ?? current.systemPrompt).trim(),
+      include: {
+        productData: Boolean(input.include?.productData ?? current.include.productData),
+        specs: Boolean(input.include?.specs ?? current.include.specs),
+        productPhotos: Boolean(input.include?.productPhotos ?? current.include.productPhotos),
+        depthMap: Boolean(input.include?.depthMap ?? current.include.depthMap),
+        roofMask: Boolean(input.include?.roofMask ?? current.include.roofMask),
+      },
+      maxProductPhotos: clamp(input.maxProductPhotos ?? current.maxProductPhotos, 1, 3, 3),
+      variants: clamp(input.variants ?? current.variants, 1, 4, 3),
+      activeProvider,
+      providers,
+    };
+    if (!next.systemPrompt) throw new Error('The system prompt cannot be empty');
+    const result = await persist([{ path: FILES.ai, content: json(next) }], 'Update AI settings');
+    aiSettings = next;
+    return { ...result, settings: next };
   });
 }

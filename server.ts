@@ -6,6 +6,7 @@ import { githubConfig } from './server/github';
 import {
   deleteProduct,
   ensureImage,
+  getAiSettings,
   getCategory,
   getProduct,
   getTexts,
@@ -14,6 +15,7 @@ import {
   listCategories,
   listProducts,
   referenceImages,
+  saveAiSettings,
   saveCategories,
   saveProduct,
   saveTexts,
@@ -21,10 +23,9 @@ import {
   SITE_URL_PREFIX,
   syncFromGitHub,
 } from './server/store';
-import { pickProvider } from './server/providers';
-import type { Category, GenerateBody, ProductInput, Texts } from './src/types';
-
-const MAX_VARIANTS = 4;
+import { createProvider, hasKey, PROVIDER_TYPES, type Provider } from './server/providers';
+import { buildFinalPrompt, type ImageRoles } from './src/lib/prompt';
+import type { AiSettings, Category, GenerateBody, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_HOUR) || 20;
 const hits = new Map<string, number[]>();
@@ -51,7 +52,17 @@ async function startServer() {
   await syncFromGitHub();
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
-  const provider = pickProvider();
+  // The active image model comes from /admin > AI settings; providers are reused while their config is unchanged.
+  const providerCache = new Map<string, Provider>();
+  const activeConfig = (): ProviderConfig => {
+    const ai = getAiSettings();
+    return ai.providers.find((p) => p.id === ai.activeProvider) ?? ai.providers[0];
+  };
+  const providerFor = (cfg: ProviderConfig) => {
+    const key = JSON.stringify(cfg);
+    if (!providerCache.has(key)) providerCache.set(key, createProvider(cfg));
+    return providerCache.get(key)!;
+  };
 
   const accessCode = process.env.APP_PASSWORD || '';
   const adminPassword = process.env.ADMIN_PASSWORD || '';
@@ -76,7 +87,17 @@ async function startServer() {
   app.use(SITE_URL_PREFIX, (_req, res) => res.status(404).end());
 
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true, provider: provider.name, locked: Boolean(accessCode) });
+    const cfg = activeConfig();
+    const ai = getAiSettings();
+    const usesImages = PROVIDER_TYPES[cfg.type].images !== 'photo-only';
+    res.json({
+      ok: true,
+      provider: cfg.type,
+      providerLabel: cfg.label,
+      locked: Boolean(accessCode),
+      // Which photo analyses the app should run (they're only useful when the model receives them).
+      analysis: { depth: usesImages && ai.include.depthMap, mask: usesImages && ai.include.roofMask },
+    });
   });
 
   // Lets the app check a code before showing the editor.
@@ -134,6 +155,22 @@ async function startServer() {
       res.status(400).json({ error: err.message });
     }
   });
+  admin.get('/ai', (_req, res) => {
+    const settings = getAiSettings();
+    res.json({
+      settings,
+      keyStatus: Object.fromEntries(settings.providers.map((p) => [p.id, hasKey(p)])),
+      types: PROVIDER_TYPES,
+    });
+  });
+  admin.put('/ai', async (req, res) => {
+    try {
+      const result = await saveAiSettings(req.body as Partial<AiSettings>);
+      res.json({ ...result, keyStatus: Object.fromEntries(result.settings.providers.map((p) => [p.id, hasKey(p)])) });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
   app.use('/api/admin', admin);
 
   app.post('/api/generate', async (req, res) => {
@@ -148,30 +185,36 @@ async function startServer() {
     if (!body.image?.startsWith('data:image/') || !product) {
       return res.status(400).json({ error: 'Expected { image: dataURL, productId } with a known product' });
     }
-    const count = Math.min(Math.max(Number(body.count) || 3, 1), MAX_VARIANTS);
-    const photos = await referenceImages(product);
-    const swatch = body.swatch?.startsWith('data:image/') ? [body.swatch] : [];
+    const ai = getAiSettings();
+    const cfg = activeConfig();
+    const dataUrl = (v?: string) => (v?.startsWith('data:image/') ? v : undefined);
+    // Demo goes through the full pipeline too, so the analysis can be tried without an API key.
+    const accepts = PROVIDER_TYPES[cfg.type].images === 'photo-only' ? 'photo-only' : 'all';
+
+    // Images in the order the prompt describes them: house photo, depth map, roof mask, product photos.
+    const depth = ai.include.depthMap && accepts === 'all' ? dataUrl(body.depth) : undefined;
+    const mask = ai.include.roofMask && accepts === 'all' ? dataUrl(body.mask) : undefined;
+    const photos = ai.include.productPhotos && accepts === 'all' ? (await referenceImages(product)).slice(0, ai.maxProductPhotos) : [];
+    const swatch = ai.include.productPhotos && accepts === 'all' && !photos.length ? dataUrl(body.swatch) : undefined;
+    const roles: ImageRoles = { depth: Boolean(depth), mask: Boolean(mask), productPhotos: photos.length, swatch: Boolean(swatch) };
+    const images = [body.image, depth, mask, ...photos, swatch].filter((x): x is string => Boolean(x));
+    const category = getCategory(product.category);
+    const prompts = Array.from({ length: ai.variants }, (_, v) => buildFinalPrompt(ai, product, category, roles, v));
+
     const started = Date.now();
     try {
-      const images = await provider.generate({
-        image: body.image,
-        product,
-        category: getCategory(product.category),
-        references: photos.length ? photos : swatch,
-        photoReferences: photos.length > 0,
-        depth: body.depth?.startsWith('data:image/') ? body.depth : undefined,
-        count,
-      });
-      if (images.length === 0) {
+      const results = await providerFor(cfg).generate({ images, prompts });
+      if (results.length === 0) {
         return res.status(502).json({ error: 'The model returned no images. Try again or pick another photo.' });
       }
-      console.log(`[generate] ${provider.name} "${product.name}" (${photos.length} product photos${body.depth ? ', depth map' : ''}) -> ${images.length} images in ${Date.now() - started}ms`);
-      res.json({ images, provider: provider.name });
+      const used = [depth && 'depth map', mask && 'roof mask', photos.length && `${photos.length} product photos`, swatch && 'texture sample'];
+      console.log(`[generate] ${cfg.label} "${product.name}" (${used.filter(Boolean).join(', ') || 'photo only'}) -> ${results.length} images in ${Date.now() - started}ms`);
+      res.json({ images: results, provider: cfg.type });
     } catch (err: any) {
       console.error('[generate] failed:', err);
       // Customers get a plain message; the full error stays in the server log.
       const message = String(err?.message ?? '');
-      const code = /API key|UNAUTHENTICATED|PERMISSION_DENIED|ACCOUNT_STATE_INVALID|\b401\b|\b403\b/.test(message)
+      const code = err?.code === 'unavailable' || /API key|UNAUTHENTICATED|PERMISSION_DENIED|ACCOUNT_STATE_INVALID|\b401\b|\b403\b/.test(message)
         ? 'unavailable'
         : /RESOURCE_EXHAUSTED|\b429\b|quota/i.test(message)
           ? 'busy'
@@ -193,7 +236,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Roof Visualizer running on http://localhost:${PORT} (provider: ${provider.name})`);
+    console.log(`Roof Visualizer running on http://localhost:${PORT} (image model: ${activeConfig().label})`);
   });
 }
 

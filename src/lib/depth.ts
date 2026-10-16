@@ -20,9 +20,18 @@ let estimator: Promise<any> | null = null;
 let gpuBroken = false;
 const cache = new Map<string, Promise<DepthMaps | null>>();
 
+let transformers: Promise<any> | null = null;
+
+/** transformers.js, loaded from the CDN once and shared by the depth and roof-mask models. */
+export function loadTransformers(): Promise<any> {
+  transformers ??= import(/* @vite-ignore */ TRANSFORMERS_CDN);
+  transformers.catch(() => (transformers = null));
+  return transformers;
+}
+
 function loadEstimator() {
   estimator ??= (async () => {
-    const { pipeline } = await import(/* @vite-ignore */ TRANSFORMERS_CDN);
+    const { pipeline } = await loadTransformers();
     if ('gpu' in navigator && !gpuBroken) {
       try {
         return await pipeline('depth-estimation', MODEL, { device: 'webgpu', dtype: 'fp16' });

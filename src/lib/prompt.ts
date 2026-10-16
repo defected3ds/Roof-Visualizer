@@ -1,0 +1,92 @@
+import type { AiSettings, Category, Product } from '../types';
+
+/**
+ * Builds the final prompt sent to the image model: the admin's general system prompt plus the
+ * selected product's data plus a guide to the attached images. Shared by the server (generation)
+ * and the admin (live preview), so the preview is exactly what the model receives.
+ */
+
+export const DEFAULT_SYSTEM_PROMPT = `You are editing a real photograph of a house to show how it would look with a new roof.
+
+Keep the house and its surroundings exactly as they are: the same camera angle, framing, walls, windows, doors, chimneys, gutters, trim, sky, trees, people and lighting.
+
+Replace ONLY the roof covering with the selected product described below.
+
+Preserve the exact roof geometry: ridges, hips, valleys, dormers, eaves, verges and pitch must not move or change shape.
+
+Lay the new tiles in correct perspective on every roof plane, with realistic tile size and course spacing, straight courses, matching ridge and hip tiles, natural shadows and the same light, colour temperature and weather as the photo.
+
+The result must look like a real, unedited photograph, not a render.
+
+{{product}}
+
+{{images}}`;
+
+/** What the model receives besides the house photo, in this order. */
+export interface ImageRoles {
+  depth: boolean;
+  mask: boolean;
+  /** Number of product photos (0 when a drawn texture sample is sent instead). */
+  productPhotos: number;
+  /** A drawn texture sample is sent because the product has no photos. */
+  swatch: boolean;
+}
+
+export function productBlock(settings: AiSettings, product: Product, category?: Category): string {
+  const label = [product.brand, product.name].filter(Boolean).join(' ');
+  const kind = category ? ` (${category.name})` : '';
+  const lines = [`SELECTED PRODUCT: ${label}${kind}.`];
+  if (settings.include.productData) {
+    if (category?.description) lines.push(`Product type: ${category.description}`);
+    lines.push(`Appearance: ${product.description}`);
+  }
+  if (settings.include.specs && product.specs.length) {
+    lines.push(
+      `Technical data (use it for the correct tile size, proportions and colour): ${product.specs.map((s) => `${s.label}: ${s.value}`).join('; ')}.`,
+    );
+  }
+  return lines.join('\n');
+}
+
+export function imageGuide(roles: ImageRoles): string {
+  const lines = ['ATTACHED IMAGES:', 'Image 1 is the photo of the house to edit. Return an edited version of this photo only.'];
+  let n = 2;
+  if (roles.depth) {
+    lines.push(
+      `Image ${n} is a depth map of the house photo (brighter = closer to the camera). Use it only to understand the 3D shape: the orientation and pitch of each roof plane and where ridges, hips, valleys and eaves are, so the tile courses follow those planes in perspective. Never draw it into the result.`,
+    );
+    n += 1;
+  }
+  if (roles.mask) {
+    lines.push(
+      `Image ${n} is a roof mask of the house photo: white marks the roof area to re-cover, black must stay unchanged. It is approximate; follow the real roof edges in the photo. Never draw it into the result.`,
+    );
+    n += 1;
+  }
+  if (roles.productPhotos > 0) {
+    const which = roles.productPhotos === 1 ? `Image ${n} is a reference photo` : `Images ${n} to ${n + roles.productPhotos - 1} are reference photos`;
+    lines.push(
+      `${which} of the selected product: reproduce its shape and profile, colour and colour variation, surface finish and size as faithfully as possible. Use them only as a material reference, never copy their background or composition.`,
+    );
+  } else if (roles.swatch) {
+    lines.push(`Image ${n} is a texture sample of the material: match its colour, profile and pattern.`);
+  }
+  return lines.join('\n');
+}
+
+/** The final prompt. `{{product}}` and `{{images}}` in the system prompt are replaced; missing ones are appended. */
+export function buildFinalPrompt(
+  settings: AiSettings,
+  product: Product,
+  category: Category | undefined,
+  roles: ImageRoles,
+  variant = 0,
+): string {
+  let text = settings.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT;
+  const productText = productBlock(settings, product, category);
+  const imagesText = imageGuide(roles);
+  text = text.includes('{{product}}') ? text.replace('{{product}}', productText) : `${text}\n\n${productText}`;
+  text = text.includes('{{images}}') ? text.replace('{{images}}', imagesText) : `${text}\n\n${imagesText}`;
+  if (variant > 0) text += `\n\nVariation ${variant + 1}: allow natural, subtle differences in colour blend and weathering.`;
+  return text.replace(/\n{3,}/g, '\n\n').trim();
+}

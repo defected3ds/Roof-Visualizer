@@ -4,13 +4,15 @@
  *   npx tsx scripts/try.ts photo1.jpg photo2.jpg --product barrel-terracotta --count 2
  *
  * Results are written to test-output/<photo>-<material>-<n>.<ext>.
- * Products with photos send them as references; drawn swatches are browser-only, so those send text only.
+ * Uses the active image model and system prompt from data/ai.json. Product photos are sent as references;
+ * depth maps and roof masks are browser-only, so they are not used here.
  */
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
-import { pickProvider } from '../server/providers';
-import { getCategory, getProduct, listProducts, referenceImages } from '../server/store';
+import { createProvider } from '../server/providers';
+import { buildFinalPrompt } from '../src/lib/prompt';
+import { getAiSettings, getCategory, getProduct, listProducts, referenceImages } from '../server/store';
 
 const args = process.argv.slice(2);
 const flag = (name: string) => {
@@ -27,8 +29,9 @@ if (photos.length === 0) {
   process.exit(1);
 }
 
-const provider = pickProvider();
-console.log(`Provider: ${provider.name}`);
+const ai = getAiSettings();
+const provider = createProvider(ai.providers.find((p) => p.id === ai.activeProvider) ?? ai.providers[0]);
+console.log(`Image model: ${provider.name}`);
 const outDir = path.join(process.cwd(), 'test-output');
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -41,7 +44,9 @@ for (const photo of photos) {
     const references = await referenceImages(product);
     const started = Date.now();
     try {
-      const images = await provider.generate({ image, product, category: getCategory(product.category), references, photoReferences: references.length > 0, count });
+      const roles = { depth: false, mask: false, productPhotos: references.length, swatch: false };
+      const prompts = Array.from({ length: count }, (_, v) => buildFinalPrompt(ai, product, getCategory(product.category), roles, v));
+      const images = await provider.generate({ images: [image, ...references], prompts });
       images.forEach((dataUrl, n) => {
         const [, mime, b64] = /^data:image\/([^;]+);base64,(.*)$/s.exec(dataUrl)!;
         const file = path.join(outDir, `${path.parse(photo).name}-${id}-${n + 1}.${mime === 'jpeg' ? 'jpg' : mime}`);

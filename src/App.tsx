@@ -19,6 +19,7 @@ import { MaterialPicker } from './components/MaterialPicker';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
 import { depthFor, depthWithin } from './lib/depth';
+import { roofMaskFor, roofMaskWithin } from './lib/roofmask';
 import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
@@ -73,7 +74,10 @@ function RoofApp() {
   const [generating, setGenerating] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [edgeMaps, setEdgeMaps] = useState<string[]>([]);
-  const [depth, setDepth] = useState<{ photo: string; status: 'running' | 'ready' | 'failed' } | null>(null);
+  // Photo analysis (depth map, roof mask) for the current photo; which ones run is set in /admin > AI settings.
+  const [analysis, setAnalysis] = useState({ depth: true, mask: true });
+  const [analysing, setAnalysing] = useState<string | null>(null);
+  const [waitingForAnalysis, setWaitingForAnalysis] = useState(false);
   const [compare, setCompare] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -89,6 +93,7 @@ function RoofApp() {
       try {
         const health = await (await fetch('/api/health')).json();
         setProvider(health.provider);
+        if (health.analysis) setAnalysis(health.analysis);
         if (!health.locked) return setGate('open');
         const saved = storedCode();
         setGate(saved && (await checkCode(saved)) ? 'open' : 'locked');
@@ -115,14 +120,15 @@ function RoofApp() {
       .catch((err) => setToast(err.message));
   }, [gate, accessCode]);
 
-  // Start depth estimation as soon as there is a photo, while the customer picks a product.
+  // Analyse the photo (depth map, then roof mask) as soon as there is one, while the customer picks a product.
+  const analyse = (photo: string) =>
+    Promise.all([analysis.depth ? depthFor(photo) : null, analysis.mask ? roofMaskFor(photo) : null]);
   useEffect(() => {
-    if (!base) return setDepth(null);
-    setDepth({ photo: base, status: 'running' });
-    depthFor(base).then((maps) =>
-      setDepth((cur) => (cur?.photo === base ? { photo: base, status: maps ? 'ready' : 'failed' } : cur)),
-    );
-  }, [base]);
+    if (!base) return setAnalysing(null);
+    setAnalysing(base);
+    analyse(base).finally(() => setAnalysing((cur) => (cur === base ? null : cur)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [base, analysis]);
 
   useEffect(() => {
     if (!toast) return;
@@ -156,14 +162,18 @@ function RoofApp() {
     setGenerating(true);
     setStartedAt(Date.now());
     setCompare(false);
-    // Structure previews for the loading animation: depth maps (if ready) first, then edge maps.
+    // Previews for the loading animation: depth maps, the detected roof, then edge maps. Until the analysis is
+    // done the overlay says "Analysing 3D shape".
     setEdgeMaps([]);
     const edges = buildEdgeMaps(base).catch(() => [] as string[]);
-    depthFor(base).then(async (d) => setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(await edges)]));
-    // Until the depth map is ready the overlay shows "Analysing 3D shape"; edge maps fill in if it fails.
-    edges.then((e) => depthFor(base).then((d) => !d && setEdgeMaps(e)));
-    // The depth map helps the AI understand the roof's 3D shape; don't wait long for slow phones.
-    const depthMaps = await depthWithin(base, 12000);
+    analyse(base).then(async ([d, m]) => setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : []), ...(await edges)]));
+    // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.
+    setWaitingForAnalysis(true);
+    const [depthMaps, roofMask] = await Promise.all([
+      analysis.depth ? depthWithin(base, 20000) : null,
+      analysis.mask ? roofMaskWithin(base, 20000) : null,
+    ]);
+    setWaitingForAnalysis(false);
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -173,6 +183,7 @@ function RoofApp() {
           productId: product.id,
           swatch: product.images.length ? undefined : renderSwatch(product, 384),
           depth: depthMaps?.gray,
+          mask: roofMask?.mask,
           count: VARIANTS,
         }),
       });
@@ -343,7 +354,7 @@ function RoofApp() {
           generating={generating}
           startedAt={startedAt}
           edgeMaps={edgeMaps}
-          analysing={generating && depth?.status === 'running'}
+          analysing={generating && waitingForAnalysis && analysing === base}
         />
       </div>
 

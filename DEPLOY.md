@@ -53,6 +53,10 @@ The app has a back office at **`/admin`** (e.g. `https://roof-visualizer.onrende
 - **Categories:** rename, reorder, add and delete the categories customers filter by, each with a short note for
   the AI. A category can only be deleted once it has no products.
 - **App texts:** every text customers see, with ready-made defaults. Change any of them; "Default" restores one.
+- **AI settings:** the system prompt (with a live preview of the final prompt for any product), what the AI receives
+  (product data, technical data, product photos, depth map, roof mask) and which image model is active. To use
+  another model, add its API key in Render → Environment under the variable name shown there (for example
+  `OPENAI_API_KEY`), then make it active. Keys are never typed into the admin.
 
 It needs two more environment variables in Render (service → **Environment** → **Edit** → **+ Add**):
 

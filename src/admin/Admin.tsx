@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from '../components/ui';
+import { AiSettingsEditor } from './AiSettings';
 import { fileToDataUrl } from '../lib/image';
 import { productThumb } from '../lib/swatch';
 import { DEFAULT_TEXTS, TEXT_GROUPS } from '../texts';
@@ -43,9 +44,9 @@ const COMMON_SPECS = [
   'Colors',
 ];
 
-type Tab = 'products' | 'categories' | 'texts';
+type Tab = 'products' | 'categories' | 'texts' | 'ai';
 
-interface SaveResult {
+export interface SaveResult {
   synced: boolean;
   warning?: string;
 }
@@ -58,7 +59,7 @@ function readPassword() {
   }
 }
 
-async function api<T>(password: string, method: string, url: string, body?: unknown): Promise<T> {
+export async function api<T>(password: string, method: string, url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
     method,
     headers: { 'X-Admin-Password': password, ...(body ? { 'Content-Type': 'application/json' } : {}) },
@@ -160,12 +161,13 @@ export default function Admin() {
         <Tag>Admin</Tag>
         <h1 className="mt-4 text-[30px] font-bold leading-tight">Roof Visualizer admin</h1>
 
-        <nav className="mt-6 flex gap-1 border-b border-line">
+        <nav className="no-scrollbar mt-6 flex gap-1 overflow-x-auto border-b border-line">
           {(
             [
               ['products', 'Products'],
               ['categories', 'Categories'],
               ['texts', 'App texts'],
+              ['ai', 'AI settings'],
             ] as [Tab, string][]
           ).map(([id, label]) => (
             <button
@@ -207,6 +209,7 @@ export default function Admin() {
           <CategoryEditor password={password} catalog={catalog} onSaved={(r) => saved(r, 'Categories saved.')} />
         )}
         {tab === 'texts' && <TextEditor password={password} texts={texts} onSaved={(r) => saved(r, 'Texts saved.')} />}
+        {tab === 'ai' && <AiSettingsEditor password={password} catalog={catalog} onSaved={(r) => saved(r, 'AI settings saved.')} />}
 
         <a href="/" className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-brand">
           <ArrowLeft size={16} /> Back to the app
@@ -321,7 +324,7 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
   );
 }
 
-const fieldClass = 'mt-2 w-full rounded-wb border border-line bg-white px-3 py-2.5 font-normal outline-none focus:border-brand';
+export const fieldClass = 'mt-2 w-full rounded-wb border border-line bg-white px-3 py-2.5 font-normal outline-none focus:border-brand';
 
 function ProductForm({
   password,

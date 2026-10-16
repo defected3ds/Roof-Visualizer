@@ -48,10 +48,52 @@ export interface GenerateBody {
   swatch?: string;
   /** Depth map of the house photo as a data URL (see src/lib/depth.ts). */
   depth?: string;
+  /** Roof mask of the house photo as a data URL, white = roof (see src/lib/roofmask.ts). */
+  mask?: string;
   count: number;
 }
 
 export interface GenerateResponse {
   images: string[];
   provider: string;
+}
+
+export type ProviderType = 'gemini' | 'openai' | 'replicate' | 'demo';
+
+/** One image-model API the admin can switch to. API keys never live here, only the name of the env variable. */
+export interface ProviderConfig {
+  id: string;
+  label: string;
+  type: ProviderType;
+  /** Model name at the provider, e.g. "gemini-nano-banana-2.1" or "black-forest-labs/flux-kontext-pro". */
+  model: string;
+  /** Name of the server environment variable holding the API key, e.g. GEMINI_API_KEY. */
+  keyEnv: string;
+}
+
+/** AI settings edited in /admin > AI settings (data/ai.json). */
+export interface AiSettings {
+  /** General instructions; {{product}} and {{images}} mark where product data and the image guide go. */
+  systemPrompt: string;
+  include: {
+    /** Product description and category note. */
+    productData: boolean;
+    /** Technical data sheet. */
+    specs: boolean;
+    productPhotos: boolean;
+    depthMap: boolean;
+    roofMask: boolean;
+  };
+  /** Product photos sent per generation (1–3). */
+  maxProductPhotos: number;
+  /** Results per generation (1–4). */
+  variants: number;
+  activeProvider: string;
+  providers: ProviderConfig[];
+}
+
+/** What the admin receives: settings plus which providers have their API key set on the server. */
+export interface AiSettingsView {
+  settings: AiSettings;
+  keyStatus: Record<string, boolean>;
 }
