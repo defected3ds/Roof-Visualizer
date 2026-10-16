@@ -119,7 +119,7 @@ function boxFilter(src: Float32Array, w: number, h: number, r: number): Float32A
  * Values are 0..1.
  */
 function sharpen(depth: Float32Array, guide: Float32Array, w: number, h: number, r: number): Float32Array {
-  const refined = guidedFilter(depth, guide, w, h, r, 0.002);
+  const refined = guidedFilter(depth, guide, w, h, r, 0.001);
   // Depth edges of the coarse map, widened and feathered into a blend weight.
   const smooth = boxFilter(depth, w, h, 1);
   const edge = new Float32Array(w * h);
@@ -128,13 +128,13 @@ function sharpen(depth: Float32Array, guide: Float32Array, w: number, h: number,
       const i = y * w + x;
       const gx = (smooth[i + 1] - smooth[i - 1]) / 2;
       const gy = (smooth[i + w] - smooth[i - w]) / 2;
-      edge[i] = Math.hypot(gx, gy) > 0.02 ? 1 : 0;
+      edge[i] = Math.hypot(gx, gy) > 0.08 ? 1 : 0; // only strong depth steps: house vs sky or background
     }
   }
   const band = boxFilter(edge, w, h, r);
   const out = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
-    const k = Math.min(1, band[i] * 4);
+    const k = Math.min(1, band[i] * 8);
     out[i] = depth[i] * (1 - k) + refined[i] * k;
   }
   return out;
@@ -241,7 +241,7 @@ async function run(photo: string): Promise<DepthMaps | null> {
     }
     const toUrl = (data: ImageData) => {
       wctx.putImageData(data, 0, 0);
-      return work.toDataURL('image/jpeg', 0.88);
+      return work.toDataURL('image/jpeg', 0.92);
     };
     return { gray: toUrl(gray), color: toUrl(color) };
   } catch (err) {
