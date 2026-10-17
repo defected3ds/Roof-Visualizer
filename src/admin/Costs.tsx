@@ -37,15 +37,66 @@ interface Visit {
   generations: number;
   cost: number;
   seconds: number;
+  /** Same IP and device = same person, even in a later visit. */
+  person: string;
+  personNo: number;
+  visitNo: number;
+  first: string;
+}
+
+interface Group {
+  key: string;
+  session?: string;
+  rows: Row[];
+}
+
+/** Rows of the same visit together (newest visit first); rows from before visitor tracking go last. */
+function groupByVisit(rows: Row[]): Group[] {
+  const groups = new Map<string, Group>();
+  for (const row of rows) {
+    const session = visitorOf(row.head)?.session;
+    const key = session ?? 'none';
+    if (!groups.has(key)) groups.set(key, { key, session, rows: [] });
+    groups.get(key)!.rows.push(row);
+  }
+  const all = [...groups.values()];
+  return [...all.filter((g) => g.session), ...all.filter((g) => !g.session)];
+}
+
+function VisitHeader({ group, visits }: { group: Group; visits: Map<string, Visit> }) {
+  const visit = group.session ? visits.get(group.session) : undefined;
+  const v = visitorOf(group.rows[0].head);
+  if (!visit || !v) {
+    return <p className="rounded-wb bg-paper px-3 py-1.5 text-xs font-semibold text-muted">Earlier calls (before visitor details were recorded)</p>;
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-wb border border-line bg-paper px-3 py-2 text-xs">
+      <span className="rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">Visitor {visit.personNo}</span>
+      <span className="font-semibold">Visit {visit.visitNo}</span>
+      <span className="text-muted">
+        {[place(v), v.device, v.ip && `IP ${v.ip}`].filter(Boolean).join(' · ')} · started {when(visit.first)} · {visit.generations} generation
+        {visit.generations === 1 ? '' : 's'} · {money(visit.cost)}
+      </span>
+    </div>
+  );
 }
 
 /** What each visit (session) did in the loaded period. */
 function visitStats(events: UsageEvent[]): Map<string, Visit> {
   const m = new Map<string, Visit>();
-  for (const e of events) {
+  const persons = new Map<string, number>();
+  const visitsOf = new Map<string, number>();
+  // Oldest first, so visitors and visits are numbered in the order they arrived.
+  for (const e of [...events].sort((a, b) => a.created_at.localeCompare(b.created_at))) {
     const v = visitorOf(e);
     if (!v?.session) continue;
-    const s = m.get(v.session) ?? { generations: 0, cost: 0, seconds: 0 };
+    let s = m.get(v.session);
+    if (!s) {
+      const person = `${v.ip ?? ''}|${v.device ?? ''}`;
+      if (!persons.has(person)) persons.set(person, persons.size + 1);
+      visitsOf.set(person, (visitsOf.get(person) ?? 0) + 1);
+      s = { generations: 0, cost: 0, seconds: 0, person, personNo: persons.get(person)!, visitNo: visitsOf.get(person)!, first: e.created_at };
+    }
     if (GENERATION.has(e.kind) && !e.kind.startsWith('test-')) s.generations += 1;
     s.cost += e.cost;
     s.seconds = Math.max(s.seconds, v.sessionSeconds ?? 0);
@@ -107,6 +158,7 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
   const events = view?.events ?? [];
   const rows = useMemo(() => buildRows(events), [events]);
   const visits = useMemo(() => visitStats(events), [events]);
+  const groups = useMemo(() => groupByVisit(rows.slice(0, shown)), [rows, shown]);
   const summary = useMemo(() => {
     const real = events.filter((e) => !e.kind.startsWith('test-'));
     const total = real.reduce((s, e) => s + e.cost, 0);
@@ -208,9 +260,16 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
             <p className="mt-2 text-sm text-muted">
               Newest first. Open a row to see every API call. Previews are small and removed after {view.settings.retentionDays} days; the costs stay.
             </p>
-            <ul className="mt-3 divide-y divide-line border-y border-line">
-              {rows.slice(0, shown).map((row) => (
-                <HistoryRow key={row.key} row={row} visits={visits} open={open === row.key} onToggle={() => setOpen(open === row.key ? null : row.key)} />
+            <ul className="mt-3">
+              {groups.map((g) => (
+                <li key={g.key} className="mt-4 first:mt-0">
+                  <VisitHeader group={g} visits={visits} />
+                  <ul className="divide-y divide-line">
+                    {g.rows.map((row) => (
+                      <HistoryRow key={row.key} row={row} visits={visits} open={open === row.key} onToggle={() => setOpen(open === row.key ? null : row.key)} />
+                    ))}
+                  </ul>
+                </li>
               ))}
             </ul>
             {rows.length > shown && (
