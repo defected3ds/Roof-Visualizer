@@ -90,7 +90,8 @@ async function rest(pathAndQuery: string, init: RequestInit = {}, prefer?: strin
     ...init,
     headers: {
       apikey: supabaseKey(),
-      Authorization: `Bearer ${supabaseKey()}`,
+      // New sb_secret_ keys are not JWTs and must only go in apikey; old service_role keys are JWTs.
+      ...(supabaseKey().startsWith('eyJ') ? { Authorization: `Bearer ${supabaseKey()}` } : {}),
       'Content-Type': 'application/json',
       ...(prefer ? { Prefer: prefer } : {}),
       ...(init.headers as Record<string, string> | undefined),
