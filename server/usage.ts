@@ -78,7 +78,7 @@ const memory: UsageEvent[] = [];
 let nextId = 1;
 let lastError = '';
 
-const supabaseUrl = () => (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+const supabaseUrl = () => (process.env.SUPABASE_URL || '').trim().replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
 const supabaseKey = () => process.env.SUPABASE_SERVICE_KEY || '';
 const useSupabase = () => Boolean(supabaseUrl() && supabaseKey());
 
