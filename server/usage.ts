@@ -7,6 +7,7 @@
  * Logging never breaks the app: every failure is caught and shown in Admin > Costs.
  */
 import { imageSize } from './providers';
+import { currentVisitor } from './visitor';
 import type { AiSettings, PriceItem, ProviderConfig, UsageEvent } from '../src/types';
 
 export function defaultPrices(): PriceItem[] {
@@ -123,6 +124,8 @@ async function rest(pathAndQuery: string, init: RequestInit = {}, prefer?: strin
 /** Saves one record. Never throws. */
 export async function recordUsage(event: Omit<UsageEvent, 'id' | 'created_at'>): Promise<void> {
   try {
+    const visitor = await currentVisitor();
+    if (visitor) event = { ...event, detail: { ...event.detail, visitor } };
     if (useSupabase()) {
       await rest('usage_events', { method: 'POST', body: JSON.stringify({ ...event, cost: Number(event.cost.toFixed(5)) }) }, 'return=minimal');
     } else {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, RefreshCw, TriangleAlert } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from '../components/ui';
-import type { UsageEvent, UsageSettings, UsageView } from '../types';
+import type { UsageEvent, UsageSettings, UsageView, VisitorInfo } from '../types';
 import { api, fieldClass, type SaveResult } from './Admin';
 
 const money = (v: number) => `$${v.toFixed(v === 0 ? 2 : v < 0.1 ? 4 : 3)}`;
@@ -20,6 +20,38 @@ interface Row {
   head: UsageEvent;
   calls: UsageEvent[];
   total: number;
+}
+
+const visitorOf = (e: UsageEvent) => (e.detail?.visitor ?? null) as VisitorInfo | null;
+
+function place(v: VisitorInfo | null) {
+  return [v?.city, v?.country].filter(Boolean).join(', ');
+}
+
+function minutes(sec?: number) {
+  if (sec === undefined) return '';
+  return sec < 90 ? `${sec} s` : `${Math.round(sec / 60)} min`;
+}
+
+interface Visit {
+  generations: number;
+  cost: number;
+  seconds: number;
+}
+
+/** What each visit (session) did in the loaded period. */
+function visitStats(events: UsageEvent[]): Map<string, Visit> {
+  const m = new Map<string, Visit>();
+  for (const e of events) {
+    const v = visitorOf(e);
+    if (!v?.session) continue;
+    const s = m.get(v.session) ?? { generations: 0, cost: 0, seconds: 0 };
+    if (GENERATION.has(e.kind) && !e.kind.startsWith('test-')) s.generations += 1;
+    s.cost += e.cost;
+    s.seconds = Math.max(s.seconds, v.sessionSeconds ?? 0);
+    m.set(v.session, s);
+  }
+  return m;
 }
 
 function when(iso: string) {
@@ -74,6 +106,7 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
 
   const events = view?.events ?? [];
   const rows = useMemo(() => buildRows(events), [events]);
+  const visits = useMemo(() => visitStats(events), [events]);
   const summary = useMemo(() => {
     const real = events.filter((e) => !e.kind.startsWith('test-'));
     const total = real.reduce((s, e) => s + e.cost, 0);
@@ -177,7 +210,7 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
             </p>
             <ul className="mt-3 divide-y divide-line border-y border-line">
               {rows.slice(0, shown).map((row) => (
-                <HistoryRow key={row.key} row={row} open={open === row.key} onToggle={() => setOpen(open === row.key ? null : row.key)} />
+                <HistoryRow key={row.key} row={row} visits={visits} open={open === row.key} onToggle={() => setOpen(open === row.key ? null : row.key)} />
               ))}
             </ul>
             {rows.length > shown && (
@@ -194,8 +227,10 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
   );
 }
 
-function HistoryRow({ row, open, onToggle }: { row: Row; open: boolean; onToggle: () => void }) {
+function HistoryRow({ row, visits, open, onToggle }: { row: Row; visits: Map<string, Visit>; open: boolean; onToggle: () => void }) {
   const { head } = row;
+  const visitor = visitorOf(head);
+  const visit = visitor?.session ? visits.get(visitor.session) : undefined;
   const isGen = GENERATION.has(head.kind);
   const failed = isGen && !(head.results ?? 0);
   const previews = row.calls.find((c) => c.previews)?.previews;
@@ -220,6 +255,11 @@ function HistoryRow({ row, open, onToggle }: { row: Row; open: boolean; onToggle
             {isGen && ` · ${head.results ?? 0} result${head.results === 1 ? '' : 's'}`}
             {head.ms ? ` · ${(head.ms / 1000).toFixed(1)} s` : ''}
           </p>
+          {visitor && (
+            <p className="truncate text-xs text-muted">
+              {[place(visitor), visitor.device, visitor.sessionSeconds !== undefined && `${minutes(visitor.sessionSeconds)} into visit`].filter(Boolean).join(' · ')}
+            </p>
+          )}
         </div>
         <p className="shrink-0 text-sm font-bold">{money(row.total)}</p>
       </button>
@@ -232,6 +272,15 @@ function HistoryRow({ row, open, onToggle }: { row: Row; open: boolean; onToggle
                 <img key={i} src={src} alt={`Result ${i + 1}`} className="h-24 rounded-[2px] border border-line" />
               ))}
             </div>
+          )}
+          {visitor && (
+            <p className="text-muted">
+              <span className="font-semibold text-ink">Visitor</span> · IP {visitor.ip ?? 'unknown'} (anonymised)
+              {place(visitor) && ` · ${place(visitor)}`}
+              {visitor.device && ` · ${visitor.device}`}
+              {visitor.session && ` · visit ${visitor.session.slice(0, 6)}`}
+              {visit && ` · ${visit.generations} generation${visit.generations === 1 ? '' : 's'}, ${money(visit.cost)}, ${minutes(visit.seconds)} so far in this visit`}
+            </p>
           )}
           <table className="w-full text-left">
             <tbody>

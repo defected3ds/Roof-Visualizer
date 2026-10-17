@@ -27,6 +27,7 @@ import {
 } from './server/store';
 import { createProvider, estimateDepth, hasDepthKey, hasKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
 import { buildModelPrompt, type ImageRoles } from './src/lib/prompt';
+import { requestContext } from './server/visitor';
 import { activePriceIds, attachPreviews, depthCost, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
 import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
@@ -84,6 +85,7 @@ async function startServer() {
     hasAccess(req) || (Boolean(adminPassword) && sameSecret(req.get('x-admin-password'), adminPassword));
 
   app.set('trust proxy', 1);
+  app.use((req, _res, next) => requestContext.run(req, next));
   app.use(express.json({ limit: '40mb' }));
   app.use(IMAGE_URL_PREFIX, express.static(imageDir, { maxAge: '7d', immutable: true }));
   // Photos added after the last deploy are fetched from GitHub on first request.

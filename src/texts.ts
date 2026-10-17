@@ -34,7 +34,7 @@ export const TEXT_GROUPS: { title: string; fields: TextField[] }[] = [
       {
         key: 'start.privacy',
         label: 'Privacy note under the buttons',
-        value: 'Your photo is sent to our AI service. A small preview is kept for up to 30 days to improve the service, then deleted.',
+        value: 'Your photo is sent to our AI service. A small preview, your approximate location (from a shortened IP address) and your device type are kept for up to 30 days to improve the service, then deleted.',
         long: true,
       },
     ],

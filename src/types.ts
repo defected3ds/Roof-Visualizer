@@ -151,6 +151,18 @@ export interface UsageSettings {
   prices: PriceItem[];
 }
 
+/** Who made an API call. The IP is anonymised (last part cut off). */
+export interface VisitorInfo {
+  ip?: string;
+  country?: string;
+  city?: string;
+  device?: string;
+  /** Random id of one visit; a new one starts after 30 minutes without activity. */
+  session?: string;
+  /** Seconds since the visit started when this call was made. */
+  sessionSeconds?: number;
+}
+
 /** One API call (a generation, a depth map, a roof mask, or an admin test). */
 export interface UsageEvent {
   id: number | string;
