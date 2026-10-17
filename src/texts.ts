@@ -31,6 +31,12 @@ export const TEXT_GROUPS: { title: string; fields: TextField[] }[] = [
       { key: 'start.camera', label: 'Camera button', value: 'Take a photo' },
       { key: 'start.gallery', label: 'Gallery button (phones and tablets)', value: 'Choose from gallery' },
       { key: 'start.upload', label: 'Upload button (computers)', value: 'Upload your photo' },
+      {
+        key: 'start.privacy',
+        label: 'Privacy note under the buttons',
+        value: 'Your photo is sent to our AI service. A small preview is kept for up to 30 days to improve the service, then deleted.',
+        long: true,
+      },
     ],
   },
   {

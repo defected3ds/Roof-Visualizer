@@ -178,7 +178,7 @@ async function urlToDataUrl(url: string, headers?: Record<string, string>): Prom
 }
 
 /** Pixel size of a JPEG or PNG data URL (for models that need an aspect ratio). */
-function imageSize(dataUrl: string): { width: number; height: number } | null {
+export function imageSize(dataUrl: string): { width: number; height: number } | null {
   const buf = Buffer.from(splitDataUrl(dataUrl).data, 'base64');
   if (buf.readUInt32BE(0) === 0x89504e47) return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
   for (let i = 2; i < buf.length - 9; ) {

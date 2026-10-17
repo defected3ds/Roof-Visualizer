@@ -85,3 +85,27 @@ you add disappear at the next restart (the admin page warns you).
 - Describe the product the way a roofer would: shape/profile, exact colour and colour variation, surface
   (matte, engobed, glazed), size or tiles per m², laying pattern, ridge tiles. Skip marketing words.
 - After saving, the product is available immediately and stored in GitHub, so it survives restarts.
+
+
+## Cost history (Admin > Costs)
+
+The **Costs** tab lists every API call the app makes (image generations, depth maps, roof masks, and your admin tests) with an
+estimated cost, plus small previews of the house photo and the results. Costs are estimates: units used × the price table in the
+tab (US dollars), which you can edit. Previews are deleted after 30 days (changeable); the costs stay.
+
+Without a database the history is kept in memory only and disappears when Render restarts the app. To keep it for good, use a free
+Supabase database (about 5 minutes, once):
+
+1. Go to https://supabase.com, sign in (GitHub login works) and click **New project**. Pick a name, a database password (you won't
+   need it again) and the region closest to you (for example Frankfurt).
+2. When the project is ready open **SQL Editor** > **New query**, paste the contents of `docs/supabase.sql` from this repository and
+   click **Run**. It creates one table, `usage_events`, that nobody but the server can read.
+3. Open **Project Settings** > **API**. Copy two things:
+   - **Project URL** (like `https://abcdefgh.supabase.co`)
+   - the **service_role** key (the secret one, not the anon key; click Reveal)
+4. In Render: your service > **Environment** > add `SUPABASE_URL` (the Project URL) and `SUPABASE_SERVICE_KEY` (the service_role
+   key) > **Save changes**. Never paste the key in chat, in GitHub or in the admin.
+5. Open **Admin > Costs**. It now says nothing about "temporary history", and new generations appear there.
+
+**Privacy:** the start screen has a note (editable under App texts, "Privacy note under the buttons") that previews are kept for up
+to 30 days. Change the number of days in Admin > Costs > Price table, and keep the note in step with it.

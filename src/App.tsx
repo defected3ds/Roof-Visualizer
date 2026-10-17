@@ -22,7 +22,7 @@ import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
 import { configureDepth, depthFor, depthWithin, snapToMask } from './lib/depth';
 import { configureRoofMask, roofMaskFor, roofMaskWithin } from './lib/roofmask';
-import { buildEdgeMaps, fileToDataUrl, shareImage } from './lib/image';
+import { buildEdgeMaps, fileToDataUrl, shareImage, thumbnail } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
 import type { Catalog, Category, GenerateResponse, Product } from './types';
@@ -60,6 +60,25 @@ export default function App() {
   );
 }
 
+/** A short random id (letters and digits). */
+function newId() {
+  return (crypto.randomUUID?.() ?? `${Date.now()}${Math.random().toString(36).slice(2)}`).replace(/[^A-Za-z0-9-]/g, '').slice(0, 36);
+}
+
+/** Sends small previews of the photo and the results to the cost history. Never disturbs the visitor. */
+async function sendPreviews(generationId: string, house: string, results: string[], accessCode: string) {
+  try {
+    const [h, ...r] = await Promise.all([thumbnail(house), ...results.slice(0, 4).map((x) => thumbnail(x))]);
+    await fetch('/api/usage/previews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Access-Code': accessCode },
+      body: JSON.stringify({ generationId, house: h, results: r }),
+    });
+  } catch {
+    // The history is a nice-to-have.
+  }
+}
+
 /** With a sharp roof mask (SAM 3) the roof edge of the browser depth map is made crisp; a rough mask would only make it worse. */
 function sharpDepth(depth: Awaited<ReturnType<typeof depthFor>>, mask: Awaited<ReturnType<typeof roofMaskFor>>) {
   // Only the coarse browser depth map needs this; the fal.ai maps already have clean edges.
@@ -88,6 +107,8 @@ function RoofApp() {
   const [gate, setGate] = useState<Gate>('checking');
   const [accessCode, setAccessCode] = useState(storedCode);
   const [history, setHistory] = useState<string[]>([]);
+  // Random id of the picked photo: groups its API calls in the cost history (Admin > Costs).
+  const photoId = useRef('');
   const [cursor, setCursor] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -200,6 +221,9 @@ function RoofApp() {
       const url = await fileToDataUrl(file);
       // Pick up the current admin settings first, so a page left open for hours doesn't make maps that are switched off.
       await loadSettings().catch(() => null);
+      photoId.current = newId();
+      configureDepth({ photoId: photoId.current });
+      configureRoofMask({ photoId: photoId.current });
       setHistory([url]);
       setCursor(0);
       setResults([]);
@@ -238,6 +262,7 @@ function RoofApp() {
     ]);
     const depthMaps = await sharpDepth(depthRaw, roofMask);
     setWaitingForAnalysis(false);
+    const generationId = newId();
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -249,6 +274,8 @@ function RoofApp() {
           depth: depthMaps?.gray,
           mask: roofMask?.mask,
           count: VARIANTS,
+          photoId: photoId.current,
+          generationId,
         }),
       });
       const data = (await res.json()) as GenerateResponse & { error?: string; code?: string };
@@ -269,6 +296,7 @@ function RoofApp() {
       }
       setResults(data.images);
       setActive(0);
+      void sendPreviews(generationId, base, data.images, accessCode);
       const id = Date.now();
       setGallery((g) => [{ id, base, product: [product.brand, product.name].filter(Boolean).join(' '), images: data.images }, ...g].slice(0, HISTORY_LIMIT));
       setViewing(id);
@@ -381,6 +409,7 @@ function RoofApp() {
                 <Upload size={20} /> {t('start.upload')}
               </PrimaryButton>
             )}
+            {t('start.privacy') && <p className="pt-1 text-center text-xs leading-snug text-muted">{t('start.privacy')}</p>}
             {provider === 'demo' && <p className="pt-1 text-center text-xs text-muted">Demo mode: no AI key configured on the server.</p>}
           </div>
         </div>

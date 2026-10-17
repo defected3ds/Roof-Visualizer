@@ -51,6 +51,9 @@ export interface GenerateBody {
   /** Roof mask of the house photo as a data URL, white = roof (see src/lib/roofmask.ts). */
   mask?: string;
   count: number;
+  /** Random id of the picked photo and of this Generate press, so the cost history can group the API calls. */
+  photoId?: string;
+  generationId?: string;
 }
 
 export interface GenerateResponse {
@@ -127,4 +130,51 @@ export interface AiSettingsView {
   segmentationKey: boolean;
   /** Whether the depth map tool's key is set on the server. */
   depthKey: boolean;
+}
+
+// ---- Cost history (Admin > Costs) ----------------------------------------------------------
+
+/** One line of the price table used to estimate what an API call costs. */
+export interface PriceItem {
+  id: string;
+  label: string;
+  /** What the price is per, e.g. "result", "megapixel", "photo", "compute second". */
+  unit: string;
+  /** US dollars per unit. */
+  price: number;
+  note?: string;
+}
+
+export interface UsageSettings {
+  /** Previews of visitors' photos are deleted after this many days; the costs stay. */
+  retentionDays: number;
+  prices: PriceItem[];
+}
+
+/** One API call (a generation, a depth map, a roof mask, or an admin test). */
+export interface UsageEvent {
+  id: number | string;
+  created_at: string;
+  /** image | depth | roof-mask, or test-image | test-depth | test-roof-mask for admin tests. */
+  kind: string;
+  photo_id?: string | null;
+  generation_id?: string | null;
+  product?: string | null;
+  provider?: string | null;
+  model?: string | null;
+  results?: number | null;
+  ms?: number | null;
+  /** Estimated cost in US dollars. */
+  cost: number;
+  detail?: Record<string, unknown> | null;
+  /** Small previews (data URLs); removed after the retention period. */
+  previews?: { house?: string; results?: string[] } | null;
+}
+
+export interface UsageView {
+  /** supabase = kept for good; memory = lost when the server restarts. */
+  storage: 'supabase' | 'memory';
+  lastError?: string;
+  events: UsageEvent[];
+  settings: UsageSettings;
 }

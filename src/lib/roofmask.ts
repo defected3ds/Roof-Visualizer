@@ -22,7 +22,7 @@ export interface RoofMask {
 }
 
 /** Set from /api/health: which tool to use, and the access code for /api/roof-mask. */
-const config = { tool: 'clipseg' as 'sam3' | 'clipseg', accessCode: '', headers: {} as Record<string, string> };
+const config = { tool: 'clipseg' as 'sam3' | 'clipseg', accessCode: '', headers: {} as Record<string, string>, photoId: '' };
 export function configureRoofMask(next: Partial<typeof config>) {
   Object.assign(config, next);
 }
@@ -64,7 +64,7 @@ async function runSam3(photo: string): Promise<RoofMask | null> {
   const res = await fetch('/api/roof-mask', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Access-Code': config.accessCode, ...config.headers },
-    body: JSON.stringify({ image: photo }),
+    body: JSON.stringify({ image: photo, photoId: config.photoId }),
   });
   if (!res.ok) throw new Error(`roof mask ${res.status}`);
   const { masks } = (await res.json()) as { masks: string[] };

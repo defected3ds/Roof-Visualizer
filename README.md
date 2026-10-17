@@ -108,6 +108,13 @@ With every generation the model gets the product description, technical data, th
 On hosts with a throwaway disk (Render), set `GITHUB_TOKEN` so admin changes are committed back to the repo
 (`server/github.ts`); see DEPLOY.md.
 
+## Cost history
+
+`/admin` > **Costs** records every API call (image generation, depth map, roof mask, admin tests) with an estimated cost
+from an editable price table, and small previews of the photo and results (`server/usage.ts`, `src/admin/Costs.tsx`). Records are
+kept in Supabase (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`; table in `docs/supabase.sql`, steps in DEPLOY.md) or in memory when
+those are not set. Previews are deleted after `retentionDays` (default 30); costs stay.
+
 ## Ideas for next steps
 
 - Roof mask: segment the roof (e.g. SAM / Grounded-SAM "roof"), let users touch it up with a brush, and composite

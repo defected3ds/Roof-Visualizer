@@ -3,7 +3,8 @@ import path from 'path';
 import { commitFiles, githubConfig, readRepoFile, type FileChange } from './github';
 import { DEFAULT_TEXTS, IMAGE_TEXT_KEYS } from '../src/texts';
 import { defaultAiSettings, validKeyEnv, PROVIDER_TYPES } from './providers';
-import type { AiSettings, Category, DepthSettings, Product, ProductInput, ProviderConfig, SegmentationSettings, Spec, Texts } from '../src/types';
+import { defaultPrices } from './usage';
+import type { AiSettings, Category, DepthSettings, UsageSettings, Product, ProductInput, ProviderConfig, SegmentationSettings, Spec, Texts } from '../src/types';
 
 /**
  * Catalog data (categories, products, product photos, app texts) lives in data/ in the repo.
@@ -15,6 +16,7 @@ const FILES = {
   products: 'data/products.json',
   texts: 'data/texts.json',
   ai: 'data/ai.json',
+  prices: 'data/prices.json',
 };
 const IMAGE_DIR = 'data/product-images';
 const MAX_IMAGES = 6;
@@ -39,6 +41,8 @@ let products: Product[] = [];
 let texts: Texts = {};
 /** Saved AI settings, or null to use the defaults (see providers.ts). */
 let aiSettings: AiSettings | null = null;
+/** Saved price table and retention, or null for the defaults (see usage.ts). */
+let usageSettings: Partial<UsageSettings> | null = null;
 
 function load() {
   categories = readJson(FILES.categories, []);
@@ -48,6 +52,7 @@ function load() {
   products = readJson<Product[]>(FILES.products, []).map((p) => ({ ...p, category: categoryId(p.category), specs: p.specs ?? [] }));
   texts = readJson(FILES.texts, {});
   aiSettings = readJson<AiSettings | null>(FILES.ai, null);
+  usageSettings = readJson<Partial<UsageSettings> | null>(FILES.prices, null);
 }
 load();
 
@@ -66,7 +71,7 @@ export async function syncFromGitHub() {
       if (!content) continue;
       const parsed = JSON.parse(content.toString('utf8'));
       const valid =
-        name === 'texts' || name === 'ai' ? parsed && typeof parsed === 'object' && !Array.isArray(parsed) : Array.isArray(parsed);
+        name === 'texts' || name === 'ai' || name === 'prices' ? parsed && typeof parsed === 'object' && !Array.isArray(parsed) : Array.isArray(parsed);
       if (!valid) throw new Error(`${rel} on GitHub is not a valid ${name} file`);
       downloads.push([rel, content]);
     }
@@ -388,6 +393,37 @@ export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult &
     if (!next.systemPrompt) throw new Error('The system prompt cannot be empty');
     const result = await persist([{ path: FILES.ai, content: json(next) }], 'Update AI settings');
     aiSettings = next;
+    return { ...result, settings: next };
+  });
+}
+
+// ---- Cost history settings (price table, retention) ------------------------------------------
+
+/** Saved prices merged over the defaults, so new price lines appear without a reset. */
+export function getUsageSettings(): UsageSettings {
+  const saved = usageSettings?.prices ?? [];
+  const prices = defaultPrices().map((d) => {
+    const mine = saved.find((p) => p.id === d.id);
+    return mine && Number.isFinite(mine.price) ? { ...d, price: mine.price } : d;
+  });
+  const days = Number(usageSettings?.retentionDays);
+  return { retentionDays: Number.isFinite(days) && days >= 1 ? Math.min(3650, Math.round(days)) : 30, prices };
+}
+
+export function saveUsageSettings(input: Partial<UsageSettings>): Promise<SaveResult & { settings: UsageSettings }> {
+  return serialized(async () => {
+    const current = getUsageSettings();
+    const prices = current.prices.map((p) => {
+      const given = input.prices?.find((x) => x.id === p.id);
+      const value = Number(given?.price);
+      return { ...p, price: Number.isFinite(value) && value >= 0 ? value : p.price };
+    });
+    const days = Number(input.retentionDays ?? current.retentionDays);
+    const next: UsageSettings = { retentionDays: Number.isFinite(days) && days >= 1 ? Math.min(3650, Math.round(days)) : current.retentionDays, prices };
+    // Only the numbers are stored; labels and notes come from the defaults.
+    const stored = { retentionDays: next.retentionDays, prices: next.prices.map((p) => ({ id: p.id, price: p.price })) };
+    const result = await persist([{ path: FILES.prices, content: json(stored) }], 'Update price table');
+    usageSettings = stored as Partial<UsageSettings>;
     return { ...result, settings: next };
   });
 }

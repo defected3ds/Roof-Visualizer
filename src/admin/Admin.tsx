@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from '../components/ui';
 import { AiSettingsEditor } from './AiSettings';
+import { CostsTab } from './Costs';
 import { fileToDataUrl } from '../lib/image';
 import { productThumb } from '../lib/swatch';
 import { DEFAULT_TEXTS, TEXT_GROUPS } from '../texts';
@@ -44,7 +45,7 @@ const COMMON_SPECS = [
   'Colors',
 ];
 
-type Tab = 'products' | 'categories' | 'texts' | 'ai';
+type Tab = 'products' | 'categories' | 'texts' | 'ai' | 'costs';
 
 export interface SaveResult {
   synced: boolean;
@@ -168,6 +169,7 @@ export default function Admin() {
               ['categories', 'Categories'],
               ['texts', 'App texts'],
               ['ai', 'AI settings'],
+              ['costs', 'Costs'],
             ] as [Tab, string][]
           ).map(([id, label]) => (
             <button
@@ -209,6 +211,7 @@ export default function Admin() {
           <CategoryEditor password={password} catalog={catalog} onSaved={(r) => saved(r, 'Categories saved.')} />
         )}
         {tab === 'texts' && <TextEditor password={password} texts={texts} onSaved={(r) => saved(r, 'Texts saved.')} />}
+        {tab === 'costs' && <CostsTab password={password} onSaved={(r) => saved(r, 'Prices saved.')} />}
         {tab === 'ai' && <AiSettingsEditor password={password} catalog={catalog} onSaved={(r) => saved(r, 'AI settings saved.')} />}
 
         <a href="/" className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-brand">

@@ -10,12 +10,14 @@ import {
   getCategory,
   getProduct,
   getTexts,
+  getUsageSettings,
   IMAGE_URL_PREFIX,
   imageDir,
   listCategories,
   listProducts,
   referenceImages,
   saveAiSettings,
+  saveUsageSettings,
   saveCategories,
   saveProduct,
   saveTexts,
@@ -25,6 +27,7 @@ import {
 } from './server/store';
 import { createProvider, estimateDepth, hasDepthKey, hasKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
 import { buildModelPrompt, type ImageRoles } from './src/lib/prompt';
+import { attachPreviews, depthCost, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
 import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_HOUR) || 20;
@@ -43,6 +46,12 @@ function rateLimited(ip: string, limit = RATE_LIMIT): boolean {
   recent.push(now);
   hits.set(ip, recent);
   return false;
+}
+
+/** Ids made by the browser: short letters, digits and dashes only. */
+function cleanId(value: unknown): string | null {
+  const id = String(value ?? '');
+  return /^[A-Za-z0-9-]{6,64}$/.test(id) ? id : null;
 }
 
 function sameSecret(given: string | undefined, expected: string): boolean {
@@ -177,7 +186,10 @@ async function startServer() {
     if (!hasDepthKey(d)) return res.status(400).json({ error: `The key ${d.keyEnv} is not set on the server (Render → Environment).` });
     const started = Date.now();
     try {
-      res.json({ image: await estimateDepth(d, image), ms: Date.now() - started });
+      const depthImage = await estimateDepth(d, image);
+      const ms = Date.now() - started;
+      void recordUsage({ kind: 'test-depth', provider: d.tool === 'midas' ? 'MiDaS (fal.ai)' : 'Marigold (fal.ai)', model: d.tool, ms, cost: depthCost(getUsageSettings().prices, d.tool, ms) });
+      res.json({ image: depthImage, ms });
     } catch (err: any) {
       res.status(502).json({ error: String(err?.message ?? err).slice(0, 400) });
     }
@@ -191,9 +203,30 @@ async function startServer() {
     const started = Date.now();
     try {
       const masks = await segmentRoof(seg, image);
-      res.json({ masks, ms: Date.now() - started });
+      const ms = Date.now() - started;
+      void recordUsage({ kind: 'test-roof-mask', provider: 'SAM 3 (fal.ai)', model: 'sam3', ms, cost: roofMaskCost(getUsageSettings().prices) });
+      res.json({ masks, ms });
     } catch (err: any) {
       res.status(502).json({ error: String(err?.message ?? err).slice(0, 400) });
+    }
+  });
+  // Cost history for Admin > Costs.
+  admin.get('/usage', async (req, res) => {
+    const days = Number(req.query.days);
+    res.json({
+      storage: usageStorage(),
+      lastError: usageLastError() || undefined,
+      events: await listUsage(Number.isFinite(days) && days > 0 ? days : null),
+      settings: getUsageSettings(),
+    });
+  });
+  admin.put('/usage-settings', async (req, res) => {
+    try {
+      const result = await saveUsageSettings(req.body);
+      void purgeUsage(result.settings.retentionDays);
+      res.json(result);
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
     }
   });
   admin.get('/ai', (_req, res) => {
@@ -221,6 +254,18 @@ async function startServer() {
   });
   app.use('/api/admin', admin);
 
+  // Small previews of a generation for the cost history (made in the visitor's browser).
+  app.post('/api/usage/previews', async (req, res) => {
+    if (!hasAccess(req)) return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
+    if (rateLimited(`prev:${req.ip ?? 'unknown'}`, RATE_LIMIT * 4)) return res.status(429).end();
+    const { generationId, house, results } = (req.body ?? {}) as { generationId?: string; house?: string; results?: string[] };
+    const id = cleanId(generationId);
+    const ok = (v: unknown): v is string => typeof v === 'string' && v.startsWith('data:image/jpeg;base64,') && v.length < 150_000;
+    if (!id) return res.status(400).json({ error: 'Expected { generationId }' });
+    await attachPreviews(id, { ...(ok(house) ? { house } : {}), results: (Array.isArray(results) ? results : []).filter(ok).slice(0, 4) });
+    res.status(204).end();
+  });
+
   // Failures in the visitor's browser (depth map, roof mask), so they show up in the server log.
   app.post('/api/client-log', (req, res) => {
     if (rateLimited(`log:${req.ip ?? 'unknown'}`, 30)) return res.status(429).end();
@@ -238,14 +283,24 @@ async function startServer() {
     if (rateLimited(`depth:${req.ip ?? 'unknown'}`, MASK_LIMIT)) {
       return res.status(429).json({ code: 'limit', error: 'Too many depth maps. Try again later.' });
     }
-    const image = (req.body as { image?: string }).image;
+    const { image, photoId } = req.body as { image?: string; photoId?: string };
     if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
     const d = getAiSettings().depthEstimation;
     if (d.tool === 'browser' || !hasDepthKey(d)) return res.status(503).json({ code: 'unavailable', error: 'The server depth map is off' });
     try {
       const started = Date.now();
       const depth = await estimateDepth(d, image);
-      console.log(`[depth-map] ${d.tool === 'midas' ? 'MiDaS' : `Marigold ${d.quality}`} in ${Date.now() - started} ms`);
+      const ms = Date.now() - started;
+      console.log(`[depth-map] ${d.tool === 'midas' ? 'MiDaS' : `Marigold ${d.quality}`} in ${ms} ms`);
+      void recordUsage({
+        kind: 'depth',
+        photo_id: cleanId(photoId),
+        provider: d.tool === 'midas' ? 'MiDaS (fal.ai)' : 'Marigold (fal.ai)',
+        model: d.tool,
+        ms,
+        cost: depthCost(getUsageSettings().prices, d.tool, ms),
+        detail: d.tool === 'marigold' ? { quality: d.quality } : null,
+      });
       res.json({ image: depth });
     } catch (err) {
       console.error('[depth-map] failed:', err);
@@ -261,14 +316,24 @@ async function startServer() {
     if (rateLimited(`mask:${req.ip ?? 'unknown'}`, MASK_LIMIT)) {
       return res.status(429).json({ code: 'limit', error: 'Too many roof masks. Try again later.' });
     }
-    const image = (req.body as { image?: string }).image;
+    const { image, photoId } = req.body as { image?: string; photoId?: string };
     if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
     const seg = getAiSettings().segmentation;
     if (seg.tool !== 'sam3' || !hasSegmentationKey(seg)) return res.status(503).json({ code: 'unavailable', error: 'SAM 3 is off' });
     try {
       const started = Date.now();
       const masks = await segmentRoof(seg, image);
-      console.log(`[roof-mask] SAM 3 "${seg.prompt}" -> ${masks.length} mask(s) in ${Date.now() - started} ms`);
+      const ms = Date.now() - started;
+      console.log(`[roof-mask] SAM 3 "${seg.prompt}" -> ${masks.length} mask(s) in ${ms} ms`);
+      void recordUsage({
+        kind: 'roof-mask',
+        photo_id: cleanId(photoId),
+        provider: 'SAM 3 (fal.ai)',
+        model: 'sam3',
+        ms,
+        cost: roofMaskCost(getUsageSettings().prices),
+        detail: { masks: masks.length },
+      });
       res.json({ masks });
     } catch (err) {
       console.error('[roof-mask] failed:', err);
@@ -316,6 +381,17 @@ async function startServer() {
       const results = await createProvider(cfg).generate({ images, prompts });
       if (!results.length) return res.status(502).json({ error: 'The model returned no image.' });
       console.log(`[test-model] ${cfg.label} (${cfg.model}) "${product.name}" ok in ${Date.now() - started}ms`);
+      const priced = imageCost(getUsageSettings().prices, cfg, images, results.length);
+      void recordUsage({
+        kind: 'test-image',
+        product: [product.brand, product.name].filter(Boolean).join(' '),
+        provider: cfg.label,
+        model: cfg.model || cfg.type,
+        results: results.length,
+        ms: Date.now() - started,
+        cost: priced.cost,
+        detail: { sent, basis: priced.basis, imagesMP: priced.imagesMP },
+      });
       res.json({ image: results[0], ms: Date.now() - started, imagesSent: images.length, sent });
     } catch (err: any) {
       console.error(`[test-model] ${provider.label} failed:`, err);
@@ -340,6 +416,14 @@ async function startServer() {
     const { images, prompts, depth, mask, photos, swatch } = await buildRequest(ai, cfg, body as GenerateBody, product, ai.variants);
 
     const started = Date.now();
+    const usage = {
+      photo_id: cleanId(body.photoId),
+      generation_id: cleanId(body.generationId),
+      product: [product.brand, product.name].filter(Boolean).join(' '),
+      provider: cfg.label,
+      model: cfg.model || cfg.type,
+    };
+    const sent = ['house photo', depth && 'depth map', mask && 'roof mask', photos.length && `${photos.length} product photo${photos.length > 1 ? 's' : ''}`, swatch && 'texture sample'].filter(Boolean);
     try {
       const results = await providerFor(cfg).generate({ images, prompts });
       if (results.length === 0) {
@@ -347,9 +431,12 @@ async function startServer() {
       }
       const used = [depth && 'depth map', mask && 'roof mask', photos.length && `${photos.length} product photos`, swatch && 'texture sample'];
       console.log(`[generate] ${cfg.label} "${product.name}" (${used.filter(Boolean).join(', ') || 'photo only'}) -> ${results.length} images in ${Date.now() - started}ms`);
+      const priced = imageCost(getUsageSettings().prices, cfg, images, results.length);
+      void recordUsage({ kind: 'image', ...usage, results: results.length, ms: Date.now() - started, cost: priced.cost, detail: { sent, basis: priced.basis, imagesMP: priced.imagesMP } });
       res.json({ images: results, provider: cfg.type });
     } catch (err: any) {
       console.error('[generate] failed:', err);
+      void recordUsage({ kind: 'image', ...usage, results: 0, ms: Date.now() - started, cost: 0, detail: { sent, error: String(err?.message ?? err).slice(0, 300) } });
       // Customers get a plain message; the full error stays in the server log.
       const message = String(err?.message ?? '');
       const code = err?.code === 'unavailable' || /API key|UNAUTHENTICATED|PERMISSION_DENIED|ACCOUNT_STATE_INVALID|\b401\b|\b403\b/.test(message)
@@ -372,6 +459,11 @@ async function startServer() {
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
     app.use(vite.middlewares);
   }
+
+  // Previews of visitors' photos are removed after the retention period (costs stay).
+  const purge = () => purgeUsage(getUsageSettings().retentionDays);
+  void purge();
+  setInterval(purge, 6 * 3600_000).unref();
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Roof Visualizer running on http://localhost:${PORT} (image model: ${activeConfig().label})`);

@@ -136,3 +136,14 @@ export async function shareImage(dataUrl: string, title: string) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
+
+/** A small JPEG preview (longest side `side` px) for the cost history. */
+export async function thumbnail(dataUrl: string, side = 320): Promise<string> {
+  const img = await loadImage(dataUrl);
+  const scale = Math.min(1, side / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.6);
+}
