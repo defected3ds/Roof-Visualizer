@@ -177,4 +177,6 @@ export interface UsageView {
   lastError?: string;
   events: UsageEvent[];
   settings: UsageSettings;
+  /** Price table ids of the services the current AI settings use. */
+  activePrices?: string[];
 }

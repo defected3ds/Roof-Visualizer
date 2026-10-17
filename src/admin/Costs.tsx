@@ -187,7 +187,7 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
             )}
           </div>
 
-          <PriceTable password={password} settings={view.settings} onSaved={(r) => { onSaved(r); void load(); }} />
+          <PriceTable password={password} settings={view.settings} active={view.activePrices ?? []} onSaved={(r) => { onSaved(r); void load(); }} />
         </>
       )}
     </section>
@@ -266,7 +266,7 @@ function detailText(c: UsageEvent): string {
   return parts.join(' · ');
 }
 
-function PriceTable({ password, settings, onSaved }: { password: string; settings: UsageSettings; onSaved: (r: SaveResult) => void }) {
+function PriceTable({ password, settings, active, onSaved }: { password: string; settings: UsageSettings; active: string[]; onSaved: (r: SaveResult) => void }) {
   const [draft, setDraft] = useState(settings);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -289,13 +289,21 @@ function PriceTable({ password, settings, onSaved }: { password: string; setting
       <h2 className="border-b border-line pb-2 text-lg font-bold">Price table</h2>
       <p className="mt-2 text-sm text-muted">
         Every cost above is an estimate: units used × these prices (US dollars). Change a price when a provider changes it; old records keep the cost they were
-        saved with.
+        saved with. Services your current AI settings use are highlighted.
       </p>
       <div className="mt-4 space-y-3">
         {draft.prices.map((p, i) => (
-          <div key={p.id} className="grid items-center gap-2 sm:grid-cols-[1fr_9rem]">
+          <div
+            key={p.id}
+            className={`grid items-center gap-2 rounded-wb sm:grid-cols-[1fr_9rem] ${active.includes(p.id) ? 'border border-green-600 bg-green-50 p-3' : 'p-3'}`}
+          >
             <div>
-              <p className="text-sm font-semibold">{p.label}</p>
+              <p className="text-sm font-semibold">
+                {p.label}
+                {active.includes(p.id) && (
+                  <span className="ml-2 rounded-full bg-green-600 px-2 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-white">In use</span>
+                )}
+              </p>
               <p className="text-xs text-muted">
                 per {p.unit}
                 {p.note ? ` · ${p.note}` : ''}

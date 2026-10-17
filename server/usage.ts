@@ -7,7 +7,7 @@
  * Logging never breaks the app: every failure is caught and shown in Admin > Costs.
  */
 import { imageSize } from './providers';
-import type { PriceItem, ProviderConfig, UsageEvent } from '../src/types';
+import type { AiSettings, PriceItem, ProviderConfig, UsageEvent } from '../src/types';
 
 export function defaultPrices(): PriceItem[] {
   return [
@@ -61,6 +61,24 @@ export function imageCost(prices: PriceItem[], cfg: Pick<ProviderConfig, 'type' 
     basis = `${results} × $${priceOf(prices, 'other.image')} (default)`;
   }
   return { cost, basis, imagesMP: Number(inMP.toFixed(2)) };
+}
+
+/** Price-table ids of the services the current AI settings use, so the admin can highlight them. */
+export function activePriceIds(ai: AiSettings): string[] {
+  const ids: string[] = [];
+  const cfg = ai.providers.find((p) => p.id === ai.activeProvider);
+  if (cfg) {
+    const model = cfg.model.toLowerCase();
+    if (cfg.type === 'fal' && model.includes('krea')) ids.push('krea.mp');
+    else if (cfg.type === 'bfl' && model.startsWith('flux-2')) ids.push('flux2.out', 'flux2.in');
+    else if (cfg.type === 'gemini') ids.push('gemini.image');
+    else if (cfg.type === 'openai' && model.includes('2.5')) ids.push('openai.image');
+    else if (cfg.type !== 'demo') ids.push('other.image');
+  }
+  if (ai.segmentation.tool === 'sam3') ids.push('sam3.photo');
+  if (ai.depthEstimation.tool === 'marigold') ids.push('marigold.second');
+  if (ai.depthEstimation.tool === 'midas') ids.push('midas.photo');
+  return ids;
 }
 
 export function depthCost(prices: PriceItem[], tool: 'marigold' | 'midas' | 'browser', ms: number) {

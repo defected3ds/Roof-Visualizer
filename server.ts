@@ -27,7 +27,7 @@ import {
 } from './server/store';
 import { createProvider, estimateDepth, hasDepthKey, hasKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
 import { buildModelPrompt, type ImageRoles } from './src/lib/prompt';
-import { attachPreviews, depthCost, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
+import { activePriceIds, attachPreviews, depthCost, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
 import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_HOUR) || 20;
@@ -218,6 +218,7 @@ async function startServer() {
       lastError: usageLastError() || undefined,
       events: await listUsage(Number.isFinite(days) && days > 0 ? days : null),
       settings: getUsageSettings(),
+      activePrices: activePriceIds(getAiSettings()),
     });
   });
   admin.put('/usage-settings', async (req, res) => {
