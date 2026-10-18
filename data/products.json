@@ -6081,8 +6081,45 @@
     "name": "Test 1",
     "category": "test-images",
     "brand": "",
-    "description": "as",
-    "specs": [],
+    "description": "clay roof tiles",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "clay"
+      },
+      {
+        "label": "Overall dimensions",
+        "value": "250 x 120"
+      },
+      {
+        "label": "Effective covering width",
+        "value": ""
+      },
+      {
+        "label": "Covering length",
+        "value": ""
+      },
+      {
+        "label": "Tiles per m²",
+        "value": ""
+      },
+      {
+        "label": "Weight per tile",
+        "value": ""
+      },
+      {
+        "label": "Roof weight",
+        "value": ""
+      },
+      {
+        "label": "Installation",
+        "value": ""
+      },
+      {
+        "label": "Colors",
+        "value": ""
+      }
+    ],
     "images": [
       "/product-images/test-1-mve6gilq/mve6gilq-0.jpg"
     ]
