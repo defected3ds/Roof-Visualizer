@@ -599,7 +599,7 @@ export function measureGeometry(
   return { planes, roofAreaM2, focalPx: f, up: upSource, confidence, notes, debug, scaleChecked };
 }
 
-/** Depth as a colour picture (near = warm, far = cool), at most 640 px wide, coloured over the 2–98% range of the pixels in `focus`. */
+/** Depth as a colour picture (near = warm, far = cool), at most 800 px wide, coloured over the 2–98% range of the pixels in `focus`. */
 function depthPicture(depth: Float32Array, w: number, h: number, focus: Uint8Array): string | undefined {
   const valid = (z: number) => Number.isFinite(z) && z > 0.1 && z < 500;
   let zs: number[] = [];
@@ -612,17 +612,31 @@ function depthPicture(depth: Float32Array, w: number, h: number, focus: Uint8Arr
   zs.sort((a, b) => a - b);
   const lo = percentile(zs, 0.02);
   const hi = Math.max(percentile(zs, 0.98), lo + 0.5);
-  const scale = Math.min(1, 640 / w);
+  const scale = Math.min(1, 800 / w);
   const ow = Math.max(1, Math.round(w * scale));
   const oh = Math.max(1, Math.round(h * scale));
-  const rgb = new Uint8Array(ow * oh * 3);
+  // Sample the depth for each output pixel, then take the median of 5 × 5: the thin band of in-between values along an edge (roof against
+  // sky) is "flying pixels" that would otherwise show as a jagged green line.
+  const grid = new Float32Array(ow * oh);
   for (let y = 0; y < oh; y++) {
     for (let x = 0; x < ow; x++) {
-      const z = depth[Math.min(h - 1, Math.floor(y / scale)) * w + Math.min(w - 1, Math.floor(x / scale))];
-      const t = valid(z) ? 1 - (z - lo) / (hi - lo) : 0;
-      rgb.set(turbo(t), (y * ow + x) * 3);
+      const z = depth[Math.min(h - 1, Math.floor((y + 0.5) / scale)) * w + Math.min(w - 1, Math.floor((x + 0.5) / scale))];
+      grid[y * ow + x] = valid(z) ? z : hi * 4;
     }
   }
+  const smooth = new Float32Array(ow * oh);
+  const win = new Float32Array(25);
+  for (let y = 0; y < oh; y++) {
+    for (let x = 0; x < ow; x++) {
+      let n = 0;
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) win[n++] = grid[Math.min(oh - 1, Math.max(0, y + dy)) * ow + Math.min(ow - 1, Math.max(0, x + dx))];
+      }
+      smooth[y * ow + x] = Array.from(win).sort((a, b) => a - b)[12];
+    }
+  }
+  const rgb = new Uint8Array(ow * oh * 3);
+  for (let i = 0; i < ow * oh; i++) rgb.set(turbo(1 - (smooth[i] - lo) / (hi - lo)), i * 3);
   return `data:image/png;base64,${encodePng(rgb, ow, oh).toString('base64')}`;
 }
 

@@ -144,10 +144,21 @@ function GeneratingOverlay({
   // the last one until the result arrives. Counting from when the maps arrived starts it at the depth map.
   const [mapsSince, setMapsSince] = useState(0);
   const mapCount = useRef(0);
+  const prevMaps = useRef<string[]>([]);
   useEffect(() => {
-    // A slide added later (the measurement) joins the show; it doesn't restart it.
+    const prev = prevMaps.current;
     if (mapCount.current === 0 || edgeMaps.length < mapCount.current) setMapsSince(Date.now());
+    else if (edgeMaps.length > prev.length) {
+      // A slide added later (Depth Pro's depth, a late wall) is inserted where it belongs; if the show has already passed that place,
+      // it is shown now and the show continues from there, so it isn't skipped.
+      let at = 0;
+      while (at < prev.length && prev[at] === edgeMaps[at]) at++;
+      const current = Math.min(Math.floor((Date.now() - mapsSince) / 3500), prev.length - 1);
+      if (current >= at) setMapsSince(Date.now() - at * 3500);
+    }
     mapCount.current = edgeMaps.length;
+    prevMaps.current = edgeMaps;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edgeMaps]);
   const stage = Math.min(Math.floor((now - mapsSince) / 3500), edgeMaps.length - 1);
   const r = 26;

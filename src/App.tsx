@@ -127,10 +127,9 @@ function RoofApp() {
   const [viewing, setViewing] = useState<number | null>(null);
   const [generating, setGenerating] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
-  // Slides of the loading screen: head (depth maps, roof), extras that arrive later (wall, Depth Pro depth, measurement), tail (edge maps).
+  // Slides of the loading screen: head (depth maps, Depth Pro depth, walls, roof; the late ones are inserted when they arrive) and tail (edge maps).
   const [slideBase, setSlideBase] = useState<{ head: string[]; tail: string[] }>({ head: [], tail: [] });
-  const [slideExtras, setSlideExtras] = useState<string[]>([]);
-  const edgeMaps = useMemo(() => [...slideBase.head, ...slideExtras, ...slideBase.tail], [slideBase, slideExtras]);
+  const edgeMaps = useMemo(() => [...slideBase.head, ...slideBase.tail], [slideBase]);
   // Photo analysis (depth map, roof mask) for the current photo; which ones run is set in /admin > AI settings.
   const [analysis, setAnalysis] = useState({ depth: true, mask: true });
   const [showEdgeMaps, setShowEdgeMaps] = useState(true);
@@ -271,7 +270,6 @@ function RoofApp() {
     // Previews for the loading animation: depth maps, the detected roof, then edge maps (if switched on in
     // /admin > AI settings). Until the analysis is done the overlay says "Analysing 3D shape".
     setSlideBase({ head: [], tail: [] });
-    setSlideExtras([]);
     const runId = ++generationRun.current;
     const live = await loadSettings().catch(() => null);
     const edges = (live?.edgeMaps ?? showEdgeMaps) ? buildEdgeMaps(base).catch(() => [] as string[]) : Promise.resolve([] as string[]);
@@ -286,7 +284,7 @@ function RoofApp() {
       // Roof measurement (new setup): walls first ("Walls found"), then the roof with the walls still tinted ("Walls found" + "Roof found");
       // the measurement (arrows, pitch, area) is added to that same roof slide when it arrives.
       const measuring = measureTool.current === 'depthpro' && measureShow.current;
-      const parts: { wall: RoofMask | null; summary: MeasureOutcome['summary'] | null } = { wall: null, summary: null };
+      const parts: { wall: RoofMask | null; summary: MeasureOutcome['summary'] | null; depthPro: string | null } = { wall: null, summary: null, depthPro: null };
       const rebuild = async () => {
         if (runId !== generationRun.current) return;
         const flat = measuring && parts.wall && m ? await roofOverWalls(parts.wall.overlay, m.mask).catch(() => m.overlay) : m?.overlay;
@@ -294,7 +292,10 @@ function RoofApp() {
         const roofSlide = card ? (measuring ? await captionSlide(card, parts.wall ? [WALL_LABEL, ROOF_LABEL] : [ROOF_LABEL]).catch(() => card) : card) : null;
         const wallSlide = parts.wall ? await captionSlide(parts.wall.overlay, [WALL_LABEL]).catch(() => parts.wall!.overlay) : null;
         if (runId !== generationRun.current) return;
-        setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(wallSlide ? [wallSlide] : []), ...(roofSlide ? [roofSlide] : [])], tail: lateEdges });
+        const depthProSlide = parts.depthPro ? await captionSlide(parts.depthPro, 'Distance from the camera: red = near, blue = far').catch(() => parts.depthPro!) : null;
+        if (runId !== generationRun.current) return;
+        // Order: depth maps, Depth Pro's depth (3rd), walls, roof.
+        setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(depthProSlide ? [depthProSlide] : []), ...(wallSlide ? [wallSlide] : []), ...(roofSlide ? [roofSlide] : [])], tail: lateEdges });
       };
       parts.wall = measuring ? await Promise.race([wallMaskFor(base), new Promise<null>((r) => setTimeout(r, 4000))]) : null;
       await rebuild();
@@ -308,9 +309,9 @@ function RoofApp() {
           });
         }
         const measured = await Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 120000))]);
-        if (measured?.depthColor && runId === generationRun.current) setSlideExtras((cur) => [...cur, measured.depthColor!]);
-        if (measured?.summary) {
-          parts.summary = measured.summary;
+        if (runId === generationRun.current && (measured?.depthColor || measured?.summary)) {
+          parts.depthPro = measured.depthColor ?? null;
+          parts.summary = measured.summary ?? null;
           await rebuild();
         }
       }
