@@ -143,7 +143,7 @@ export function defaultAiSettings(): AiSettings {
     include: { productData: true, specs: true, productPhotos: true, depthMap: true, roofMask: true },
     maxProductPhotos: 3,
     variants: 3,
-    showEdgeMaps: true,
+    showEdgeMaps: false,
     showModelName: true,
     segmentation: defaultSegmentation(),
     depthEstimation: defaultDepth(),

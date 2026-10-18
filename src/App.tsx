@@ -11,6 +11,7 @@ import {
   Maximize,
   Redo2,
   RefreshCw,
+  Download,
   Share,
   Undo2,
   Upload,
@@ -23,7 +24,7 @@ import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components
 import { configureDepth, depthFor, depthWithin, snapToMask } from './lib/depth';
 import { configureRoofMask, roofMaskFor, roofMaskWithin, wallMaskFor, type RoofMask } from './lib/roofmask';
 import { buildMeasureCard, captionSlide, roofOverWalls, ROOF_LABEL, WALL_LABEL, type MeasureOutcome } from './lib/measureCard';
-import { buildEdgeMaps, fileToDataUrl, shareImage, thumbnail } from './lib/image';
+import { buildEdgeMaps, downloadImage, fileToDataUrl, shareImage, thumbnail } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
 import type { Catalog, Category, GenerateResponse, Product } from './types';
@@ -131,11 +132,13 @@ function RoofApp() {
   const [generating, setGenerating] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   // Slides of the loading screen: head (depth maps, Depth Pro depth, walls, roof; the late ones are inserted when they arrive) and tail (edge maps).
-  const [slideBase, setSlideBase] = useState<{ head: string[]; tail: string[] }>({ head: [], tail: [] });
+  const [slideBase, setSlideBase] = useState<{ head: string[]; tail: string[]; headTitles: string[] }>({ head: [], tail: [], headTitles: [] });
   const edgeMaps = useMemo(() => [...slideBase.head, ...slideBase.tail], [slideBase]);
+  // What the main loading text says while each slide is showing (same order as edgeMaps).
+  const slideTitles = useMemo(() => [...slideBase.headTitles, ...slideBase.tail.map(() => t('editor.slideEdges'))], [slideBase, t]);
   // Photo analysis (depth map, roof mask) for the current photo; which ones run is set in /admin > AI settings.
   const [analysis, setAnalysis] = useState({ depth: true, mask: true });
-  const [showEdgeMaps, setShowEdgeMaps] = useState(true);
+  const [showEdgeMaps, setShowEdgeMaps] = useState(false);
   // True when the depth map and roof mask were wanted but could not be made on this device.
   const [noAnalysis, setNoAnalysis] = useState(false);
   // Which tools made the depth map and roof mask (shown on the loading screen when the address ends in ?debug).
@@ -281,7 +284,7 @@ function RoofApp() {
     setCompare(false);
     // Previews for the loading animation: depth maps, the detected roof, then edge maps (if switched on in
     // /admin > AI settings). Until the analysis is done the overlay says "Analysing 3D shape".
-    setSlideBase({ head: [], tail: [] });
+    setSlideBase({ head: [], tail: [], headTitles: [] });
     const runId = ++generationRun.current;
     const live = await loadSettings().catch(() => null);
     setAnalysing(base);
@@ -325,10 +328,16 @@ function RoofApp() {
               await captionSlide(d.color, [{ text: 'Depth map in colour: bright = near, dark = far' }]).catch(() => d.color),
             ]
           : [];
-        const head = measuring
-          ? [wallSlide, roofSlide, ...depthSlides, depthProSlide]
-          : [...depthSlides, roofSlide];
-        setSlideBase({ head: head.filter((x): x is string => Boolean(x)), tail: parts.tail });
+        const titled: [string | null, string][] = measuring
+          ? [
+              [wallSlide, t('editor.slideWalls')],
+              [roofSlide, t('editor.slideRoof')],
+              ...depthSlides.map((x): [string, string] => [x, t('editor.slideDepth')]),
+              [depthProSlide, t('editor.slideMeasure')],
+            ]
+          : [...depthSlides.map((x): [string, string] => [x, t('editor.slideDepth')]), [roofSlide, t('editor.slideRoof')]];
+        const shown = titled.filter((x): x is [string, string] => Boolean(x[0]));
+        setSlideBase({ head: shown.map((x) => x[0]), headTitles: shown.map((x) => x[1]), tail: parts.tail });
       }));
     const depthP = use.depth ? depthFor(base) : Promise.resolve(null);
     const maskP = use.mask ? roofMaskFor(base) : Promise.resolve(null);
@@ -464,6 +473,8 @@ function RoofApp() {
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? '';
   const current = results[active] ?? base;
   const busy = generating;
+  // File name for download and share, from the product: "koramic-actua-multiblend-new-roof".
+  const fileTitle = [viewing !== null ? gallery[viewing]?.product : [product?.brand, product?.name].filter(Boolean).join(' '), 'new roof'].filter(Boolean).join(' ');
 
   if (gate === 'checking') {
     return (
@@ -555,14 +566,25 @@ function RoofApp() {
           </button>
         }
         right={
-          <button
-            onClick={() => shareImage(current, `new-roof-${product?.id ?? 'result'}`)}
-            disabled={busy}
-            className="-mr-2 p-2 text-brand disabled:opacity-30"
-            aria-label="Share"
-          >
-            <Share size={22} />
-          </button>
+          <div className="-mr-2 flex items-center">
+            <button
+              onClick={() => downloadImage(current, fileTitle)}
+              disabled={busy || current === base}
+              className="p-2 text-brand disabled:opacity-30"
+              aria-label="Download"
+              title="Download"
+            >
+              <Download size={22} />
+            </button>
+            <button
+              onClick={() => shareImage(current, fileTitle)}
+              disabled={busy}
+              className="p-2 text-brand disabled:opacity-30"
+              aria-label="Share"
+            >
+              <Share size={22} />
+            </button>
+          </div>
         }
       />
 
@@ -591,6 +613,7 @@ function RoofApp() {
           generating={generating}
           startedAt={startedAt}
           edgeMaps={edgeMaps}
+          slideTitles={slideTitles}
           modelLabel={showModel ? resultModel : ''}
           analysing={generating && waitingForAnalysis && analysing === base}
           note={noAnalysis ? t('editor.noAnalysis') : undefined}

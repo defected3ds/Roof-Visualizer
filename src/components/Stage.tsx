@@ -10,6 +10,7 @@ interface Props {
   generating: boolean;
   startedAt: number | null;
   edgeMaps: string[];
+  slideTitles: string[];
   /** Name of the AI model that made the results; written in the bottom right corner of every result. */
   modelLabel?: string;
   /** True while generation waits for the depth map. */
@@ -24,7 +25,7 @@ interface Props {
 const PHOTO = 'block w-full lg:h-full lg:object-contain';
 
 /** The photo area: current image, swipeable results, before/after slider and the generating overlay. */
-export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, modelLabel, analysing, note, info }: Props) {
+export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, slideTitles, modelLabel, analysing, note, info }: Props) {
   const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState(50);
@@ -97,7 +98,7 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
         </div>
       )}
 
-      {generating && <GeneratingOverlay startedAt={startedAt} edgeMaps={edgeMaps} analysing={analysing} note={note} info={info} ratio={ratio} />}
+      {generating && <GeneratingOverlay startedAt={startedAt} edgeMaps={edgeMaps} slideTitles={slideTitles} analysing={analysing} note={note} info={info} ratio={ratio} />}
     </div>
   );
 }
@@ -105,6 +106,7 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
 function GeneratingOverlay({
   startedAt,
   edgeMaps,
+  slideTitles,
   analysing,
   note,
   info,
@@ -112,6 +114,7 @@ function GeneratingOverlay({
 }: {
   startedAt: number | null;
   edgeMaps: string[];
+  slideTitles: string[];
   analysing?: boolean;
   note?: string;
   info?: string;
@@ -167,6 +170,9 @@ function GeneratingOverlay({
   // The show goes through the slides once, in order, and stays on the last one until the result arrives; a slide that arrives late
   // is added behind the others and shown when its turn comes.
   const stage = Math.min(Math.floor((now - mapsSince) / 3500), edgeMaps.length - 1);
+  // The main text says what the slide on screen shows; once every slide has had its turn it says the images are being made.
+  const slideTitle = edgeMaps.length > 0 && now - mapsSince < edgeMaps.length * 3500 ? slideTitles[stage] : undefined;
+  const title = slideTitle ?? t(analysing ? 'editor.analysing' : 'editor.generating');
   const r = 26;
   const circ = 2 * Math.PI * r;
   const progress = (elapsed % 12) / 12;
@@ -201,7 +207,7 @@ function GeneratingOverlay({
           </svg>
           <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-white">{elapsed.toFixed(1)}s</span>
         </div>
-        <p className="text-lg font-semibold text-white drop-shadow">{t(analysing ? 'editor.analysing' : 'editor.generating')}</p>
+        <p className="text-lg font-semibold text-white drop-shadow">{title}</p>
         {note && <p className="max-w-xs px-4 text-center text-sm text-white/90 drop-shadow">{note}</p>}
         {info && <p className="max-w-sm px-4 text-center text-xs text-white/80 drop-shadow">{info}</p>}
       </div>

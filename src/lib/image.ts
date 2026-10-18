@@ -137,6 +137,16 @@ export async function shareImage(dataUrl: string, title: string) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+/** Saves an image as a file (no share sheet), named from `title`, e.g. "koramic-actua-multiblend-new-roof.png". */
+export async function downloadImage(dataUrl: string, title: string) {
+  const blob = await (await fetch(dataUrl)).blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${title.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()}.${(blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
 /** A small JPEG preview (longest side `side` px) for the cost history. */
 export async function thumbnail(dataUrl: string, side = 320): Promise<string> {
   const img = await loadImage(dataUrl);
