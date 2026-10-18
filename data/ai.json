@@ -24,6 +24,8 @@
     "tool": "depthpro",
     "keyEnv": "REPLICATE_API_TOKEN",
     "wallPrompt": "wall",
+    "referencePrompt": "door",
+    "referenceHeightM": 2,
     "show": true
   },
   "activeProvider": "gemini",
