@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Check, Plus, RotateCcw, Trash2, TriangleAlert } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from '../components/ui';
 import { imageLimit, promptLimit, PROVIDER_TYPES } from '../lib/models';
-import { buildModelPrompt, DEFAULT_SYSTEM_PROMPT, type ImageRoles } from '../lib/prompt';
+import { buildModelPrompt, DEFAULT_SYSTEM_PROMPT, imageGuide, productBlock, type ImageRoles } from '../lib/prompt';
+import { measurementText } from '../lib/measureText';
 import { productThumb } from '../lib/swatch';
 import { fileToDataUrl } from '../lib/image';
 import { configureDepth, depthFor, orientedPreview } from '../lib/depth';
@@ -858,7 +859,32 @@ function FinalPromptPreview({ draft, catalog, limit, model }: { draft: AiSetting
   }, [draft, product, limit]);
 
   if (!product) return null;
-  const { prompt, shortened } = buildModelPrompt(draft, model, product, category, roles);
+  // With the measurement option on, show it with example numbers (the real ones come from each photo).
+  const measured =
+    draft.measurement.tool === 'depthpro'
+      ? measurementText({ confidence: 'ok', scaleChecked: true, planes: [{ pitchDeg: 38, eaveM: 9, slopeM: 5, areaM2: 45 }] }, product)
+      : '';
+  const { prompt, shortened } = buildModelPrompt(draft, model, product, category, roles, 0, measured);
+  // Mark what was added to the general prompt: product data, the measurements, and the guide to the attached images.
+  const own = model.systemPrompt?.trim() ? { ...draft, systemPrompt: model.systemPrompt } : draft;
+  const marks = [
+    { text: productBlock(own, product, category), kind: 'product' as const },
+    { text: measured, kind: 'measure' as const },
+    { text: imageGuide(roles), kind: 'images' as const },
+  ]
+    .map((m) => ({ ...m, start: m.text ? prompt.indexOf(m.text) : -1 }))
+    .filter((m) => m.start >= 0)
+    .sort((x, y) => x.start - y.start);
+  const pieces: { text: string; kind?: 'product' | 'measure' | 'images' }[] = [];
+  let at = 0;
+  for (const m of marks) {
+    if (m.start < at) continue;
+    if (m.start > at) pieces.push({ text: prompt.slice(at, m.start) });
+    pieces.push({ text: m.text, kind: m.kind });
+    at = m.start + m.text.length;
+  }
+  if (at < prompt.length) pieces.push({ text: prompt.slice(at) });
+  const markClass = { product: 'bg-sky-100', measure: 'bg-amber-100', images: 'bg-emerald-100' } as const;
   const maxChars = promptLimit(model);
   const images = [
     'House photo',
@@ -891,9 +917,17 @@ function FinalPromptPreview({ draft, catalog, limit, model }: { draft: AiSetting
         </select>
       </label>
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_220px]">
-        <pre className="max-h-[480px] overflow-auto whitespace-pre-wrap rounded-wb border border-line bg-paper p-4 font-mono text-[12.5px] leading-relaxed text-ink">
-          {prompt}
-        </pre>
+        <div>
+          <p className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+            <span className="font-semibold">Added to the general prompt:</span>
+            <span className="rounded-[2px] bg-sky-100 px-1.5 py-0.5">Product data</span>
+            <span className="rounded-[2px] bg-emerald-100 px-1.5 py-0.5">Guide to the attached images</span>
+            {measured && <span className="rounded-[2px] bg-amber-100 px-1.5 py-0.5">Roof measurements (example numbers)</span>}
+          </p>
+          <pre className="max-h-[480px] overflow-auto whitespace-pre-wrap rounded-wb border border-line bg-paper p-4 font-mono text-[12.5px] leading-relaxed text-ink">
+            {pieces.map((p, i) => (p.kind ? <mark key={i} className={`${markClass[p.kind]} text-ink`}>{p.text}</mark> : <span key={i}>{p.text}</span>))}
+          </pre>
+        </div>
         <div>
           <p className="text-sm font-semibold">Images sent, in order</p>
           <ol className="mt-2 space-y-1.5 text-sm">
