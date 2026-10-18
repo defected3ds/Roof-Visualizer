@@ -536,7 +536,11 @@ async function startServer() {
     };
     const sent = ['house photo', depth && 'depth map', mask && 'roof mask', photos.length && `${photos.length} product photo${photos.length > 1 ? 's' : ''}`, swatch && 'texture sample', measured && 'roof measurements'].filter(Boolean);
     try {
-      const results = await providerFor(cfg).generate({ images, prompts });
+      // An image model that never answers must not keep the visitor waiting for ever.
+      const results = await Promise.race([
+        providerFor(cfg).generate({ images, prompts }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(Object.assign(new Error('The image model took too long to answer.'), { code: 'unavailable' })), 200_000)),
+      ]);
       if (results.length === 0) {
         return res.status(502).json({ error: 'The model returned no images. Try again or pick another photo.' });
       }

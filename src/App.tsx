@@ -256,8 +256,23 @@ function RoofApp() {
     }
   }
 
+  // Whatever goes wrong while preparing or waiting, the loading screen must end: it never spins forever.
   async function generate() {
     if (!base || !product || generating) return;
+    try {
+      await runGenerate();
+    } catch (err: any) {
+      setToast(err?.message || t('message.error'));
+    } finally {
+      setGenerating(false);
+      setStartedAt(null);
+      setWaitingForAnalysis(false);
+      setAnalysing(null);
+    }
+  }
+
+  async function runGenerate() {
+    if (!base || !product) return;
     setGenerating(true);
     setStartedAt(Date.now());
     setCompare(false);
@@ -336,13 +351,14 @@ function RoofApp() {
       // The measurement goes into the prompt, so wait for it (admin setting, 60 s by default), then generate without it.
       Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, measureWait.current * 1000))]),
     ]).then(([d, m]) => [d, m] as const);
-    const depthMaps = await sharpDepth(depthRaw, roofMask);
+    const depthMaps = await sharpDepth(depthRaw, roofMask).catch(() => depthRaw);
     setWaitingForAnalysis(false);
     setAnalysing((cur) => (cur === base ? null : cur));
     const generationId = newId();
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
+        signal: AbortSignal.timeout(240_000),
         headers: { 'Content-Type': 'application/json', 'X-Access-Code': accessCode },
         body: JSON.stringify({
           image: base,
@@ -384,7 +400,7 @@ function RoofApp() {
         setToast(t('message.swipe'));
       }
     } catch (err: any) {
-      setToast(err.message || t('message.error'));
+      setToast(err?.name === 'TimeoutError' ? t('message.busy') : err.message || t('message.error'));
     } finally {
       setGenerating(false);
       setStartedAt(null);
