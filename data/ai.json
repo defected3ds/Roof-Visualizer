@@ -33,7 +33,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "open-ai-gpt-2-5",
+  "activeProvider": "gemini",
   "providers": [
     {
       "id": "gemini",
