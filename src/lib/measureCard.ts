@@ -1,7 +1,7 @@
 /** The loading-screen slide for the roof measurement: the roof tinted on the photo, with rounded pitch and area at its centre. */
 export interface MeasureSummary {
   pitchDeg: number;
-  areaM2: number;
+  areaM2?: number;
   /** Arrows along the eave and up the slope: [x1, y1, x2, y2] as fractions of the photo, and the length in metres (rounded). */
   eave?: { line: [number, number, number, number]; m: number };
   slope?: { line: [number, number, number, number]; m: number };
@@ -36,7 +36,7 @@ export async function buildMeasureCard(overlay: string, _mask: string, s: Measur
   if (s.slope) arrow(ctx, s.slope.line, w, h, `about ${fmt(s.slope.m)} m`, label);
 
   const size = Math.max(11, Math.round(w / 60));
-  const lines = [`Roof pitch about ${s.pitchDeg}°`, `Roof area about ${s.areaM2} m²`];
+  const lines = [`Roof pitch about ${s.pitchDeg}°`, ...(s.areaM2 ? [`Roof area about ${s.areaM2} m²`] : [])];
   ctx.font = `600 ${size}px "Noto Sans", system-ui, sans-serif`;
   const textW = Math.max(...lines.map((l) => ctx.measureText(l).width));
   const padX = size * 0.7;
@@ -98,4 +98,28 @@ function arrow(ctx: CanvasRenderingContext2D, line: [number, number, number, num
   ctx.textAlign = 'center';
   ctx.fillText(text, 0, -size * 1.17);
   ctx.restore();
+}
+
+/** A small caption in the top-left corner of a loading-screen slide ("Walls found", "Roof found"). */
+export async function captionSlide(src: string, text: string): Promise<string> {
+  const img = await load(src);
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(img, 0, 0, w, h);
+  const size = Math.max(12, Math.round(w / 52));
+  ctx.font = `600 ${size}px "Noto Sans", system-ui, sans-serif`;
+  const tw = ctx.measureText(text).width;
+  const margin = Math.round(w / 60);
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.beginPath();
+  ctx.roundRect(margin, margin, tw + size * 1.4, size * 1.9, size * 0.35);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, margin + size * 0.7, margin + size * 0.95);
+  return canvas.toDataURL('image/jpeg', 0.88);
 }

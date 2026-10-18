@@ -127,6 +127,9 @@ export interface MeasurementSettings {
   referencePrompt: string;
   /** Real height of that object in metres (a door is about 2). */
   referenceHeightM: number;
+  /** What SAM 3 looks for as the ground, and how high the camera usually is above it: the fallback scale check when no door is found. Empty = off. */
+  groundPrompt: string;
+  cameraHeightM: number;
   /** Show the measured pitch and area to visitors on the loading screen. */
   show: boolean;
 }

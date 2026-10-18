@@ -360,7 +360,10 @@ function cleanMeasurement(m: MeasurementSettings): MeasurementSettings {
   const referencePrompt = String(m.referencePrompt ?? '').trim().slice(0, 100);
   const height = Number(m.referenceHeightM);
   const referenceHeightM = Number.isFinite(height) && height >= 0.3 && height <= 6 ? Math.round(height * 100) / 100 : 2;
-  return { tool, keyEnv, wallPrompt, referencePrompt, referenceHeightM, show: m.show !== false };
+  const groundPrompt = String(m.groundPrompt ?? '').trim().slice(0, 100);
+  const cam = Number(m.cameraHeightM);
+  const cameraHeightM = Number.isFinite(cam) && cam >= 0.5 && cam <= 3 ? Math.round(cam * 100) / 100 : 1.6;
+  return { tool, keyEnv, wallPrompt, referencePrompt, referenceHeightM, groundPrompt, cameraHeightM, show: m.show !== false };
 }
 
 function cleanSegmentation(s: SegmentationSettings): SegmentationSettings {

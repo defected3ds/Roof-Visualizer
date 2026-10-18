@@ -38,6 +38,8 @@ export interface Measurement {
   confidence: 'ok' | 'low';
   notes: string[];
   ms: number;
+  /** True when a door or the camera height confirmed (or corrected) the metric scale; if not, only the pitch can be trusted. */
+  scaleChecked?: boolean;
   /** Numbers for checking a measurement by hand (shown in the admin test only). */
   debug?: Record<string, number | string>;
   /** Depth Pro's coloured depth picture as a data URL (for the loading screen), when it could be fetched. */
@@ -420,6 +422,8 @@ export function measureGeometry(
   wall: Uint8Array | null,
   /** Masks of objects of known height (doors) and that height in metres: they check and correct the scale. */
   refs: { masks: Uint8Array[]; heightM: number } | null = null,
+  /** The ground (lawn, pavement) and how high the camera usually is above it, in metres. */
+  ground: { mask: Uint8Array; heightM: number } | null = null,
 ): Omit<Measurement, 'ms'> {
   const notes: string[] = [];
   const roofCloud = backProject(depth, roof, w, h, f, 6000);
@@ -430,7 +434,7 @@ export function measureGeometry(
     roofSamples: roofCloud.n,
   };
   if (roofCloud.n < 200) {
-    return { planes: [], roofAreaM2: 0, focalPx: f, up: 'level', confidence: 'low', notes: ['Too little of the roof was found to measure.'], debug };
+    return { planes: [], roofAreaM2: 0, focalPx: f, up: 'level', confidence: 'low', notes: ['Too little of the roof was found to measure.'], debug, scaleChecked: false };
   }
   const zs = Array.from({ length: roofCloud.n }, (_, i) => roofCloud.pts[i * 3 + 2]).sort((a, b) => a - b);
   const thr = Math.max(0.05, 0.02 * zs[zs.length >> 1]);
@@ -461,30 +465,54 @@ export function measureGeometry(
   }
   if (upSource === 'level') notes.push('No usable wall found: the camera was assumed level, so pitch can be off by the real tilt.');
 
-  // Scale check against objects of known height (a door is about 2 m): the measured height says whether the depth scale is right.
+  // Scale check. Depth Pro's metric scale can be far off (4× on a house photographed from a distance), so sizes are only trusted when
+  // something of known size agrees: a door (about 2 m high), or else the camera's height above the ground (a person holds it at about 1.6 m).
   let scale = 1;
-  if (refs?.masks.length) {
+  let scaleChecked = false;
+  const door = (() => {
+    if (!refs?.masks.length) return null;
     const heights: number[] = [];
     for (const mask of refs.masks) {
       const cloud = backProject(depth, mask, w, h, f, 1500);
       if (cloud.n < 120) continue;
       const along = Array.from({ length: cloud.n }, (_, i) => dot([cloud.pts[i * 3], cloud.pts[i * 3 + 1], cloud.pts[i * 3 + 2]], up)).sort((a, b) => a - b);
       const height = percentile(along, 0.98) - percentile(along, 0.02);
-      if (height > 0.3 && height < 8) heights.push(height);
+      if (height > 0.05 && height < 12) heights.push(height);
     }
-    if (heights.length) {
-      heights.sort((a, b) => a - b);
-      const measured = heights[heights.length >> 1];
-      const factor = refs.heightM / measured;
-      debug.referenceMeasured = `${measured.toFixed(2)} m (expected ${refs.heightM} m, ${heights.length} object${heights.length > 1 ? 's' : ''})`;
-      if (Math.abs(factor - 1) < 0.08) notes.push('A door in the photo confirms the scale.');
-      else if (factor > 0.5 && factor < 2) {
-        scale = factor;
-        notes.push(`A door in the photo measured ${measured.toFixed(2)} m instead of about ${refs.heightM} m: all sizes were scaled by ${factor.toFixed(2)}.`);
-      } else notes.push(`A door in the photo measured ${measured.toFixed(2)} m, far from ${refs.heightM} m: the depth scale can't be trusted.`);
-      debug.scaleFactor = scale.toFixed(2);
-      if (factor <= 0.5 || factor >= 2) debug.scaleCheck = 'failed';
-    } else notes.push('No usable door found to check the scale.');
+    if (!heights.length) return null;
+    heights.sort((a, b) => a - b);
+    const measured = heights[heights.length >> 1];
+    debug.doorMeasured = `${measured.toFixed(2)} m (expected ${refs.heightM} m, ${heights.length} object${heights.length > 1 ? 's' : ''})`;
+    return { factor: refs.heightM / measured, measured };
+  })();
+  const floor = (() => {
+    if (!ground) return null;
+    const cloud = backProject(depth, ground.mask, w, h, f, 3000);
+    if (cloud.n < 200) return null;
+    const gthr = Math.max(0.03, 0.02 * zs[zs.length >> 1]);
+    const plane = ransacPlane(cloud.pts, Array.from({ length: cloud.n }, (_, i) => i), gthr);
+    if (!plane || plane.inliers.length < cloud.n * 0.4) return null;
+    // The ground must be roughly horizontal: its normal close to "up".
+    if (Math.abs(dot(plane.n, up)) < Math.cos((30 * Math.PI) / 180)) return null;
+    const measured = Math.abs(dot(plane.n, plane.c));
+    debug.cameraHeight = `${measured.toFixed(2)} m above the ground (expected about ${ground.heightM} m)`;
+    return measured > 0.05 ? { factor: ground.heightM / measured, measured } : null;
+  })();
+  const pick = door ? { ...door, what: 'a door', expected: refs!.heightM } : floor ? { ...floor, what: 'the camera height', expected: ground!.heightM } : null;
+  if (pick) {
+    scaleChecked = true;
+    if (Math.abs(pick.factor - 1) < 0.08) notes.push(`Scale confirmed by ${pick.what}.`);
+    else if (pick.factor > 0.2 && pick.factor < 5) {
+      scale = pick.factor;
+      notes.push(`Scale checked with ${pick.what}: it measured ${pick.measured.toFixed(2)} m instead of about ${pick.expected} m, so all sizes were multiplied by ${pick.factor.toFixed(2)}.`);
+    } else {
+      scaleChecked = false;
+      notes.push(`${pick.what} measured ${pick.measured.toFixed(2)} m, far from ${pick.expected} m: sizes are not reliable.`);
+    }
+    debug.scaleFactor = scale.toFixed(2);
+    debug.scaleBasedOn = pick.what;
+  } else {
+    notes.push('No door and no ground found to check the scale: only the pitch is reliable, sizes are not.');
   }
 
   const planes: PlaneResult[] = [];
@@ -570,15 +598,12 @@ export function measureGeometry(
     confidence = 'low';
     notes.push('The roof surface was too uneven or too hidden to fit planes reliably.');
   }
-  if (debug.scaleCheck === 'failed') {
-    confidence = 'low';
-  }
   if (planes.some((p) => p.pitchDeg > 70 || p.eaveM > 60 || p.slopeM > 30)) {
     confidence = 'low';
     notes.push('A measured size was not plausible for a house roof.');
   }
   debug.planeCoverage = Math.round((covered / roofCloud.n) * 100) + ' % of roof samples';
-  return { planes, roofAreaM2, focalPx: f, up: upSource, confidence, notes, debug };
+  return { planes, roofAreaM2, focalPx: f, up: upSource, confidence, notes, debug, scaleChecked };
 }
 
 // ---- The whole measurement ---------------------------------------------------------------------
@@ -589,11 +614,13 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
   if (!token) throw new Error(`${settings.keyEnv} is not set`);
   const started = Date.now();
   const refPrompt = settings.referencePrompt.trim();
-  const [d, roofMasks, wallMasks, refMasks] = await Promise.all([
+  const groundPrompt = settings.groundPrompt.trim();
+  const [d, roofMasks, wallMasks, refMasks, groundMasks] = await Promise.all([
     depthPro(token, image),
     segmentRoof(seg, image),
     segmentRoof({ ...seg, prompt: settings.wallPrompt || 'wall' }, image).catch(() => [] as string[]),
     refPrompt ? segmentRoof({ ...seg, prompt: refPrompt }, image).catch(() => [] as string[]) : Promise.resolve([] as string[]),
+    groundPrompt ? segmentRoof({ ...seg, prompt: groundPrompt }, image).catch(() => [] as string[]) : Promise.resolve([] as string[]),
   ]);
   if (!roofMasks.length) throw new Error('SAM 3 found no roof in the photo');
   const size = imageSize(image);
@@ -601,7 +628,8 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
   const roof = unionMasks(roofMasks, d.w, d.h);
   const wall = wallMasks.length ? unionMasks(wallMasks, d.w, d.h) : null;
   const refs = refMasks.length ? { masks: refMasks.map((u) => resampleMask(u, d.w, d.h)), heightM: settings.referenceHeightM } : null;
-  const result = measureGeometry(d.depth, d.w, d.h, f, roof, wall, refs);
+  const ground = groundMasks.length ? { mask: unionMasks(groundMasks, d.w, d.h), heightM: settings.cameraHeightM } : null;
+  const result = measureGeometry(d.depth, d.w, d.h, f, roof, wall, refs, ground);
   const debug = {
     ...result.debug,
     depthMap: `${d.w} × ${d.h}`,
@@ -653,6 +681,10 @@ export function measurementText(m: Measurement | undefined, product?: Product): 
   if (!m || m.confidence !== 'ok' || !m.planes.length) return '';
   const cover = specMm(product, ['cover', 'width']);
   const gauge = specMm(product, ['batten', 'gauge']) ?? specMm(product, ['gauge']);
+  if (!m.scaleChecked) {
+    const p = m.planes[0];
+    return `ROOF MEASUREMENT (estimated from the photo): the main roof plane has a pitch of about ${Math.round(p.pitchDeg)}°. Use it only to understand the roof's slope; the photo and the product photos decide the result.`;
+  }
   const lines = m.planes.map((p, i) => {
     let line = `Roof plane ${i + 1}: pitch about ${Math.round(p.pitchDeg)}°, eave about ${p.eaveM.toFixed(1)} m, slope length about ${p.slopeM.toFixed(1)} m, area about ${Math.round(p.areaM2)} m²`;
     if (cover && gauge) {

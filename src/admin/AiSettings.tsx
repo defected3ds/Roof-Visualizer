@@ -607,6 +607,18 @@ function MeasurementTool({
               <span className="mt-1 block text-xs font-normal text-muted">A door is about 2.0 m (UK front doors 1.98 m, patio doors about 2.1 m).</span>
             </label>
           </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-semibold">
+              Ground, if no door is found
+              <input value={m.groundPrompt} onChange={(e) => setM({ groundPrompt: e.target.value })} placeholder="ground" className={fieldClass} />
+              <span className="mt-1 block text-xs font-normal text-muted">The camera's height above it checks the scale. Empty = off.</span>
+            </label>
+            <label className="block text-sm font-semibold">
+              Usual camera height (metres)
+              <input type="number" min={0.5} max={3} step="0.05" value={m.cameraHeightM} onChange={(e) => setM({ cameraHeightM: Number(e.target.value) })} className={fieldClass} />
+              <span className="mt-1 block text-xs font-normal text-muted">A person holding a phone: about 1.4–1.7 m.</span>
+            </label>
+          </div>
           <div className="mt-4">
             <Toggle label="Show pitch and roof area to visitors on the loading screen (rounded)" checked={m.show} onChange={(v) => setM({ show: v })} />
           </div>

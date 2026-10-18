@@ -379,9 +379,10 @@ async function startServer() {
           ai.measurement.show && m.confidence === 'ok' && main
             ? {
                 pitchDeg: round(main.pitchDeg, 5),
-                areaM2: round(m.roofAreaM2, m.roofAreaM2 >= 20 ? 5 : 1),
-                eave: main.eaveLine && main.eaveLineM ? { line: main.eaveLine, m: Math.max(0.5, Math.round(main.eaveLineM * 2) / 2) } : undefined,
-                slope: main.slopeLine ? { line: main.slopeLine, m: Math.max(0.5, Math.round(main.slopeM * 2) / 2) } : undefined,
+                // Sizes only when a door or the camera height confirmed the scale; otherwise just the pitch.
+                areaM2: m.scaleChecked ? round(m.roofAreaM2, m.roofAreaM2 >= 20 ? 5 : 1) : undefined,
+                eave: m.scaleChecked && main.eaveLine && main.eaveLineM ? { line: main.eaveLine, m: Math.max(0.5, Math.round(main.eaveLineM * 2) / 2) } : undefined,
+                slope: m.scaleChecked && main.slopeLine ? { line: main.slopeLine, m: Math.max(0.5, Math.round(main.slopeM * 2) / 2) } : undefined,
               }
             : undefined,
       });

@@ -22,7 +22,7 @@ import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
 import { configureDepth, depthFor, depthWithin, snapToMask } from './lib/depth';
 import { configureRoofMask, roofMaskFor, roofMaskWithin, wallMaskFor } from './lib/roofmask';
-import { buildMeasureCard, type MeasureOutcome } from './lib/measureCard';
+import { buildMeasureCard, captionSlide, type MeasureOutcome } from './lib/measureCard';
 import { buildEdgeMaps, fileToDataUrl, shareImage, thumbnail } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
@@ -283,13 +283,17 @@ function RoofApp() {
       const depthName = d ? (d.source === 'marigold' ? 'Marigold (fal.ai)' : d.source === 'midas' ? 'MiDaS (fal.ai)' : `browser model${d.fallback ? ` (server depth map failed: ${d.fallback})` : ''}`) : 'none';
       setAnalysisInfo(`Depth map: ${depthName} · Roof mask: ${m ? (m.source === 'sam3' ? 'SAM 3 (fal.ai)' : 'CLIPSeg (browser)') : 'none'}`);
       const lateEdges = await edges;
-      setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : [])], tail: lateEdges });
-      // Roof measurement (new setup): the wall found by SAM 3, Depth Pro's depth and the measured numbers join the show as they arrive.
-      if (measureTool.current === 'depthpro' && measureShow.current) {
+      // Roof measurement (new setup): walls first, then the roof, each with a caption.
+      const measuring = measureTool.current === 'depthpro' && measureShow.current;
+      const wall = measuring ? await Promise.race([wallMaskFor(base), new Promise<null>((r) => setTimeout(r, 12000))]) : null;
+      const wallSlide = wall ? await captionSlide(wall.overlay, 'Walls found').catch(() => wall.overlay) : null;
+      const roofSlide = m ? (measuring ? await captionSlide(m.overlay, 'Roof found').catch(() => m.overlay) : m.overlay) : null;
+      setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(wallSlide ? [wallSlide] : []), ...(roofSlide ? [roofSlide] : [])], tail: lateEdges });
+      // Depth Pro's depth and the measured numbers join the show when they arrive.
+      if (measuring) {
         const add = (src?: string | null) => {
           if (src && runId === generationRun.current) setSlideExtras((cur) => [...cur, src]);
         };
-        void wallMaskFor(base).then((w) => add(w?.overlay));
         const measured = await Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 120000))]);
         add(measured?.depthColor);
         if (measured?.summary && m) add(await buildMeasureCard(m.overlay, m.mask, measured.summary).catch(() => null));
