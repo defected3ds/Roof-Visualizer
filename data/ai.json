@@ -26,6 +26,8 @@
     "wallPrompt": "wall",
     "referencePrompt": "door",
     "referenceHeightM": 2,
+    "groundPrompt": "ground",
+    "cameraHeightM": 1.6,
     "show": true
   },
   "activeProvider": "gemini",
