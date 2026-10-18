@@ -611,7 +611,7 @@ export function measureGeometry(
 }
 
 /** Depth as a colour picture (near = warm, far = cool), at most 800 px wide, coloured over the 2–98% range of the pixels in `focus`. */
-function depthPicture(depth: Float32Array, w: number, h: number, focus: Uint8Array, maxWidth = 800): string | undefined {
+export function depthPicture(depth: Float32Array, w: number, h: number, focus: Uint8Array, maxWidth = 800): string | undefined {
   const valid = (z: number) => Number.isFinite(z) && z > 0.1 && z < 500;
   let zs: number[] = [];
   for (let i = 0; i < depth.length; i += 7) if (focus[i] && valid(depth[i])) zs.push(depth[i]);
@@ -643,7 +643,8 @@ function depthPicture(depth: Float32Array, w: number, h: number, focus: Uint8Arr
       for (let dy = -2; dy <= 2; dy++) {
         for (let dx = -2; dx <= 2; dx++) win[n++] = grid[Math.min(oh - 1, Math.max(0, y + dy)) * ow + Math.min(ow - 1, Math.max(0, x + dx))];
       }
-      smooth[y * ow + x] = Array.from(win).sort((a, b) => a - b)[12];
+      win.sort();
+      smooth[y * ow + x] = win[12];
     }
   }
   const rgb = new Uint8Array(ow * oh * 3);
@@ -668,12 +669,20 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
     samUsed.push({ prompt, fresh });
     return job;
   };
+  // Where the time goes: waiting for Depth Pro, waiting for SAM 3, and our own computing.
+  const spans: Record<string, number> = {};
+  const timed = <T,>(name: string, p: Promise<T>) => {
+    const t0 = Date.now();
+    return p.finally(() => {
+      spans[name] = Date.now() - t0;
+    });
+  };
   const [d, roofMasks, wallMasks, refMasks, groundMasks] = await Promise.all([
-    depthPro(token, image),
-    sam(seg.prompt || 'roof'),
-    sam(settings.wallPrompt || 'wall').catch(() => [] as string[]),
-    refPrompt ? sam(refPrompt).catch(() => [] as string[]) : Promise.resolve([] as string[]),
-    groundPrompt ? sam(groundPrompt).catch(() => [] as string[]) : Promise.resolve([] as string[]),
+    timed('Depth Pro (Replicate)', depthPro(token, image)),
+    timed('SAM roof', sam(seg.prompt || 'roof')),
+    timed('SAM wall', sam(settings.wallPrompt || 'wall')).catch(() => [] as string[]),
+    refPrompt ? timed('SAM door', sam(refPrompt)).catch(() => [] as string[]) : Promise.resolve([] as string[]),
+    groundPrompt ? timed('SAM ground', sam(groundPrompt)).catch(() => [] as string[]) : Promise.resolve([] as string[]),
   ]);
   if (!roofMasks.length) throw new Error('SAM 3 found no roof in the photo');
   const size = imageSize(image);
@@ -683,8 +692,13 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
   const refs = refMasks.length ? { masks: refMasks.map((u) => resampleMask(u, d.w, d.h)), heightM: settings.referenceHeightM } : null;
   const ground = groundMasks.length ? { mask: unionMasks(groundMasks, d.w, d.h), heightM: settings.cameraHeightM } : null;
   const result = measureGeometry(d.depth, d.w, d.h, f, roof, wall, refs, ground);
+  const waited = Date.now() - started;
+  const samSlowest = Math.max(0, ...Object.entries(spans).filter(([k]) => k.startsWith('SAM')).map(([, v]) => v));
   const debug = {
     ...result.debug,
+    timeDepthPro: `${((spans['Depth Pro (Replicate)'] ?? 0) / 1000).toFixed(1)} s waiting for Depth Pro`,
+    timeSam: `${(samSlowest / 1000).toFixed(1)} s waiting for the slowest SAM 3 call`,
+    timeWaitingTotal: `${(waited / 1000).toFixed(1)} s until both had answered (they run at the same time)`,
     depthMap: `${d.w} × ${d.h}`,
     photo: size ? `${size.width} × ${size.height}` : 'unknown',
     focalFromDepthPro: Math.round(d.focalPx),

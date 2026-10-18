@@ -293,7 +293,7 @@ function RoofApp() {
         const { d, m, wall } = parts;
         const flat = measuring && wall && m ? await roofOverWalls(wall.overlay, m.mask).catch(() => m.overlay) : m?.overlay;
         const card = flat && m && measuring && parts.summary ? await buildMeasureCard(flat, m.mask, parts.summary).catch(() => flat) : flat;
-        const roofSlide = card ? (measuring ? await captionSlide(card, wall ? [WALL_LABEL, ROOF_LABEL] : [ROOF_LABEL]).catch(() => card) : card) : null;
+        const roofSlide = card ? await captionSlide(card, measuring && wall ? [WALL_LABEL, ROOF_LABEL] : [ROOF_LABEL]).catch(() => card) : null;
         const wallSlide = wall ? await captionSlide(wall.overlay, [WALL_LABEL]).catch(() => wall.overlay) : null;
         const depthProSlide = parts.depthPro ? await captionSlide(parts.depthPro, 'Distance from the camera: red = near, blue = far').catch(() => parts.depthPro!) : null;
         if (runId !== generationRun.current) return;
