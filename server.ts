@@ -450,7 +450,7 @@ async function startServer() {
     const category = getCategory(product.category);
     const measured = ai.measurement.tool === 'depthpro' ? measurementText(recallMeasurement(cleanId(body.photoId) ?? undefined), product) : '';
     const prompts = Array.from({ length: variants }, (_, v) => buildModelPrompt(ai, cfg, product, category, roles, v, measured).prompt);
-    return { images, prompts, depth, mask, photos, swatch, measured: Boolean(measured) };
+    return { images, prompts, depth, mask, photos, swatch, measured };
   }
 
   // "Test this model" in AI settings: one real generation with a model card as it is being edited.
@@ -526,7 +526,7 @@ async function startServer() {
       const used = [depth && 'depth map', mask && 'roof mask', photos.length && `${photos.length} product photos`, swatch && 'texture sample'];
       console.log(`[generate] ${cfg.label} "${product.name}" (${used.filter(Boolean).join(', ') || 'photo only'}) -> ${results.length} images in ${Date.now() - started}ms`);
       const priced = imageCost(getUsageSettings().prices, cfg, images, results.length);
-      void recordUsage({ kind: 'image', ...usage, results: results.length, ms: Date.now() - started, cost: priced.cost, detail: { sent, basis: priced.basis, imagesMP: priced.imagesMP } });
+      void recordUsage({ kind: 'image', ...usage, results: results.length, ms: Date.now() - started, cost: priced.cost, detail: { sent, basis: priced.basis, imagesMP: priced.imagesMP, ...(measured ? { measurementText: measured } : {}) } });
       res.json({ images: results, provider: cfg.type });
     } catch (err: any) {
       console.error('[generate] failed:', err);

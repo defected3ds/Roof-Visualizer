@@ -371,6 +371,7 @@ function detailText(c: UsageEvent): string {
   const parts: string[] = [];
   if (Array.isArray(d.sent)) parts.push(`sent: ${(d.sent as string[]).join(', ')}`);
   if (typeof d.basis === 'string') parts.push(`estimate: ${d.basis}`);
+  if (typeof d.measurementText === 'string') parts.push(`text added to the prompt: “${d.measurementText.replace(/\s+/g, ' ')}”`);
   if (typeof d.quality === 'string') parts.push(`quality: ${d.quality}`);
   if (typeof d.error === 'string') parts.push(`error: ${d.error}`);
   return parts.join(' · ');

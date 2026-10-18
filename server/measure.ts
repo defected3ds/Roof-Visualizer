@@ -492,7 +492,14 @@ export function measureGeometry(
     return measured > 0.05 ? { factor: ground.heightM / measured, measured } : null;
   })();
   const pick = door ? { ...door, what: 'a door', expected: refs!.heightM } : floor ? { ...floor, what: 'the camera height', expected: ground!.heightM } : null;
-  if (pick) {
+  // Two checks that disagree strongly can't both be right: then neither is trusted and no sizes are given.
+  const disagree = door && floor && Math.max(door.factor / floor.factor, floor.factor / door.factor) > 1.7;
+  if (disagree) {
+    notes.push(
+      `A door (×${door!.factor.toFixed(2)}) and the camera height (×${floor!.factor.toFixed(2)}) disagree on the scale: sizes are not reliable.`,
+    );
+    debug.scaleCheck = 'door and camera height disagree';
+  } else if (pick) {
     scaleChecked = true;
     if (Math.abs(pick.factor - 1) < 0.08) notes.push(`Scale confirmed by ${pick.what}.`);
     else if (pick.factor > 0.2 && pick.factor < 5) {
