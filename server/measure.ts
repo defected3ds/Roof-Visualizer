@@ -4,7 +4,8 @@
  * (see `notes` in the result); an unreliable photo returns confidence "low" so the app sends no numbers.
  */
 import { inflateRawSync, inflateSync } from 'node:zlib';
-import { imageSize, segmentRoof } from './providers';
+import { imageSize } from './providers';
+import { segmentCached } from './segcache';
 import type { MeasurementSettings, Product, SegmentationSettings } from '../src/types';
 
 const REPLICATE = process.env.REPLICATE_API_URL || 'https://api.replicate.com/v1';
@@ -38,6 +39,8 @@ export interface Measurement {
   confidence: 'ok' | 'low';
   notes: string[];
   ms: number;
+  /** How many SAM 3 calls this measurement actually made (masks already made for the photo are reused). */
+  samCalls?: number;
   /** True when a door or the camera height confirmed (or corrected) the metric scale; if not, only the pitch can be trusted. */
   scaleChecked?: boolean;
   /** Numbers for checking a measurement by hand (shown in the admin test only). */
@@ -609,18 +612,24 @@ export function measureGeometry(
 // ---- The whole measurement ---------------------------------------------------------------------
 
 /** Measures the roof in a photo. Throws on provider errors; returns confidence "low" when the photo can't be trusted. */
-export async function measureRoof(settings: MeasurementSettings, seg: SegmentationSettings, image: string): Promise<Measurement> {
+export async function measureRoof(settings: MeasurementSettings, seg: SegmentationSettings, image: string, photoId?: string | null): Promise<Measurement> {
   const token = process.env[settings.keyEnv];
   if (!token) throw new Error(`${settings.keyEnv} is not set`);
   const started = Date.now();
   const refPrompt = settings.referencePrompt.trim();
   const groundPrompt = settings.groundPrompt.trim();
+  let samCalls = 0;
+  const sam = (prompt: string) => {
+    const { job, fresh } = segmentCached(photoId, { ...seg, prompt }, image);
+    if (fresh) samCalls++;
+    return job;
+  };
   const [d, roofMasks, wallMasks, refMasks, groundMasks] = await Promise.all([
     depthPro(token, image),
-    segmentRoof(seg, image),
-    segmentRoof({ ...seg, prompt: settings.wallPrompt || 'wall' }, image).catch(() => [] as string[]),
-    refPrompt ? segmentRoof({ ...seg, prompt: refPrompt }, image).catch(() => [] as string[]) : Promise.resolve([] as string[]),
-    groundPrompt ? segmentRoof({ ...seg, prompt: groundPrompt }, image).catch(() => [] as string[]) : Promise.resolve([] as string[]),
+    sam(seg.prompt || 'roof'),
+    sam(settings.wallPrompt || 'wall').catch(() => [] as string[]),
+    refPrompt ? sam(refPrompt).catch(() => [] as string[]) : Promise.resolve([] as string[]),
+    groundPrompt ? sam(groundPrompt).catch(() => [] as string[]) : Promise.resolve([] as string[]),
   ]);
   if (!roofMasks.length) throw new Error('SAM 3 found no roof in the photo');
   const size = imageSize(image);
@@ -637,7 +646,7 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
     focalFromDepthPro: Math.round(d.focalPx),
     focalUsed: Math.round(f),
   };
-  return { ...result, debug, ms: Date.now() - started, colorMap: d.colorMap };
+  return { ...result, debug, ms: Date.now() - started, colorMap: d.colorMap, samCalls };
 }
 
 // ---- Cache by photo, so the measurement made while the visitor looks at the photo is there at Generate ----

@@ -28,6 +28,7 @@ import {
 import { createProvider, estimateDepth, hasDepthKey, hasKey, hasMeasurementKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
 import { buildModelPrompt, type ImageRoles } from './src/lib/prompt';
 import { requestContext } from './server/visitor';
+import { segmentCached } from './server/segcache';
 import { measureRoof, measurementText, recallMeasurement, rememberMeasurement } from './server/measure';
 import { activePriceIds, attachPreviews, depthCost, measureCost, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
 import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
@@ -354,7 +355,7 @@ async function startServer() {
       return res.status(503).json({ code: 'unavailable', error: 'Measurement is off' });
     }
     try {
-      const m = await measureRoof(ai.measurement, ai.segmentation, image);
+      const m = await measureRoof(ai.measurement, ai.segmentation, image, cleanId(photoId));
       const id = cleanId(photoId);
       if (id) rememberMeasurement(id, m);
       console.log(`[measure] ${m.confidence} ${m.planes.map((p) => `${p.pitchDeg}°`).join(', ') || 'no plane'} in ${m.ms} ms`);
@@ -365,7 +366,7 @@ async function startServer() {
         provider: 'Depth Pro (Replicate) + SAM 3',
         model: 'depth-pro',
         ms: m.ms,
-        cost: measureCost(prices),
+        cost: measureCost(prices, m.samCalls),
         detail: { confidence: m.confidence, planes: m.planes.length, up: m.up },
       });
       // Rounded, and only for a reliable result: this is what visitors may see.
@@ -410,7 +411,8 @@ async function startServer() {
     if (wall && ai.measurement.tool !== 'depthpro') return res.status(503).json({ code: 'unavailable', error: 'Measurement is off' });
     try {
       const started = Date.now();
-      const masks = await segmentRoof(seg, image);
+      const { job, fresh } = segmentCached(cleanId(photoId), seg, image);
+      const masks = await job;
       const ms = Date.now() - started;
       console.log(`[roof-mask] SAM 3 "${seg.prompt}" -> ${masks.length} mask(s) in ${ms} ms`);
       void recordUsage({
@@ -419,8 +421,8 @@ async function startServer() {
         provider: 'SAM 3 (fal.ai)',
         model: 'sam3',
         ms,
-        cost: roofMaskCost(getUsageSettings().prices),
-        detail: { masks: masks.length, ...(wall ? { target: 'wall' } : {}) },
+        cost: fresh ? roofMaskCost(getUsageSettings().prices) : 0,
+        detail: { masks: masks.length, ...(wall ? { target: 'wall' } : {}), ...(fresh ? {} : { shared: true }) },
       });
       res.json({ masks });
     } catch (err) {

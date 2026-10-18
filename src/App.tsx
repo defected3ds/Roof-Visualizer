@@ -285,7 +285,7 @@ function RoofApp() {
       const lateEdges = await edges;
       // Roof measurement (new setup): walls first, then the roof, each with a caption.
       const measuring = measureTool.current === 'depthpro' && measureShow.current;
-      const wall = measuring ? await Promise.race([wallMaskFor(base), new Promise<null>((r) => setTimeout(r, 12000))]) : null;
+      const wall = measuring ? await Promise.race([wallMaskFor(base), new Promise<null>((r) => setTimeout(r, 6000))]) : null;
       const wallSlide = wall ? await captionSlide(wall.overlay, 'Walls found').catch(() => wall.overlay) : null;
       // The walls stay tinted blue on the roof slide.
       const roofSlide = m
@@ -301,9 +301,15 @@ function RoofApp() {
         };
         const measured = await Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 120000))]);
         add(measured?.depthColor);
-        if (measured?.summary && m) {
-          const base = wall ? await roofOverWalls(wall.overlay, m.mask).catch(() => m.overlay) : m.overlay;
-          add(await buildMeasureCard(base, m.mask, measured.summary).catch(() => null));
+        if (measured?.summary && m && roofSlide && runId === generationRun.current) {
+          // The roof slide itself gets the arrows and numbers, so they show on the picture the visitor is already looking at.
+          const flat = wall ? await roofOverWalls(wall.overlay, m.mask).catch(() => m.overlay) : m.overlay;
+          const card = await buildMeasureCard(flat, m.mask, measured.summary)
+            .then((c) => captionSlide(c, wall ? 'Walls and roof found' : 'Roof found'))
+            .catch(() => null);
+          if (card && runId === generationRun.current) {
+            setSlideBase((cur) => ({ ...cur, head: cur.head.map((s, i) => (i === cur.head.length - 1 ? card : s)) }));
+          }
         }
       }
     });

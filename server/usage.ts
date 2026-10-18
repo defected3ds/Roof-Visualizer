@@ -91,8 +91,8 @@ export function depthCost(prices: PriceItem[], tool: 'marigold' | 'midas' | 'bro
 }
 
 export const roofMaskCost = (prices: PriceItem[]) => priceOf(prices, 'sam3.photo');
-/** Depth Pro plus four SAM 3 calls (roof, wall, door, ground). */
-export const measureCost = (prices: PriceItem[]) => priceOf(prices, 'depthpro.photo') + 4 * priceOf(prices, 'sam3.photo');
+/** Depth Pro plus the SAM 3 calls the measurement made itself (roof and wall masks are reused when the browser already asked for them). */
+export const measureCost = (prices: PriceItem[], samCalls = 4) => priceOf(prices, 'depthpro.photo') + samCalls * priceOf(prices, 'sam3.photo');
 
 // ---- Storage ----------------------------------------------------------------------------------
 
