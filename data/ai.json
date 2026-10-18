@@ -20,6 +20,11 @@
     "keyEnv": "FAL_API_KEY",
     "quality": "balanced"
   },
+  "measurement": {
+    "tool": "depthpro",
+    "keyEnv": "REPLICATE_API_TOKEN",
+    "wallPrompt": "wall"
+  },
   "activeProvider": "gemini",
   "providers": [
     {
