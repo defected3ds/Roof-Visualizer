@@ -6075,5 +6075,16 @@
       "/product-images/rivius-antique-slate/1.jpg",
       "/product-images/rivius-antique-slate/2.jpg"
     ]
+  },
+  {
+    "id": "test-1-mve6gilq",
+    "name": "Test 1",
+    "category": "test-images",
+    "brand": "",
+    "description": "as",
+    "specs": [],
+    "images": [
+      "/product-images/test-1-mve6gilq/mve6gilq-0.jpg"
+    ]
   }
 ]
