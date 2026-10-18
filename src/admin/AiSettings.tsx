@@ -63,21 +63,21 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
   const activeLimit = imageLimit(active);
 
   return (
-    <section className="mt-6 space-y-10">
-      <p className="text-muted">
+    <section className="mt-6 space-y-10 xl:grid xl:grid-cols-2 xl:items-start xl:gap-x-14 xl:gap-y-10 xl:space-y-0">
+      <p className="text-muted xl:col-span-2">
         How the roof images are made: the <strong className="text-ink">system prompt</strong> (general instructions) is combined with
         the selected <strong className="text-ink">product data</strong>, the customer&apos;s photo, its <strong className="text-ink">depth map</strong>{' '}
         and <strong className="text-ink">roof mask</strong>, and the product photos, and sent to the active image model.
       </p>
 
       {/* ---- Image model ---- */}
-      <div>
+      <div className="xl:col-span-2">
         <h2 className="border-b border-line pb-2 text-lg font-bold">Image model</h2>
         <p className="mt-2 text-sm text-muted">
           Choose which AI makes the images. API keys are not entered here (settings are saved to GitHub); add them in Render →
           Environment under the variable name shown, e.g. <code>GEMINI_API_KEY</code>.
         </p>
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-3 xl:grid xl:grid-cols-2 xl:items-start xl:gap-4 xl:space-y-0">
           {draft.providers.map((p, i) => {
             const isActive = p.id === draft.activeProvider;
             const saved = loaded.settings.providers.find((x) => x.id === p.id);
@@ -176,7 +176,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
       </div>
 
       {/* ---- System prompt ---- */}
-      <div>
+      <div className="xl:col-span-2">
         <div className="flex items-end justify-between gap-4 border-b border-line pb-2">
           <h2 className="text-lg font-bold">System prompt</h2>
           {draft.systemPrompt.trim() !== DEFAULT_SYSTEM_PROMPT && (
@@ -255,10 +255,12 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
         </div>
       </div>
 
-      <FinalPromptPreview draft={draft} catalog={catalog} limit={activeLimit} model={active} />
+      <div className="xl:col-span-2">
+        <FinalPromptPreview draft={draft} catalog={catalog} limit={activeLimit} model={active} />
+      </div>
 
-      {error && <p className="text-sm font-semibold text-brand">{error}</p>}
-      <div className="sticky bottom-0 flex gap-3 border-t border-line bg-white py-4">
+      {error && <p className="text-sm font-semibold text-brand xl:col-span-2">{error}</p>}
+      <div className="sticky bottom-0 flex gap-3 border-t border-line bg-white py-4 xl:col-span-2">
         <SecondaryButton onClick={() => setDraft(loaded.settings)} disabled={busy} className="sm:w-40">
           Undo changes
         </SecondaryButton>

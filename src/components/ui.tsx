@@ -1,6 +1,7 @@
 /** Page frame. `app` screens use the full window width on desktop (lg and up). */
-export function Shell({ children, wide, app }: { children: React.ReactNode; wide?: boolean; app?: boolean }) {
-  const width = app ? 'max-w-xl lg:max-w-none' : wide ? 'max-w-3xl' : 'max-w-xl';
+export function Shell({ children, wide, app, admin }: { children: React.ReactNode; wide?: boolean; app?: boolean; admin?: boolean }) {
+  // admin: the narrow column on phones and tablets, the wide desktop layout on large screens.
+  const width = admin ? 'max-w-3xl lg:max-w-[1500px]' : app ? 'max-w-xl lg:max-w-none' : wide ? 'max-w-3xl' : 'max-w-xl';
   return <main className={`mx-auto flex min-h-dvh w-full flex-col bg-white text-ink ${width}`}>{children}</main>;
 }
 

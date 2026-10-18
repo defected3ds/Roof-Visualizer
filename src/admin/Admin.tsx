@@ -152,7 +152,7 @@ export default function Admin() {
   }
 
   return (
-    <Shell wide>
+    <Shell admin>
       <Header
         right={
           <button onClick={logout} className="text-sm font-semibold text-brand">
@@ -160,7 +160,7 @@ export default function Admin() {
           </button>
         }
       />
-      <div className="px-5 pb-10 pt-8">
+      <div className="px-5 pb-10 pt-8 lg:px-10">
         <Tag>Admin</Tag>
         <h1 className="mt-4 text-[30px] font-bold leading-tight">Roof Visualizer admin</h1>
 
@@ -343,7 +343,7 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
           </h2>
           {g.items.length === 0 && <p className="py-3 text-sm text-muted">No products in this category yet.</p>}
           {view === 'grid' ? (
-            <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
               {g.items.map((p) => (
                 <li key={p.id}>
                   <button onClick={() => onEdit(p)} className="group block w-full overflow-hidden rounded-wb border border-line bg-white text-left transition hover:border-brand">
@@ -360,7 +360,7 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
               ))}
             </ul>
           ) : (
-          <ul className="divide-y divide-dotted divide-line">
+          <ul className="divide-y divide-dotted divide-line lg:grid lg:grid-cols-2 lg:gap-x-10 lg:divide-y-0 [&>li]:lg:border-b [&>li]:lg:border-dotted [&>li]:lg:border-line">
             {g.items.map((p) => (
               <li key={p.id}>
                 <button onClick={() => onEdit(p)} className="flex w-full items-center gap-4 py-3 text-left hover:bg-paper">
