@@ -718,6 +718,7 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
     timeWaitingTotal: `${(waited / 1000).toFixed(1)} s until both had answered (they run at the same time)`,
     depthMap: `${d.w} × ${d.h}`,
     photo: size ? `${size.width} × ${size.height}` : 'unknown',
+    lens: `${((f * 36) / d.w).toFixed(0)} mm (35 mm equivalent), ${((2 * Math.atan(d.w / 2 / f) * 180) / Math.PI).toFixed(0)}° wide view`,
     focalFromDepthPro: Math.round(d.focalPx),
     focalUsed: Math.round(f),
   };
