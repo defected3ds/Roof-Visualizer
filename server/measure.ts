@@ -10,8 +10,15 @@ import { encodePng, turbo } from './png';
 import type { MeasurementSettings, Product, SegmentationSettings } from '../src/types';
 
 const REPLICATE = process.env.REPLICATE_API_URL || 'https://api.replicate.com/v1';
-/** oitoito/depth-pro on Replicate: input image_path, output npz (depth) + color_map + focal_length_px. Override with DEPTH_PRO_VERSION. */
-const DEPTH_PRO_VERSION = '229e06384ee89b1e658ef5cd2859698a91aadef68d7537fbd4095e9fd92ae456';
+/**
+ * Two hosts of Apple's Depth Pro on Replicate. Both take image_path and return an npz (depth in metres); the focal length comes back as
+ * focal_length_px (oitoito) or only in the run log, "Estimated focal length: 975.7" (chenxwh, much more used and so more often warm).
+ * DEPTH_PRO_VERSION overrides the version id.
+ */
+const DEPTH_PRO_VERSIONS = {
+  chenxwh: 'a6645b33f4e36eda0d8d52ab3da6ef37b82d198e2b70c72e680cc75f0baf1623',
+  oitoito: '229e06384ee89b1e658ef5cd2859698a91aadef68d7537fbd4095e9fd92ae456',
+} as const;
 
 export interface PlaneResult {
   /** Slope of the plane against the horizontal, degrees. */
@@ -56,12 +63,16 @@ export interface Measurement {
 
 // ---- Depth Pro on Replicate -----------------------------------------------------------------
 
-async function depthPro(token: string, image: string): Promise<{ depth: Float32Array; w: number; h: number; focalPx: number }> {
+async function depthPro(
+  token: string,
+  image: string,
+  host: keyof typeof DEPTH_PRO_VERSIONS,
+): Promise<{ depth: Float32Array; w: number; h: number; focalPx: number; waitS?: number; runS?: number }> {
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
   const res = await fetch(`${REPLICATE}/predictions`, {
     method: 'POST',
     headers: { ...headers, Prefer: 'wait=60' },
-    body: JSON.stringify({ version: process.env.DEPTH_PRO_VERSION || DEPTH_PRO_VERSION, input: { image_path: await uploadImage(token, image) } }),
+    body: JSON.stringify({ version: process.env.DEPTH_PRO_VERSION || DEPTH_PRO_VERSIONS[host], input: { image_path: await uploadImage(token, image) } }),
     signal: AbortSignal.timeout(90_000),
   });
   if (!res.ok) throw new Error(`Replicate Depth Pro ${res.status}: ${(await res.text()).slice(0, 300)}`);
@@ -80,9 +91,13 @@ async function depthPro(token: string, image: string): Promise<{ depth: Float32A
   const file = await fetch(out.npz, { signal: AbortSignal.timeout(60_000) });
   if (!file.ok) throw new Error(`Downloading the depth file failed: ${file.status}`);
   const { depth, w, h } = readNpzDepth(Buffer.from(await file.arrayBuffer()));
-  const focalPx = Number(out.focal_length_px);
+  const fromLog = /Estimated focal length:\s*([0-9.]+)/i.exec(String(pred.logs ?? ''))?.[1];
+  const focalPx = Number(out.focal_length_px ?? fromLog);
   if (!Number.isFinite(focalPx) || focalPx <= 0) throw new Error('Depth Pro returned no focal length');
-  return { depth, w, h, focalPx };
+  // Replicate's own clock: how long the request waited before it started (queue and boot), and how long the model ran.
+  const waitS = pred.started_at && pred.created_at ? (Date.parse(pred.started_at) - Date.parse(pred.created_at)) / 1000 : undefined;
+  const runS = Number(pred.metrics?.predict_time);
+  return { depth, w, h, focalPx, waitS, runS: Number.isFinite(runS) ? runS : undefined };
 }
 
 /** Uploads the photo to Replicate's file store and returns its URL (a large data URL in the request body is slow and may be refused). Falls back to the data URL. */
@@ -678,7 +693,7 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
     });
   };
   const [d, roofMasks, wallMasks, refMasks, groundMasks] = await Promise.all([
-    timed('Depth Pro (Replicate)', depthPro(token, image)),
+    timed('Depth Pro (Replicate)', depthPro(token, image, settings.depthHost === 'oitoito' ? 'oitoito' : 'chenxwh')),
     timed('SAM roof', sam(seg.prompt || 'roof')),
     timed('SAM wall', sam(settings.wallPrompt || 'wall')).catch(() => [] as string[]),
     refPrompt ? timed('SAM door', sam(refPrompt)).catch(() => [] as string[]) : Promise.resolve([] as string[]),
@@ -696,7 +711,9 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
   const samSlowest = Math.max(0, ...Object.entries(spans).filter(([k]) => k.startsWith('SAM')).map(([, v]) => v));
   const debug = {
     ...result.debug,
-    timeDepthPro: `${((spans['Depth Pro (Replicate)'] ?? 0) / 1000).toFixed(1)} s waiting for Depth Pro`,
+    timeDepthPro: `${((spans['Depth Pro (Replicate)'] ?? 0) / 1000).toFixed(1)} s waiting for Depth Pro (${settings.depthHost === 'oitoito' ? 'oitoito' : 'chenxwh'} on Replicate)`,
+    ...(d.waitS !== undefined ? { replicateWait: `${d.waitS.toFixed(1)} s before Replicate started it (queue and boot)` } : {}),
+    ...(d.runS !== undefined ? { replicateRun: `${d.runS.toFixed(1)} s the model itself ran` } : {}),
     timeSam: `${(samSlowest / 1000).toFixed(1)} s waiting for the slowest SAM 3 call`,
     timeWaitingTotal: `${(waited / 1000).toFixed(1)} s until both had answered (they run at the same time)`,
     depthMap: `${d.w} × ${d.h}`,

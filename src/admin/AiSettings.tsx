@@ -620,6 +620,14 @@ function MeasurementTool({
               <span className="mt-1 block text-xs font-normal text-muted">A person holding a phone: about 1.4–1.7 m.</span>
             </label>
           </div>
+          <label className="mt-4 block max-w-sm text-sm font-semibold">
+            Depth Pro host on Replicate
+            <select value={m.depthHost} onChange={(e) => setM({ depthHost: e.target.value as typeof m.depthHost })} className={fieldClass}>
+              <option value="chenxwh">chenxwh/ml-depth-pro (popular, more often warm)</option>
+              <option value="oitoito">oitoito/depth-pro (rarely used, usually cold)</option>
+            </select>
+            <span className="mt-1 block text-xs font-normal text-muted">Same Apple model on both. The measurement drop-down in Costs shows how long Replicate took to start it.</span>
+          </label>
           <label className="mt-4 block max-w-xs text-sm font-semibold">
             Wait for the measurement before generating (seconds)
             <input type="number" min={5} max={180} step={5} value={m.waitSeconds} onChange={(e) => setM({ waitSeconds: Number(e.target.value) })} className={fieldClass} />
