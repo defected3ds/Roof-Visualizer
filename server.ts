@@ -369,7 +369,17 @@ async function startServer() {
         model: 'depth-pro',
         ms: m.ms,
         cost: measureCost(prices, m.samCalls),
-        detail: { confidence: m.confidence, planes: m.planes.length, up: m.up },
+        detail: {
+          confidence: m.confidence,
+          up: m.up,
+          scaleChecked: Boolean(m.scaleChecked),
+          focalPx: Math.round(m.focalPx),
+          roofAreaM2: m.roofAreaM2,
+          samCalls: m.samCalls,
+          planes: m.planes.map((p) => ({ pitchDeg: p.pitchDeg, eaveM: p.eaveM, slopeM: p.slopeM, areaM2: p.areaM2, share: Math.round(p.share * 100) / 100 })),
+          notes: m.notes,
+          debug: m.debug,
+        },
       });
       // Rounded, and only for a reliable result: this is what visitors may see.
       const main = [...m.planes].sort((a, b) => b.share - a.share)[0];

@@ -123,7 +123,9 @@ function buildRows(events: UsageEvent[]): Row[] {
   for (const e of events) {
     if (GENERATION.has(e.kind)) continue;
     const target = e.photo_id ? byPhoto.get(e.photo_id)?.find((g) => g.created_at >= e.created_at) : undefined;
-    const row = target ? rows.get(`g${target.id}`) : undefined;
+    // A roof measurement that finished after the generation still belongs to the first generation of its photo.
+    const late = !target && e.kind === 'measure' && e.photo_id ? byPhoto.get(e.photo_id)?.[0] : undefined;
+    const row = target || late ? rows.get(`g${(target ?? late)!.id}`) : undefined;
     if (row) {
       row.calls.push(e);
       row.total += e.cost;
@@ -160,6 +162,11 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
   const events = view?.events ?? [];
   const rows = useMemo(() => buildRows(events), [events]);
   const visits = useMemo(() => visitStats(events), [events]);
+  const measures = useMemo(() => {
+    const m = new Map<string, UsageEvent>();
+    for (const e of [...events].reverse()) if (e.kind === 'measure' && e.photo_id) m.set(e.photo_id, e);
+    return m;
+  }, [events]);
   const groups = useMemo(() => groupByVisit(rows.slice(0, shown)), [rows, shown]);
   const summary = useMemo(() => {
     const real = events.filter((e) => !e.kind.startsWith('test-'));
@@ -268,7 +275,7 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
                   <VisitHeader group={g} visits={visits} />
                   <ul className="divide-y divide-line">
                     {g.rows.map((row) => (
-                      <HistoryRow key={row.key} row={row} visits={visits} open={open === row.key} onToggle={() => setOpen(open === row.key ? null : row.key)} />
+                      <HistoryRow key={row.key} row={row} visits={visits} measures={measures} open={open === row.key} onToggle={() => setOpen(open === row.key ? null : row.key)} />
                     ))}
                   </ul>
                 </li>
@@ -288,7 +295,7 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
   );
 }
 
-function HistoryRow({ row, visits, open, onToggle }: { row: Row; visits: Map<string, Visit>; open: boolean; onToggle: () => void }) {
+function HistoryRow({ row, visits, measures, open, onToggle }: { row: Row; visits: Map<string, Visit>; measures: Map<string, UsageEvent>; open: boolean; onToggle: () => void }) {
   const { head } = row;
   const visitor = visitorOf(head);
   const visit = visitor?.session ? visits.get(visitor.session) : undefined;
@@ -343,9 +350,11 @@ function HistoryRow({ row, visits, open, onToggle }: { row: Row; visits: Map<str
               {visit && ` · ${visit.generations} generation${visit.generations === 1 ? '' : 's'}, ${money(visit.cost)}, ${minutes(visit.seconds)} so far in this visit`}
             </p>
           )}
+          {isGen && <MeasureInfo gen={head} measure={head.photo_id ? measures.get(head.photo_id) : undefined} />}
           <table className="w-full text-left">
             <tbody>
               {[...row.calls]
+                .filter((c) => c.kind !== 'measure')
                 .sort((a, b) => a.created_at.localeCompare(b.created_at))
                 .map((c) => (
                   <tr key={String(c.id)} className="border-t border-line first:border-t-0">
@@ -371,7 +380,6 @@ function detailText(c: UsageEvent): string {
   const parts: string[] = [];
   if (Array.isArray(d.sent)) parts.push(`sent: ${(d.sent as string[]).join(', ')}`);
   if (typeof d.basis === 'string') parts.push(`estimate: ${d.basis}`);
-  if (typeof d.measurementText === 'string') parts.push(`text added to the prompt: “${d.measurementText.replace(/\s+/g, ' ')}”`);
   if (typeof d.quality === 'string') parts.push(`quality: ${d.quality}`);
   if (typeof d.error === 'string') parts.push(`error: ${d.error}`);
   return parts.join(' · ');
@@ -456,5 +464,95 @@ function PriceTable({ password, settings, active, onSaved }: { password: string;
         </PrimaryButton>
       </div>
     </div>
+  );
+}
+
+interface MeasureDetail {
+  confidence?: string;
+  up?: string;
+  scaleChecked?: boolean;
+  focalPx?: number;
+  roofAreaM2?: number;
+  samCalls?: number;
+  planes?: { pitchDeg: number; eaveM: number; slopeM: number; areaM2: number; share: number }[];
+  notes?: string[];
+  debug?: Record<string, string | number>;
+}
+
+/** Everything about the roof measurement of a generation's photo, in one drop-down. */
+function MeasureInfo({ gen, measure }: { gen: UsageEvent; measure?: UsageEvent }) {
+  const sentText = typeof gen.detail?.measurementText === 'string' ? gen.detail.measurementText : '';
+  if (!measure && !sentText) return null;
+  const d = (measure?.detail ?? {}) as MeasureDetail;
+  const used = Boolean(sentText);
+  return (
+    <details className="rounded-wb border border-line bg-white p-3">
+      <summary className="cursor-pointer text-xs font-semibold">
+        Roof measurement
+        <span className={`ml-2 rounded-[2px] px-1.5 py-0.5 text-[11px] font-bold uppercase ${used ? 'bg-emerald-100' : 'bg-paper text-muted'}`}>{used ? 'in the prompt' : 'not in the prompt'}</span>
+        {measure && <span className="ml-2 font-normal text-muted">{measure.ms ? `${(measure.ms / 1000).toFixed(1)} s · ` : ''}{money(measure.cost)}</span>}
+      </summary>
+      <div className="mt-3 space-y-3 text-xs">
+        {measure ? (
+          <>
+            <p>
+              <span className="font-semibold">{d.confidence === 'ok' ? 'Reliable' : 'Not reliable'}</span> · {d.scaleChecked ? 'scale confirmed' : 'scale not confirmed (no sizes)'} · up from{' '}
+              {d.up === 'wall' ? 'a wall' : 'a level camera'}
+              {d.focalPx ? ` · focal length ${d.focalPx} px` : ''}
+              {d.samCalls !== undefined ? ` · ${d.samCalls} SAM 3 call${d.samCalls === 1 ? '' : 's'} made` : ''}
+            </p>
+            {d.planes && d.planes.length > 0 && (
+              <table className="w-full text-left">
+                <thead className="text-muted">
+                  <tr>
+                    <th className="pr-2">Plane</th>
+                    <th className="pr-2">Pitch</th>
+                    <th className="pr-2">Eave</th>
+                    <th className="pr-2">Slope</th>
+                    <th className="pr-2">Area</th>
+                    <th>Share</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {d.planes.map((p, i) => (
+                    <tr key={i} className="border-t border-line">
+                      <td className="pr-2">{i + 1}</td>
+                      <td className="pr-2">{p.pitchDeg}°</td>
+                      <td className="pr-2">{p.eaveM} m</td>
+                      <td className="pr-2">{p.slopeM} m</td>
+                      <td className="pr-2">{p.areaM2} m²</td>
+                      <td>{Math.round(p.share * 100)} %</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {d.notes && d.notes.length > 0 && (
+              <ul className="list-disc pl-5 text-muted">
+                {d.notes.map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            )}
+            {d.debug && (
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 text-muted">
+                {Object.entries(d.debug).map(([k, v]) => (
+                  <div key={k} className="contents">
+                    <dt className="font-semibold">{k}</dt>
+                    <dd>{String(v)}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </>
+        ) : (
+          <p className="text-muted">No measurement record was found for this photo (it may have been made before the records were kept).</p>
+        )}
+        <div>
+          <p className="font-semibold">{used ? 'Text added to the prompt of this generation' : 'Nothing was added to the prompt of this generation'}</p>
+          {used && <pre className="mt-1 whitespace-pre-wrap rounded-[2px] bg-paper p-2">{sentText}</pre>}
+        </div>
+      </div>
+    </details>
   );
 }
