@@ -21,7 +21,7 @@
     "quality": "balanced"
   },
   "measurement": {
-    "tool": "off",
+    "tool": "depthpro",
     "keyEnv": "REPLICATE_API_TOKEN",
     "wallPrompt": "wall",
     "referencePrompt": "door",
