@@ -33,5 +33,10 @@
     "id": "large-flat",
     "name": "Large Format Flat",
     "description": "Large flat interlocking tiles with a clean, slate-like or modern flat appearance and thin straight leading edges."
+  },
+  {
+    "id": "test-images",
+    "name": "TEST IMAGES",
+    "description": ""
   }
 ]
