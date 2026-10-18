@@ -114,6 +114,7 @@ function RoofApp() {
   const measureTool = useRef('off');
   const measuring = useRef<{ photo: string; id: string; done: Promise<MeasureOutcome | null> } | null>(null);
   const measureShow = useRef(true);
+  const measureWait = useRef(60);
   const generationRun = useRef(0);
   const [cursor, setCursor] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -159,6 +160,7 @@ function RoofApp() {
     configureDepth({ tool: health.depthTool === 'marigold' || health.depthTool === 'midas' ? health.depthTool : 'browser' });
     measureTool.current = health.measureTool === 'depthpro' ? 'depthpro' : 'off';
     measureShow.current = health.measureShow !== false;
+    measureWait.current = Number(health.measureWait) > 0 ? Number(health.measureWait) : 60;
     if (typeof health.edgeMaps === 'boolean') setShowEdgeMaps(health.edgeMaps);
     return health as { locked: boolean; edgeMaps?: boolean; analysis?: typeof analysis; depthTool?: string };
   }
@@ -317,8 +319,8 @@ function RoofApp() {
     const [depthRaw, roofMask] = await Promise.all([
       use.depth ? depthWithin(base, live?.depthTool === 'marigold' || live?.depthTool === 'midas' ? 60000 : 20000) : null,
       use.mask ? roofMaskWithin(base, 20000) : null,
-      // The measurement is optional: wait for it at most 15 s, then generate without it.
-      Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 15000))]),
+      // The measurement goes into the prompt, so wait for it (admin setting, 60 s by default), then generate without it.
+      Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, measureWait.current * 1000))]),
     ]).then(([d, m]) => [d, m] as const);
     const depthMaps = await sharpDepth(depthRaw, roofMask);
     setWaitingForAnalysis(false);

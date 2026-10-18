@@ -363,7 +363,7 @@ function cleanMeasurement(m: MeasurementSettings): MeasurementSettings {
   const groundPrompt = String(m.groundPrompt ?? '').trim().slice(0, 100);
   const cam = Number(m.cameraHeightM);
   const cameraHeightM = Number.isFinite(cam) && cam >= 0.5 && cam <= 3 ? Math.round(cam * 100) / 100 : 1.6;
-  return { tool, keyEnv, wallPrompt, referencePrompt, referenceHeightM, groundPrompt, cameraHeightM, show: m.show !== false };
+  return { tool, keyEnv, wallPrompt, referencePrompt, referenceHeightM, groundPrompt, cameraHeightM, waitSeconds: Math.min(180, Math.max(5, Math.round(Number(m.waitSeconds)) || 60)), show: m.show !== false };
 }
 
 function cleanSegmentation(s: SegmentationSettings): SegmentationSettings {

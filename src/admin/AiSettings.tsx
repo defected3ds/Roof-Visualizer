@@ -620,6 +620,11 @@ function MeasurementTool({
               <span className="mt-1 block text-xs font-normal text-muted">A person holding a phone: about 1.4–1.7 m.</span>
             </label>
           </div>
+          <label className="mt-4 block max-w-xs text-sm font-semibold">
+            Wait for the measurement before generating (seconds)
+            <input type="number" min={5} max={180} step={5} value={m.waitSeconds} onChange={(e) => setM({ waitSeconds: Number(e.target.value) })} className={fieldClass} />
+            <span className="mt-1 block text-xs font-normal text-muted">Generate waits this long for the roof measurement so it is in the prompt; after that it goes ahead without it.</span>
+          </label>
           <div className="mt-4">
             <Toggle label="Show pitch and roof area to visitors on the loading screen (rounded)" checked={m.show} onChange={(v) => setM({ show: v })} />
           </div>

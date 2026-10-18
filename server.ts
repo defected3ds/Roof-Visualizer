@@ -124,6 +124,7 @@ async function startServer() {
       depthTool: ai.depthEstimation.tool !== 'browser' && hasDepthKey(ai.depthEstimation) ? ai.depthEstimation.tool : 'browser',
       // Roof measurements (Depth Pro + SAM 3): on only when both tokens are set.
       measureShow: ai.measurement.show,
+      measureWait: ai.measurement.waitSeconds,
       measureTool: ai.measurement.tool === 'depthpro' && hasMeasurementKey(ai.measurement) && hasSegmentationKey(ai.segmentation) && usesImages ? 'depthpro' : 'off',
       // Line / edge maps on the loading screen (display only).
       edgeMaps: ai.showEdgeMaps,

@@ -130,6 +130,8 @@ export interface MeasurementSettings {
   /** What SAM 3 looks for as the ground, and how high the camera usually is above it: the fallback scale check when no door is found. Empty = off. */
   groundPrompt: string;
   cameraHeightM: number;
+  /** Seconds Generate waits for the measurement before it goes ahead without it. */
+  waitSeconds: number;
   /** Show the measured pitch and area to visitors on the loading screen. */
   show: boolean;
 }

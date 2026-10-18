@@ -39,7 +39,7 @@ function defaultDepth(): DepthSettings {
 }
 
 export function defaultMeasurement(): MeasurementSettings {
-  return { tool: 'off', keyEnv: 'REPLICATE_API_TOKEN', wallPrompt: 'wall', referencePrompt: 'door', referenceHeightM: 2, groundPrompt: 'ground', cameraHeightM: 1.6, show: true };
+  return { tool: 'off', keyEnv: 'REPLICATE_API_TOKEN', wallPrompt: 'wall', referencePrompt: 'door', referenceHeightM: 2, groundPrompt: 'ground', cameraHeightM: 1.6, waitSeconds: 60, show: true };
 }
 
 export function hasMeasurementKey(m: MeasurementSettings): boolean {
