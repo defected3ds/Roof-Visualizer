@@ -21,8 +21,8 @@ import { History, type HistoryItem } from './components/History';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
 import { configureDepth, depthFor, depthWithin, snapToMask } from './lib/depth';
-import { configureRoofMask, roofMaskFor, roofMaskWithin, wallMaskFor } from './lib/roofmask';
-import { buildMeasureCard, captionSlide, roofOverWalls, type MeasureOutcome } from './lib/measureCard';
+import { configureRoofMask, roofMaskFor, roofMaskWithin, wallMaskFor, type RoofMask } from './lib/roofmask';
+import { buildMeasureCard, captionSlide, roofOverWalls, ROOF_LABEL, WALL_LABEL, type MeasureOutcome } from './lib/measureCard';
 import { buildEdgeMaps, fileToDataUrl, shareImage, thumbnail } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
@@ -283,33 +283,35 @@ function RoofApp() {
       const depthName = d ? (d.source === 'marigold' ? 'Marigold (fal.ai)' : d.source === 'midas' ? 'MiDaS (fal.ai)' : `browser model${d.fallback ? ` (server depth map failed: ${d.fallback})` : ''}`) : 'none';
       setAnalysisInfo(`Depth map: ${depthName} · Roof mask: ${m ? (m.source === 'sam3' ? 'SAM 3 (fal.ai)' : 'CLIPSeg (browser)') : 'none'}`);
       const lateEdges = await edges;
-      // Roof measurement (new setup): walls first, then the roof, each with a caption.
+      // Roof measurement (new setup): walls first ("Walls found"), then the roof with the walls still tinted ("Walls found" + "Roof found");
+      // the measurement (arrows, pitch, area) is added to that same roof slide when it arrives.
       const measuring = measureTool.current === 'depthpro' && measureShow.current;
-      const wall = measuring ? await Promise.race([wallMaskFor(base), new Promise<null>((r) => setTimeout(r, 6000))]) : null;
-      const wallSlide = wall ? await captionSlide(wall.overlay, 'Walls found').catch(() => wall.overlay) : null;
-      // The walls stay tinted blue on the roof slide.
-      const roofSlide = m
-        ? measuring
-          ? await (wall ? roofOverWalls(wall.overlay, m.mask, 'Walls and roof found') : captionSlide(m.overlay, 'Roof found')).catch(() => m.overlay)
-          : m.overlay
-        : null;
-      setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(wallSlide ? [wallSlide] : []), ...(roofSlide ? [roofSlide] : [])], tail: lateEdges });
-      // Depth Pro's depth and the measured numbers join the show when they arrive.
+      const parts: { wall: RoofMask | null; summary: MeasureOutcome['summary'] | null } = { wall: null, summary: null };
+      const rebuild = async () => {
+        if (runId !== generationRun.current) return;
+        const flat = measuring && parts.wall && m ? await roofOverWalls(parts.wall.overlay, m.mask).catch(() => m.overlay) : m?.overlay;
+        const card = flat && m && measuring && parts.summary ? await buildMeasureCard(flat, m.mask, parts.summary).catch(() => flat) : flat;
+        const roofSlide = card ? (measuring ? await captionSlide(card, parts.wall ? [WALL_LABEL, ROOF_LABEL] : [ROOF_LABEL]).catch(() => card) : card) : null;
+        const wallSlide = parts.wall ? await captionSlide(parts.wall.overlay, [WALL_LABEL]).catch(() => parts.wall!.overlay) : null;
+        if (runId !== generationRun.current) return;
+        setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(wallSlide ? [wallSlide] : []), ...(roofSlide ? [roofSlide] : [])], tail: lateEdges });
+      };
+      parts.wall = measuring ? await Promise.race([wallMaskFor(base), new Promise<null>((r) => setTimeout(r, 4000))]) : null;
+      await rebuild();
       if (measuring) {
-        const add = (src?: string | null) => {
-          if (src && runId === generationRun.current) setSlideExtras((cur) => [...cur, src]);
-        };
+        // A wall that arrives late still joins: the walls always stay on the picture.
+        if (!parts.wall) {
+          void wallMaskFor(base).then((w) => {
+            if (!w) return;
+            parts.wall = w;
+            return rebuild();
+          });
+        }
         const measured = await Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 120000))]);
-        add(measured?.depthColor);
-        if (measured?.summary && m && roofSlide && runId === generationRun.current) {
-          // The roof slide itself gets the arrows and numbers, so they show on the picture the visitor is already looking at.
-          const flat = wall ? await roofOverWalls(wall.overlay, m.mask).catch(() => m.overlay) : m.overlay;
-          const card = await buildMeasureCard(flat, m.mask, measured.summary)
-            .then((c) => captionSlide(c, wall ? 'Walls and roof found' : 'Roof found'))
-            .catch(() => null);
-          if (card && runId === generationRun.current) {
-            setSlideBase((cur) => ({ ...cur, head: cur.head.map((s, i) => (i === cur.head.length - 1 ? card : s)) }));
-          }
+        if (measured?.depthColor && runId === generationRun.current) setSlideExtras((cur) => [...cur, measured.depthColor!]);
+        if (measured?.summary) {
+          parts.summary = measured.summary;
+          await rebuild();
         }
       }
     });

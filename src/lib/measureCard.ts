@@ -100,8 +100,18 @@ function arrow(ctx: CanvasRenderingContext2D, line: [number, number, number, num
   ctx.restore();
 }
 
-/** A small caption in the top-left corner of a loading-screen slide ("Walls found", "Roof found"). */
-export async function captionSlide(src: string, text: string): Promise<string> {
+/** A caption label: text and the colour of the tint it names. */
+export interface SlideLabel {
+  text: string;
+  color?: string;
+}
+
+export const WALL_LABEL: SlideLabel = { text: 'Walls found', color: '#2f7be0' };
+export const ROOF_LABEL: SlideLabel = { text: 'Roof found', color: '#c01818' };
+
+/** Captions stacked in the top-left corner of a loading-screen slide ("Walls found", then "Roof found"), each with a colour swatch. */
+export async function captionSlide(src: string, labels: SlideLabel[] | string): Promise<string> {
+  const list: SlideLabel[] = typeof labels === 'string' ? [{ text: labels }] : labels;
   const img = await load(src);
   const w = img.naturalWidth;
   const h = img.naturalHeight;
@@ -112,15 +122,26 @@ export async function captionSlide(src: string, text: string): Promise<string> {
   ctx.drawImage(img, 0, 0, w, h);
   const size = Math.max(12, Math.round(w / 52));
   ctx.font = `600 ${size}px "Noto Sans", system-ui, sans-serif`;
-  const tw = ctx.measureText(text).width;
   const margin = Math.round(w / 60);
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.beginPath();
-  ctx.roundRect(margin, margin, tw + size * 1.4, size * 1.9, size * 0.35);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, margin + size * 0.7, margin + size * 0.95);
+  const swatch = size * 0.8;
+  list.forEach((label, i) => {
+    const tw = ctx.measureText(label.text).width;
+    const boxW = tw + size * 1.4 + (label.color ? swatch + size * 0.5 : 0);
+    const y = margin + i * size * 2.2;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.beginPath();
+    ctx.roundRect(margin, y, boxW, size * 1.9, size * 0.35);
+    ctx.fill();
+    let x = margin + size * 0.7;
+    if (label.color) {
+      ctx.fillStyle = label.color;
+      ctx.fillRect(x, y + (size * 1.9 - swatch) / 2, swatch, swatch);
+      x += swatch + size * 0.5;
+    }
+    ctx.fillStyle = '#fff';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label.text, x, y + size * 0.95);
+  });
   return canvas.toDataURL('image/jpeg', 0.88);
 }
 
