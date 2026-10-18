@@ -290,9 +290,9 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
   // List or gallery grid; the choice is remembered in this browser.
   const [view, setView] = useState<'list' | 'grid'>(() => {
     try {
-      return localStorage.getItem('rv.productView') === 'grid' ? 'grid' : 'list';
+      return localStorage.getItem('rv.productView') === 'list' ? 'list' : 'grid';
     } catch {
-      return 'list';
+      return 'grid';
     }
   });
   const chooseView = (v: 'list' | 'grid') => {
@@ -308,12 +308,12 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
     <>
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
         <p className="text-muted">These are the products customers can choose in the app.</p>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex shrink-0 overflow-hidden rounded-wb border border-line" role="group" aria-label="View">
             {(
               [
-                ['list', 'List', List],
                 ['grid', 'Gallery', LayoutGrid],
+                ['list', 'List', List],
               ] as const
             ).map(([v, label, Icon]) => (
               <button
@@ -321,18 +321,19 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
                 type="button"
                 onClick={() => chooseView(v)}
                 aria-pressed={view === v}
-                title={label}
-                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold ${view === v ? 'bg-brand text-white' : 'bg-white text-muted hover:bg-paper'}`}
+                className={`flex h-12 w-44 items-center justify-center gap-2 px-3 text-[15px] font-bold uppercase tracking-wide ${view === v ? 'bg-brand text-white' : 'bg-white text-muted hover:bg-paper'}`}
               >
-                <Icon size={16} /> <span className="hidden sm:inline">{label}</span>
+                <Icon size={18} /> {label}
               </button>
             ))}
           </div>
-          <div>
-            <PrimaryButton onClick={() => onEdit('new')} className="px-6">
-              <Plus size={18} /> Add product
-            </PrimaryButton>
-          </div>
+          <button
+            type="button"
+            onClick={() => onEdit('new')}
+            className="flex h-12 w-44 shrink-0 items-center justify-center gap-2 rounded-wb bg-brand px-3 text-[15px] font-bold uppercase tracking-wide text-white transition hover:bg-brand-dark"
+          >
+            <Plus size={18} /> Add product
+          </button>
         </div>
       </div>
       {groups.map((g) => (
