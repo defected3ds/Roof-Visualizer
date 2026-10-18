@@ -10,6 +10,8 @@ interface Props {
   generating: boolean;
   startedAt: number | null;
   edgeMaps: string[];
+  /** Name of the AI model that made the results; written in the bottom right corner of every result. */
+  modelLabel?: string;
   /** True while generation waits for the depth map. */
   analysing?: boolean;
   /** Shown under the timer, e.g. when the photo analysis failed. */
@@ -22,7 +24,7 @@ interface Props {
 const PHOTO = 'block w-full lg:h-full lg:object-contain';
 
 /** The photo area: current image, swipeable results, before/after slider and the generating overlay. */
-export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, analysing, note, info }: Props) {
+export function Stage({ base, results, active, onActiveChange, compare, generating, startedAt, edgeMaps, modelLabel, analysing, note, info }: Props) {
   const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState(50);
@@ -79,6 +81,7 @@ export function Stage({ base, results, active, onActiveChange, compare, generati
               ) : (
                 <img src={src} alt={`Result ${i + 1}`} className={PHOTO} />
               )}
+              {modelLabel && !generating && <ModelBadge ratio={ratio} text={modelLabel} />}
             </div>
           ))}
         </div>
@@ -202,6 +205,35 @@ function GeneratingOverlay({
         {note && <p className="max-w-xs px-4 text-center text-sm text-white/90 drop-shadow">{note}</p>}
         {info && <p className="max-w-sm px-4 text-center text-xs text-white/80 drop-shadow">{info}</p>}
       </div>
+      </div>
+    </div>
+  );
+}
+
+/** The model name in the bottom right corner of the photo itself (not of the white sides a wide window leaves around it). */
+function ModelBadge({ ratio, text }: { ratio: number | null; text: string }) {
+  const area = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  useEffect(() => {
+    const el = area.current;
+    if (!el || !ratio) return;
+    const fit = () => {
+      const cw = el.clientWidth;
+      const ch = el.clientHeight;
+      if (!cw || !ch) return;
+      const width = cw / ch > ratio ? ch * ratio : cw;
+      const height = cw / ch > ratio ? ch : cw / ratio;
+      setBox({ left: (cw - width) / 2, top: (ch - height) / 2, width, height });
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ratio]);
+  return (
+    <div ref={area} className="pointer-events-none absolute inset-0">
+      <div className="absolute" style={box ?? { inset: 0 }}>
+        <span className="absolute bottom-2 right-2 max-w-[80%] truncate rounded-[3px] bg-black/55 px-2 py-1 text-[11px] font-semibold text-white sm:text-xs">{text}</span>
       </div>
     </div>
   );

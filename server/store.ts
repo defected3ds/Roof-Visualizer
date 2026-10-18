@@ -402,6 +402,7 @@ export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult &
       maxProductPhotos: clamp(input.maxProductPhotos ?? current.maxProductPhotos, 1, 3, 3),
       variants: clamp(input.variants ?? current.variants, 1, 4, 3),
       showEdgeMaps: Boolean(input.showEdgeMaps ?? current.showEdgeMaps),
+      showModelName: Boolean(input.showModelName ?? current.showModelName),
       segmentation: cleanSegmentation({ ...current.segmentation, ...input.segmentation }),
       depthEstimation: cleanDepth({ ...current.depthEstimation, ...input.depthEstimation }),
       measurement: cleanMeasurement({ ...current.measurement, ...input.measurement }),

@@ -122,6 +122,8 @@ function RoofApp() {
   const [showDetails, setShowDetails] = useState(false);
   const [productId, setProductId] = useState<string | null>(null);
   const [results, setResults] = useState<string[]>([]);
+  const [resultModel, setResultModel] = useState('');
+  const [showModel, setShowModel] = useState(true);
   const [active, setActive] = useState(0);
   // Earlier generations of this photo (newest first) and the one currently on the stage.
   const [gallery, setGallery] = useState<(HistoryItem & { base: string })[]>([]);
@@ -160,6 +162,7 @@ function RoofApp() {
     configureDepth({ tool: health.depthTool === 'marigold' || health.depthTool === 'midas' ? health.depthTool : 'browser' });
     measureTool.current = health.measureTool === 'depthpro' ? 'depthpro' : 'off';
     measureShow.current = health.measureShow !== false;
+    setShowModel(health.showModel !== false);
     measureWait.current = Number(health.measureWait) > 0 ? Number(health.measureWait) : 60;
     if (typeof health.edgeMaps === 'boolean') setShowEdgeMaps(health.edgeMaps);
     return health as { locked: boolean; edgeMaps?: boolean; analysis?: typeof analysis; depthTool?: string };
@@ -406,10 +409,11 @@ function RoofApp() {
         throw new Error(reason ? `${t('message.error')} (${reason})` : t('message.error'));
       }
       setResults(data.images);
+      setResultModel(data.model ?? '');
       setActive(0);
       void sendPreviews(generationId, base, data.images, accessCode);
       const id = Date.now();
-      setGallery((g) => [{ id, base, product: [product.brand, product.name].filter(Boolean).join(' '), images: data.images }, ...g].slice(0, HISTORY_LIMIT));
+      setGallery((g) => [{ id, base, product: [product.brand, product.name].filter(Boolean).join(' '), images: data.images, model: data.model }, ...g].slice(0, HISTORY_LIMIT));
       setViewing(id);
       if (data.provider === 'demo') {
         setToast('Demo mode: add GEMINI_API_KEY or REPLICATE_API_TOKEN on the server to generate real roofs.');
@@ -443,6 +447,7 @@ function RoofApp() {
     const at = history.indexOf(item.base);
     if (at >= 0) setCursor(at);
     setResults(item.images);
+    setResultModel(item.model ?? '');
     setActive(0);
     setViewing(id);
     setCompare(false);
@@ -586,6 +591,7 @@ function RoofApp() {
           generating={generating}
           startedAt={startedAt}
           edgeMaps={edgeMaps}
+          modelLabel={showModel ? resultModel : ''}
           analysing={generating && waitingForAnalysis && analysing === base}
           note={noAnalysis ? t('editor.noAnalysis') : undefined}
           info={new URLSearchParams(window.location.search).has('debug') ? analysisInfo : undefined}

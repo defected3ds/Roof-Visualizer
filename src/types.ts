@@ -59,6 +59,8 @@ export interface GenerateBody {
 export interface GenerateResponse {
   images: string[];
   provider: string;
+  /** Name of the AI model that made the images, as set in the admin. */
+  model?: string;
 }
 
 export type ProviderType = 'gemini' | 'openai' | 'bfl' | 'fal' | 'kie' | 'replicate' | 'demo';
@@ -95,6 +97,8 @@ export interface AiSettings {
   variants: number;
   /** Show line and edge maps of the photo while generating (display only, never sent to the AI). */
   showEdgeMaps: boolean;
+  /** Write the name of the AI model in the bottom right corner of every result. */
+  showModelName: boolean;
   /** How the roof mask is made. */
   segmentation: SegmentationSettings;
   /** How the depth map is made. */

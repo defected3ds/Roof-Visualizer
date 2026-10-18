@@ -144,6 +144,7 @@ export function defaultAiSettings(): AiSettings {
     maxProductPhotos: 3,
     variants: 3,
     showEdgeMaps: true,
+    showModelName: true,
     segmentation: defaultSegmentation(),
     depthEstimation: defaultDepth(),
     measurement: defaultMeasurement(),

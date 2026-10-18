@@ -251,6 +251,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
         </p>
         <div className="mt-4">
           <Toggle label="Show line and edge maps of the photo" checked={draft.showEdgeMaps} onChange={(v) => set({ showEdgeMaps: v })} />
+          <Toggle label="Write the AI model name in the bottom right corner of every result" checked={draft.showModelName} onChange={(v) => set({ showModelName: v })} />
         </div>
       </div>
 

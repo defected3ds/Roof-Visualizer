@@ -123,6 +123,7 @@ async function startServer() {
       // Depth map tool: Marigold on the server (needs its fal.ai key), else Depth Anything in the browser.
       depthTool: ai.depthEstimation.tool !== 'browser' && hasDepthKey(ai.depthEstimation) ? ai.depthEstimation.tool : 'browser',
       // Roof measurements (Depth Pro + SAM 3): on only when both tokens are set.
+      showModel: ai.showModelName,
       measureShow: ai.measurement.show,
       measureWait: ai.measurement.waitSeconds,
       measureTool: ai.measurement.tool === 'depthpro' && hasMeasurementKey(ai.measurement) && hasSegmentationKey(ai.segmentation) && usesImages ? 'depthpro' : 'off',
@@ -553,7 +554,7 @@ async function startServer() {
       console.log(`[generate] ${cfg.label} "${product.name}" (${used.filter(Boolean).join(', ') || 'photo only'}) -> ${results.length} images in ${Date.now() - started}ms`);
       const priced = imageCost(getUsageSettings().prices, cfg, images, results.length);
       void recordUsage({ kind: 'image', ...usage, results: results.length, ms: Date.now() - started, cost: priced.cost, detail: { sent, basis: priced.basis, imagesMP: priced.imagesMP, ...(measured ? { measurementText: measured } : {}) } });
-      res.json({ images: results, provider: cfg.type });
+      res.json({ images: results, provider: cfg.type, model: cfg.label });
     } catch (err: any) {
       console.error('[generate] failed:', err);
       void recordUsage({ kind: 'image', ...usage, results: 0, ms: Date.now() - started, cost: 0, detail: { sent, error: String(err?.message ?? err).slice(0, 300) } });

@@ -5,6 +5,8 @@ export interface HistoryItem {
   /** Name of the product these results were made with. */
   product: string;
   images: string[];
+  /** Name of the AI model that made them. */
+  model?: string;
 }
 
 interface Props {
