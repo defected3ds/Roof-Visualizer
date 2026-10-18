@@ -149,6 +149,7 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
     setBusy(true);
     try {
       setView(await api<UsageView>(password, 'GET', `/api/admin/usage?days=${days}`));
+      setAsked(new Set());
       setError('');
     } catch (err: any) {
       setError(err.message);
@@ -160,7 +161,10 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
     void load();
   }, [load]);
 
-  const events = view?.events ?? [];
+  // Preview pictures come separately (they are big): for the generations that are listed, in batches of 20.
+  const [pictures, setPictures] = useState<Record<string, UsageEvent['previews']>>({});
+  const baseEvents = view?.events ?? [];
+  const events = useMemo(() => baseEvents.map((e) => (pictures[String(e.id)] ? { ...e, previews: pictures[String(e.id)] } : e)), [baseEvents, pictures]);
   const rows = useMemo(() => buildRows(events), [events]);
   const visits = useMemo(() => visitStats(events), [events]);
   const measures = useMemo(() => {
@@ -169,6 +173,19 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
     return m;
   }, [events]);
   const groups = useMemo(() => groupByVisit(rows.slice(0, shown)), [rows, shown]);
+  const shownIds = useMemo(
+    () => rows.slice(0, shown).flatMap((r) => r.calls.filter((c) => GENERATION.has(c.kind)).map((c) => String(c.id))),
+    [rows, shown],
+  );
+  const [asked, setAsked] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const need = shownIds.filter((id) => !asked.has(id)).slice(0, 20);
+    if (!need.length) return;
+    setAsked((cur) => new Set([...cur, ...need]));
+    api<{ previews: Record<string, UsageEvent['previews']> }>(password, 'GET', `/api/admin/usage/previews?ids=${need.join(',')}`)
+      .then((r) => setPictures((cur) => ({ ...cur, ...r.previews })))
+      .catch(() => undefined);
+  }, [shownIds, asked, password]);
   const summary = useMemo(() => {
     const real = events.filter((e) => !e.kind.startsWith('test-'));
     const total = real.reduce((s, e) => s + e.cost, 0);

@@ -31,7 +31,7 @@ import { requestContext } from './server/visitor';
 import { segmentCached } from './server/segcache';
 import { reliablePitch } from './src/lib/measureText';
 import { measureRoof, measurementText, recallMeasurement, rememberMeasurement } from './server/measure';
-import { activePriceIds, attachPreviews, depthCost, measureCost, priceOf, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
+import { activePriceIds, attachPreviews, depthCost, measureCost, priceOf, imageCost, listPreviews, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
 import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_HOUR) || 20;
@@ -251,6 +251,10 @@ async function startServer() {
       settings: getUsageSettings(),
       activePrices: activePriceIds(getAiSettings()),
     });
+  });
+  // The preview pictures of the rows the admin is showing, fetched in small batches: ?ids=12,13,14
+  admin.get('/usage/previews', async (req, res) => {
+    res.json({ previews: await listPreviews(String(req.query.ids ?? '').split(',')) });
   });
   admin.put('/usage-settings', async (req, res) => {
     try {

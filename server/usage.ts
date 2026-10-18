@@ -169,16 +169,38 @@ export async function attachPreviews(generationId: string, previews: NonNullable
 }
 
 /** Newest first. */
+/** The preview pictures of some records (by id), for the rows the admin is showing. */
+export async function listPreviews(ids: string[]): Promise<Record<string, UsageEvent['previews']>> {
+  const clean = ids.filter((id) => /^\d{1,15}$/.test(id)).slice(0, 40);
+  if (!clean.length) return {};
+  try {
+    if (useSupabase()) {
+      const res = await rest(`usage_events?select=id,previews&id=in.(${clean.join(',')})`, { signal: AbortSignal.timeout(40_000) });
+      const rows = (await res.json()) as { id: number | string; previews?: UsageEvent['previews'] }[];
+      return Object.fromEntries(rows.filter((r) => r.previews).map((r) => [String(r.id), r.previews]));
+    }
+    return Object.fromEntries(memory.filter((e) => clean.includes(String(e.id)) && e.previews).map((e) => [String(e.id), e.previews]));
+  } catch (err: any) {
+    console.error('[usage] could not read previews:', String(err?.message ?? err));
+    return {};
+  }
+}
+
 export async function listUsage(sinceDays: number | null, limit = 1500): Promise<UsageEvent[]> {
   const since = sinceDays ? new Date(Date.now() - sinceDays * 86_400_000).toISOString() : null;
   try {
     if (useSupabase()) {
       const filter = since ? `&created_at=gte.${encodeURIComponent(since)}` : '';
-      const res = await rest(`usage_events?select=*&order=created_at.desc&limit=${limit}${filter}`);
+      // Without the preview pictures: they are big, and are fetched separately for the rows that are shown (see listPreviews).
+      const columns = 'id,created_at,kind,photo_id,generation_id,product,provider,model,results,ms,cost,detail';
+      const res = await rest(`usage_events?select=${columns}&order=created_at.desc&limit=${limit}${filter}`, { signal: AbortSignal.timeout(40_000) });
       lastError = '';
       return (await res.json()) as UsageEvent[];
     }
-    return memory.filter((e) => !since || e.created_at >= since).slice(0, limit);
+    return memory
+      .filter((e) => !since || e.created_at >= since)
+      .slice(0, limit)
+      .map(({ previews: _previews, ...rest }) => rest as UsageEvent);
   } catch (err: any) {
     lastError = String(err?.message ?? err);
     console.error('[usage] could not read:', lastError);
