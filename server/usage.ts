@@ -16,6 +16,8 @@ export function defaultPrices(): PriceItem[] {
     { id: 'openai.image', label: 'OpenAI GPT Image 2.5 (Flare, Sunburst)', unit: 'result', price: 0.1, note: 'Billed by tokens; $0.05–0.15 is typical, check your usage page' },
     { id: 'krea.mp', label: 'Krea 3 on fal.ai', unit: 'megapixel', price: 0.025, note: 'Billed for the output and every attached image' },
     { id: 'flux2.out', label: 'FLUX.2 (bfl.ai), output', unit: 'megapixel', price: 0.03, note: 'First megapixel; later ones are cheaper' },
+    { id: 'flux3.image', label: 'FLUX 3 Image (bfl.ai)', unit: 'result', price: 0.05, note: 'About $0.048 at 1K, $0.10 at 2K; BFL reports the exact credits per request' },
+    { id: 'flux3.klein', label: 'FLUX 3 Image Klein (bfl.ai)', unit: 'result', price: 0.01, note: 'About $0.009 at 1K, $0.014 at 2K' },
     { id: 'flux2.in', label: 'FLUX.2 (bfl.ai), input images', unit: 'megapixel', price: 0.015 },
     { id: 'other.image', label: 'Other image models (fal.ai, kie.ai, Replicate, GPT Image 1)', unit: 'result', price: 0.05, note: 'A rough default: check the provider price page' },
     { id: 'sam3.photo', label: 'Meta SAM 3 roof mask (fal.ai)', unit: 'photo', price: 0.005 },
@@ -46,6 +48,10 @@ export function imageCost(prices: PriceItem[], cfg: Pick<ProviderConfig, 'type' 
   if (cfg.type === 'fal' && model.includes('krea')) {
     cost = results * (outMP + inMP) * priceOf(prices, 'krea.mp');
     basis = `${results} × (${outMP.toFixed(1)} MP out + ${inMP.toFixed(1)} MP in) × $${priceOf(prices, 'krea.mp')}`;
+  } else if (cfg.type === 'bfl' && model.startsWith('flux-3')) {
+    const id = model.includes('klein') ? 'flux3.klein' : 'flux3.image';
+    cost = results * priceOf(prices, id);
+    basis = `${results} × $${priceOf(prices, id)}`;
   } else if (cfg.type === 'bfl' && model.startsWith('flux-2')) {
     cost = results * (outMP * priceOf(prices, 'flux2.out') + inMP * priceOf(prices, 'flux2.in'));
     basis = `${results} × (${outMP.toFixed(1)} MP out + ${inMP.toFixed(1)} MP in)`;
@@ -72,6 +78,7 @@ export function activePriceIds(ai: AiSettings): string[] {
   if (cfg) {
     const model = cfg.model.toLowerCase();
     if (cfg.type === 'fal' && model.includes('krea')) ids.push('krea.mp');
+    else if (cfg.type === 'bfl' && model.startsWith('flux-3')) ids.push(model.includes('klein') ? 'flux3.klein' : 'flux3.image');
     else if (cfg.type === 'bfl' && model.startsWith('flux-2')) ids.push('flux2.out', 'flux2.in');
     else if (cfg.type === 'gemini') ids.push('gemini.image');
     else if (cfg.type === 'openai' && model.includes('2.5')) ids.push('openai.image');

@@ -291,11 +291,18 @@ function openaiProvider(cfg: ProviderConfig, apiKey: string): Provider {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Black Forest Labs (api.bfl.ai): FLUX.2 takes input_image + input_image_2..8, Kontext one image
+// Black Forest Labs (api.bfl.ai): FLUX.2 takes input_image + input_image_2..8, FLUX 3 an images list (up to 10), Kontext one image
 // ---------------------------------------------------------------------------------------------
 
 /** Overridable for regional endpoints (e.g. https://api.eu.bfl.ai) and tests. */
 const BFL_API = process.env.BFL_API_URL || 'https://api.bfl.ai';
+
+/** The FLUX 3 resolution tier (equal-pixel-area steps) nearest to the house photo, never above 2k (4k costs far more). */
+function bflResolution(dataUrl: string): '768sq' | '1k' | '1.5k' | '2k' {
+  const size = imageSize(dataUrl);
+  const mp = size ? (size.width * size.height) / 1e6 : 1;
+  return mp <= 0.8 ? '768sq' : mp <= 1.3 ? '1k' : mp <= 1.9 ? '1.5k' : '2k';
+}
 
 function bflProvider(cfg: ProviderConfig, apiKey: string): Provider {
   const headers = { 'x-key': apiKey, accept: 'application/json' };
@@ -303,13 +310,20 @@ function bflProvider(cfg: ProviderConfig, apiKey: string): Provider {
     name: cfg.label,
     generate: ({ images, prompts }) =>
       allVariants(prompts, async (prompt) => {
-        const body: Record<string, unknown> = {
-          prompt,
-          output_format: 'jpeg',
-          safety_tolerance: 2,
-          seed: Math.floor(Math.random() * 1e9),
-        };
-        images.forEach((img, i) => (body[i === 0 ? 'input_image' : `input_image_${i + 1}`] = splitDataUrl(img).data));
+        const flux3 = /^flux-3/i.test(cfg.model);
+        const body: Record<string, unknown> = flux3
+          ? {
+              // FLUX 3: one "images" list (up to 10, the first is the one edited), no input_image fields. The plain model takes only the
+              // fields below; Klein also takes seed and output_format. The size follows the house photo (aspect_ratio auto) at the nearest tier.
+              prompt,
+              images: images.map((img) => splitDataUrl(img).data),
+              aspect_ratio: 'auto',
+              resolution: bflResolution(images[0]),
+              safety_tolerance: 2,
+              ...(/klein/i.test(cfg.model) ? { seed: Math.floor(Math.random() * 1e9), output_format: 'jpeg' } : { grounding: false }),
+            }
+          : { prompt, output_format: 'jpeg', safety_tolerance: 2, seed: Math.floor(Math.random() * 1e9) };
+        if (!flux3) images.forEach((img, i) => (body[i === 0 ? 'input_image' : `input_image_${i + 1}`] = splitDataUrl(img).data));
         if (/kontext/i.test(cfg.model)) body.aspect_ratio = aspectRatio(images[0]);
         const res = await fetch(`${BFL_API}/v1/${cfg.model}`, {
           method: 'POST',

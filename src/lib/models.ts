@@ -18,7 +18,7 @@ export const PROVIDER_TYPES: Record<ProviderType, { label: string; defaultModel:
     label: 'Black Forest Labs (bfl.ai)',
     defaultModel: 'flux-2-pro',
     defaultKeyEnv: 'BFL_API_KEY',
-    help: 'The endpoint name after api.bfl.ai/v1/, e.g. flux-2-pro, flux-2-max or flux-kontext-pro.',
+    help: 'The endpoint name after api.bfl.ai/v1/, e.g. flux-3-image, flux-3-image-klein, flux-2-pro or flux-kontext-pro.',
   },
   fal: {
     label: 'fal.ai',
@@ -55,7 +55,8 @@ export function imageLimit(cfg: Pick<ProviderConfig, 'type' | 'model'>): number 
     case 'openai':
       return 8;
     case 'bfl':
-      return /^flux-2/i.test(cfg.model) ? 8 : 1; // FLUX.2: input_image + input_image_2..8; Kontext: one image
+      // FLUX 3: an images list of up to 10; FLUX.2: input_image + input_image_2..8; Kontext: one image
+      return /^flux-3/i.test(cfg.model) ? 10 : /^flux-2/i.test(cfg.model) ? 8 : 1;
     case 'fal':
       return MULTI_IMAGE.test(cfg.model) && !/kontext/i.test(cfg.model) ? 8 : 1;
     case 'kie':
