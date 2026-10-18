@@ -143,7 +143,12 @@ function GeneratingOverlay({
   // Show the structure maps once, in order (depth map, roof mask, then line maps if switched on), and stay on
   // the last one until the result arrives. Counting from when the maps arrived starts it at the depth map.
   const [mapsSince, setMapsSince] = useState(0);
-  useEffect(() => setMapsSince(Date.now()), [edgeMaps]);
+  const mapCount = useRef(0);
+  useEffect(() => {
+    // A slide added later (the measurement) joins the show; it doesn't restart it.
+    if (mapCount.current === 0 || edgeMaps.length < mapCount.current) setMapsSince(Date.now());
+    mapCount.current = edgeMaps.length;
+  }, [edgeMaps]);
   const stage = Math.min(Math.floor((now - mapsSince) / 3500), edgeMaps.length - 1);
   const r = 26;
   const circ = 2 * Math.PI * r;

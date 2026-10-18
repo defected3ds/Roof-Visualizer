@@ -22,6 +22,7 @@ import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
 import { configureDepth, depthFor, depthWithin, snapToMask } from './lib/depth';
 import { configureRoofMask, roofMaskFor, roofMaskWithin } from './lib/roofmask';
+import { buildMeasureCard, type MeasureSummary } from './lib/measureCard';
 import { buildEdgeMaps, fileToDataUrl, shareImage, thumbnail } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
@@ -111,7 +112,9 @@ function RoofApp() {
   const photoId = useRef('');
   // Roof measurement (admin option): started with the photo analysis, awaited at Generate so the numbers are ready for the prompt.
   const measureTool = useRef('off');
-  const measuring = useRef<{ photo: string; id: string; done: Promise<void> } | null>(null);
+  const measuring = useRef<{ photo: string; id: string; done: Promise<MeasureSummary | null> } | null>(null);
+  const measureShow = useRef(true);
+  const generationRun = useRef(0);
   const [cursor, setCursor] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -153,6 +156,7 @@ function RoofApp() {
     configureRoofMask({ tool: health.maskTool === 'sam3' ? 'sam3' : 'clipseg' });
     configureDepth({ tool: health.depthTool === 'marigold' || health.depthTool === 'midas' ? health.depthTool : 'browser' });
     measureTool.current = health.measureTool === 'depthpro' ? 'depthpro' : 'off';
+    measureShow.current = health.measureShow !== false;
     if (typeof health.edgeMaps === 'boolean') setShowEdgeMaps(health.edgeMaps);
     return health as { locked: boolean; edgeMaps?: boolean; analysis?: typeof analysis; depthTool?: string };
   }
@@ -197,16 +201,16 @@ function RoofApp() {
     const [d, m] = await Promise.all([flags.depth ? depthFor(photo) : null, flags.mask ? roofMaskFor(photo) : null]);
     return [await sharpDepth(d, m), m] as const;
   };
-  const startMeasure = (photo: string): Promise<void> => {
-    if (measureTool.current !== 'depthpro') return Promise.resolve();
+  const startMeasure = (photo: string): Promise<MeasureSummary | null> => {
+    if (measureTool.current !== 'depthpro') return Promise.resolve(null);
     if (measuring.current?.photo === photo && measuring.current.id === photoId.current) return measuring.current.done;
     const done = fetch('/api/measure', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Access-Code': accessCode },
       body: JSON.stringify({ image: photo, photoId: photoId.current }),
     })
-      .then(() => undefined)
-      .catch(() => undefined);
+      .then(async (r) => ((await r.json()) as { summary?: MeasureSummary }).summary ?? null)
+      .catch(() => null);
     measuring.current = { photo, id: photoId.current, done };
     return done;
   };
@@ -263,6 +267,7 @@ function RoofApp() {
     // Previews for the loading animation: depth maps, the detected roof, then edge maps (if switched on in
     // /admin > AI settings). Until the analysis is done the overlay says "Analysing 3D shape".
     setEdgeMaps([]);
+    const runId = ++generationRun.current;
     const live = await loadSettings().catch(() => null);
     const edges = (live?.edgeMaps ?? showEdgeMaps) ? buildEdgeMaps(base).catch(() => [] as string[]) : Promise.resolve([] as string[]);
     setNoAnalysis(false);
@@ -272,15 +277,24 @@ function RoofApp() {
       setNoAnalysis((use.depth || use.mask) && !d && !m);
       const depthName = d ? (d.source === 'marigold' ? 'Marigold (fal.ai)' : d.source === 'midas' ? 'MiDaS (fal.ai)' : `browser model${d.fallback ? ` (server depth map failed: ${d.fallback})` : ''}`) : 'none';
       setAnalysisInfo(`Depth map: ${depthName} · Roof mask: ${m ? (m.source === 'sam3' ? 'SAM 3 (fal.ai)' : 'CLIPSeg (browser)') : 'none'}`);
-      setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : []), ...(await edges)]);
+      const lateEdges = await edges;
+      setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : []), ...lateEdges]);
+      // The measurement slide is added when the numbers arrive (they can take longer than the maps).
+      if (m && measureShow.current) {
+        const summary = await Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 90000))]);
+        if (summary && runId === generationRun.current) {
+          const card = await buildMeasureCard(m.overlay, m.mask, summary).catch(() => null);
+          if (card) setEdgeMaps((cur) => [...cur.slice(0, (d ? 2 : 0) + 1), card, ...cur.slice((d ? 2 : 0) + 1)]);
+        }
+      }
     });
     // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.
     setWaitingForAnalysis(true);
     const [depthRaw, roofMask] = await Promise.all([
       use.depth ? depthWithin(base, live?.depthTool === 'marigold' || live?.depthTool === 'midas' ? 60000 : 20000) : null,
       use.mask ? roofMaskWithin(base, 20000) : null,
-      // The measurement is optional: wait for it at most 40 s, then generate without it.
-      Promise.race([startMeasure(base), new Promise<void>((r) => setTimeout(r, 40000))]),
+      // The measurement is optional: wait for it at most 15 s, then generate without it.
+      Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 15000))]),
     ]).then(([d, m]) => [d, m] as const);
     const depthMaps = await sharpDepth(depthRaw, roofMask);
     setWaitingForAnalysis(false);

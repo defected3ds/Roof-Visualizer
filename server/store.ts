@@ -357,7 +357,7 @@ function cleanMeasurement(m: MeasurementSettings): MeasurementSettings {
     throw new Error('Measurement: the key variable must be a name like REPLICATE_API_TOKEN (ending in KEY or TOKEN)');
   }
   const wallPrompt = String(m.wallPrompt ?? '').trim().slice(0, 100) || 'wall';
-  return { tool, keyEnv, wallPrompt };
+  return { tool, keyEnv, wallPrompt, show: m.show !== false };
 }
 
 function cleanSegmentation(s: SegmentationSettings): SegmentationSettings {

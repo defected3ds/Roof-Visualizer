@@ -123,6 +123,8 @@ export interface MeasurementSettings {
   keyEnv: string;
   /** What SAM 3 looks for to find the wall (used to work out which way is up). */
   wallPrompt: string;
+  /** Show the measured pitch and area to visitors on the loading screen. */
+  show: boolean;
 }
 
 export interface SegmentationSettings {

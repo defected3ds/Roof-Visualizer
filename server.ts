@@ -121,6 +121,7 @@ async function startServer() {
       // Depth map tool: Marigold on the server (needs its fal.ai key), else Depth Anything in the browser.
       depthTool: ai.depthEstimation.tool !== 'browser' && hasDepthKey(ai.depthEstimation) ? ai.depthEstimation.tool : 'browser',
       // Roof measurements (Depth Pro + SAM 3): on only when both tokens are set.
+      measureShow: ai.measurement.show,
       measureTool: ai.measurement.tool === 'depthpro' && hasMeasurementKey(ai.measurement) && hasSegmentationKey(ai.segmentation) && usesImages ? 'depthpro' : 'off',
       // Line / edge maps on the loading screen (display only).
       edgeMaps: ai.showEdgeMaps,
@@ -367,7 +368,14 @@ async function startServer() {
         cost: measureCost(prices),
         detail: { confidence: m.confidence, planes: m.planes.length, up: m.up },
       });
-      res.json({ ok: true, confidence: m.confidence });
+      // Rounded, and only for a reliable result: this is what visitors may see.
+      const main = [...m.planes].sort((a, b) => b.share - a.share)[0];
+      const round = (v: number, step: number) => Math.max(step, Math.round(v / step) * step);
+      res.json({
+        ok: true,
+        confidence: m.confidence,
+        summary: ai.measurement.show && m.confidence === 'ok' && main ? { pitchDeg: round(main.pitchDeg, 5), areaM2: round(m.roofAreaM2, m.roofAreaM2 >= 20 ? 5 : 1) } : undefined,
+      });
     } catch (err) {
       console.error('[measure] failed:', err);
       res.status(502).json({ code: 'unavailable', error: 'Measurement failed' });

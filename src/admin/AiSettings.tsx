@@ -595,6 +595,9 @@ function MeasurementTool({
               <span className="mt-1 block text-xs font-normal text-muted">The wall shows which way is up, which makes the pitch more exact.</span>
             </label>
           </div>
+          <div className="mt-4">
+            <Toggle label="Show pitch and roof area to visitors on the loading screen (rounded)" checked={m.show} onChange={(v) => setM({ show: v })} />
+          </div>
           <TestMeasure password={password} measurement={m} />
         </>
       )}
