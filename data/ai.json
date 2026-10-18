@@ -32,7 +32,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "bfl-flux-3-image",
+  "activeProvider": "bfl-flux-3-image-klein",
   "providers": [
     {
       "id": "gemini",
