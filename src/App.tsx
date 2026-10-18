@@ -274,46 +274,60 @@ function RoofApp() {
     setNoAnalysis(false);
     // What the admin has switched on right now (not what this page loaded with): only those maps are made and shown.
     const use = live?.analysis ?? analysis;
-    analyseWith(base, use).then(async ([d, m]) => {
-      setNoAnalysis((use.depth || use.mask) && !d && !m);
-      const depthName = d ? (d.source === 'marigold' ? 'Marigold (fal.ai)' : d.source === 'midas' ? 'MiDaS (fal.ai)' : `browser model${d.fallback ? ` (server depth map failed: ${d.fallback})` : ''}`) : 'none';
-      setAnalysisInfo(`Depth map: ${depthName} · Roof mask: ${m ? (m.source === 'sam3' ? 'SAM 3 (fal.ai)' : 'CLIPSeg (browser)') : 'none'}`);
-      const lateEdges = await edges;
-      // Roof measurement (new setup): walls first ("Walls found"), then the roof with the walls still tinted ("Walls found" + "Roof found");
-      // the measurement (arrows, pitch, area) is added to that same roof slide when it arrives.
-      const measuring = measureTool.current === 'depthpro' && measureShow.current;
-      const parts: { wall: RoofMask | null; summary: MeasureOutcome['summary'] | null; depthPro: string | null } = { wall: null, summary: null, depthPro: null };
-      const rebuild = async () => {
+    // The loading-screen slides appear one by one, each as soon as its data exists (depth maps, then walls, roof, Depth Pro's depth and the
+    // measurement), instead of all at once when the slowest service has answered.
+    const measuring = measureTool.current === 'depthpro' && measureShow.current;
+    const parts: {
+      d: Awaited<ReturnType<typeof depthFor>>;
+      m: RoofMask | null;
+      wall: RoofMask | null;
+      summary: MeasureOutcome['summary'] | null;
+      depthPro: string | null;
+      tail: string[];
+    } = { d: null, m: null, wall: null, summary: null, depthPro: null, tail: [] };
+    // Rebuilds run one after the other, so a slow one can't overwrite a newer picture.
+    let queue: Promise<void> = Promise.resolve();
+    const rebuild = () =>
+      (queue = queue.then(async () => {
         if (runId !== generationRun.current) return;
-        const flat = measuring && parts.wall && m ? await roofOverWalls(parts.wall.overlay, m.mask).catch(() => m.overlay) : m?.overlay;
+        const { d, m, wall } = parts;
+        const flat = measuring && wall && m ? await roofOverWalls(wall.overlay, m.mask).catch(() => m.overlay) : m?.overlay;
         const card = flat && m && measuring && parts.summary ? await buildMeasureCard(flat, m.mask, parts.summary).catch(() => flat) : flat;
-        const roofSlide = card ? (measuring ? await captionSlide(card, parts.wall ? [WALL_LABEL, ROOF_LABEL] : [ROOF_LABEL]).catch(() => card) : card) : null;
-        const wallSlide = parts.wall ? await captionSlide(parts.wall.overlay, [WALL_LABEL]).catch(() => parts.wall!.overlay) : null;
-        if (runId !== generationRun.current) return;
+        const roofSlide = card ? (measuring ? await captionSlide(card, wall ? [WALL_LABEL, ROOF_LABEL] : [ROOF_LABEL]).catch(() => card) : card) : null;
+        const wallSlide = wall ? await captionSlide(wall.overlay, [WALL_LABEL]).catch(() => wall.overlay) : null;
         const depthProSlide = parts.depthPro ? await captionSlide(parts.depthPro, 'Distance from the camera: red = near, blue = far').catch(() => parts.depthPro!) : null;
         if (runId !== generationRun.current) return;
         // Order: depth maps, Depth Pro's depth (3rd), walls, roof.
-        setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(depthProSlide ? [depthProSlide] : []), ...(wallSlide ? [wallSlide] : []), ...(roofSlide ? [roofSlide] : [])], tail: lateEdges });
-      };
-      parts.wall = measuring ? await Promise.race([wallMaskFor(base), new Promise<null>((r) => setTimeout(r, 4000))]) : null;
-      await rebuild();
-      if (measuring) {
-        // A wall that arrives late still joins: the walls always stay on the picture.
-        if (!parts.wall) {
-          void wallMaskFor(base).then((w) => {
-            if (!w) return;
-            parts.wall = w;
-            return rebuild();
-          });
-        }
-        const measured = await Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 120000))]);
-        if (runId === generationRun.current && (measured?.depthColor || measured?.summary)) {
-          parts.depthPro = measured.depthColor ?? null;
-          parts.summary = measured.summary ?? null;
-          await rebuild();
-        }
-      }
-    });
+        setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(depthProSlide ? [depthProSlide] : []), ...(wallSlide ? [wallSlide] : []), ...(roofSlide ? [roofSlide] : [])], tail: parts.tail });
+      }));
+    const depthP = use.depth ? depthFor(base) : Promise.resolve(null);
+    const maskP = use.mask ? roofMaskFor(base) : Promise.resolve(null);
+    void (async () => {
+      const raw = await depthP.catch(() => null);
+      parts.d = raw;
+      void rebuild();
+      const m = await maskP.catch(() => null);
+      parts.m = m;
+      parts.d = await sharpDepth(raw, m).catch(() => raw);
+      const d = parts.d;
+      setNoAnalysis((use.depth || use.mask) && !d && !m);
+      const depthName = d ? (d.source === 'marigold' ? 'Marigold (fal.ai)' : d.source === 'midas' ? 'MiDaS (fal.ai)' : `browser model${d.fallback ? ` (server depth map failed: ${d.fallback})` : ''}`) : 'none';
+      setAnalysisInfo(`Depth map: ${depthName} · Roof mask: ${m ? (m.source === 'sam3' ? 'SAM 3 (fal.ai)' : 'CLIPSeg (browser)') : 'none'}`);
+      parts.tail = await edges;
+      void rebuild();
+    })();
+    if (measuring) {
+      void wallMaskFor(base).then((w) => {
+        parts.wall = w;
+        void rebuild();
+      });
+      void Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 120000))]).then((measured) => {
+        if (runId !== generationRun.current || !(measured?.depthColor || measured?.summary)) return;
+        parts.depthPro = measured.depthColor ?? null;
+        parts.summary = measured.summary ?? null;
+        void rebuild();
+      });
+    }
     // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.
     setWaitingForAnalysis(true);
     const [depthRaw, roofMask] = await Promise.all([
