@@ -613,6 +613,8 @@ interface MeasureResult {
   confidence: 'ok' | 'low';
   notes: string[];
   ms: number;
+  debug?: Record<string, number | string>;
+  colorMap?: string;
 }
 
 /** Measures the start photo, or a photo the admin picks (best: a house whose real size is known). */
@@ -689,6 +691,20 @@ function TestMeasure({ password, measurement }: { password: string; measurement:
               ))}
             </ul>
           )}
+          {r.debug && (
+            <details className="mt-2 text-xs text-muted">
+              <summary className="cursor-pointer font-semibold">Details for checking</summary>
+              <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3">
+                {Object.entries(r.debug).map(([k, v]) => (
+                  <div key={k} className="contents">
+                    <dt className="font-semibold">{k}</dt>
+                    <dd>{String(v)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          )}
+          {r.colorMap && <img src={r.colorMap} alt="Depth Pro depth" className="mt-2 w-full max-w-sm rounded-wb border border-line" />}
           {state.text && <pre className="mt-2 whitespace-pre-wrap rounded-[2px] bg-paper p-2 text-xs">{state.text}</pre>}
         </div>
       )}

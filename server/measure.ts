@@ -33,6 +33,8 @@ export interface Measurement {
   confidence: 'ok' | 'low';
   notes: string[];
   ms: number;
+  /** Numbers for checking a measurement by hand (shown in the admin test only). */
+  debug?: Record<string, number | string>;
   /** Depth Pro's coloured depth picture as a data URL (for the loading screen), when it could be fetched. */
   colorMap?: string;
 }
@@ -394,11 +396,18 @@ const percentile = (sorted: number[], q: number) => sorted[Math.min(sorted.lengt
 export function measureGeometry(depth: Float32Array, w: number, h: number, f: number, roof: Uint8Array, wall: Uint8Array | null): Omit<Measurement, 'ms'> {
   const notes: string[] = [];
   const roofCloud = backProject(depth, roof, w, h, f, 6000);
+  const count = (m: Uint8Array | null) => (m ? m.reduce((s, v) => s + (v ? 1 : 0), 0) : 0);
+  const debug: Record<string, number | string> = {
+    roofPixelShare: Math.round((count(roof) / (w * h)) * 1000) / 10 + ' %',
+    wallPixelShare: wall ? Math.round((count(wall) / (w * h)) * 1000) / 10 + ' %' : 'no wall found',
+    roofSamples: roofCloud.n,
+  };
   if (roofCloud.n < 200) {
-    return { planes: [], roofAreaM2: 0, focalPx: f, up: 'level', confidence: 'low', notes: ['Too little of the roof was found to measure.'] };
+    return { planes: [], roofAreaM2: 0, focalPx: f, up: 'level', confidence: 'low', notes: ['Too little of the roof was found to measure.'], debug };
   }
   const zs = Array.from({ length: roofCloud.n }, (_, i) => roofCloud.pts[i * 3 + 2]).sort((a, b) => a - b);
   const thr = Math.max(0.05, 0.02 * zs[zs.length >> 1]);
+  debug.roofDepthM = `${zs[Math.floor(zs.length * 0.05)].toFixed(1)} / ${zs[zs.length >> 1].toFixed(1)} / ${zs[Math.floor(zs.length * 0.95)].toFixed(1)} (5% / median / 95%)`;
 
   // Which way is up: the wall's plane is vertical, so it fixes the camera tilt (no roll assumed).
   let up: V3 = [0, -1, 0];
@@ -406,6 +415,7 @@ export function measureGeometry(depth: Float32Array, w: number, h: number, f: nu
   if (wall) {
     const wallCloud = backProject(depth, wall, w, h, f, 4000);
     const plane = ransacPlane(wallCloud.pts, Array.from({ length: wallCloud.n }, (_, i) => i), thr);
+    debug.wallInliers = plane ? Math.round((plane.inliers.length / wallCloud.n) * 100) + ' %' : 'no plane';
     if (plane && plane.inliers.length > wallCloud.n * 0.4) {
       const uy = plane.n[2];
       const uz = -plane.n[1];
@@ -481,7 +491,8 @@ export function measureGeometry(depth: Float32Array, w: number, h: number, f: nu
     confidence = 'low';
     notes.push('A measured size was not plausible for a house roof.');
   }
-  return { planes, roofAreaM2, focalPx: f, up: upSource, confidence, notes };
+  debug.planeCoverage = Math.round((covered / roofCloud.n) * 100) + ' % of roof samples';
+  return { planes, roofAreaM2, focalPx: f, up: upSource, confidence, notes, debug };
 }
 
 // ---- The whole measurement ---------------------------------------------------------------------
@@ -502,7 +513,14 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
   const roof = unionMasks(roofMasks, d.w, d.h);
   const wall = wallMasks.length ? unionMasks(wallMasks, d.w, d.h) : null;
   const result = measureGeometry(d.depth, d.w, d.h, f, roof, wall);
-  return { ...result, ms: Date.now() - started, colorMap: d.colorMap };
+  const debug = {
+    ...result.debug,
+    depthMap: `${d.w} × ${d.h}`,
+    photo: size ? `${size.width} × ${size.height}` : 'unknown',
+    focalFromDepthPro: Math.round(d.focalPx),
+    focalUsed: Math.round(f),
+  };
+  return { ...result, debug, ms: Date.now() - started, colorMap: d.colorMap };
 }
 
 // ---- Cache by photo, so the measurement made while the visitor looks at the photo is there at Generate ----
