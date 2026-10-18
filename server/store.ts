@@ -357,7 +357,10 @@ function cleanMeasurement(m: MeasurementSettings): MeasurementSettings {
     throw new Error('Measurement: the key variable must be a name like REPLICATE_API_TOKEN (ending in KEY or TOKEN)');
   }
   const wallPrompt = String(m.wallPrompt ?? '').trim().slice(0, 100) || 'wall';
-  return { tool, keyEnv, wallPrompt, show: m.show !== false };
+  const referencePrompt = String(m.referencePrompt ?? '').trim().slice(0, 100);
+  const height = Number(m.referenceHeightM);
+  const referenceHeightM = Number.isFinite(height) && height >= 0.3 && height <= 6 ? Math.round(height * 100) / 100 : 2;
+  return { tool, keyEnv, wallPrompt, referencePrompt, referenceHeightM, show: m.show !== false };
 }
 
 function cleanSegmentation(s: SegmentationSettings): SegmentationSettings {

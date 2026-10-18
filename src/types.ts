@@ -123,6 +123,10 @@ export interface MeasurementSettings {
   keyEnv: string;
   /** What SAM 3 looks for to find the wall (used to work out which way is up). */
   wallPrompt: string;
+  /** What SAM 3 looks for as an object of known height to check the scale, e.g. "door". Empty = no check. */
+  referencePrompt: string;
+  /** Real height of that object in metres (a door is about 2). */
+  referenceHeightM: number;
   /** Show the measured pitch and area to visitors on the loading screen. */
   show: boolean;
 }

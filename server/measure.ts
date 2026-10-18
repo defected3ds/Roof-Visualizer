@@ -242,18 +242,26 @@ export function pngMask(dataUrl: string): { mask: Uint8Array; w: number; h: numb
   return { mask, w, h };
 }
 
+/** One mask resampled (nearest) to w × h. */
+function resampleMask(dataUrl: string, w: number, h: number): Uint8Array {
+  const out = new Uint8Array(w * h);
+  const m = pngMask(dataUrl);
+  for (let y = 0; y < h; y++) {
+    const sy = Math.min(m.h - 1, Math.floor(((y + 0.5) * m.h) / h));
+    for (let x = 0; x < w; x++) {
+      const sx = Math.min(m.w - 1, Math.floor(((x + 0.5) * m.w) / w));
+      if (m.mask[sy * m.w + sx]) out[y * w + x] = 1;
+    }
+  }
+  return out;
+}
+
 /** Union of several masks, resampled (nearest) to w × h. */
 function unionMasks(dataUrls: string[], w: number, h: number): Uint8Array {
   const out = new Uint8Array(w * h);
   for (const url of dataUrls) {
-    const m = pngMask(url);
-    for (let y = 0; y < h; y++) {
-      const sy = Math.min(m.h - 1, Math.floor(((y + 0.5) * m.h) / h));
-      for (let x = 0; x < w; x++) {
-        const sx = Math.min(m.w - 1, Math.floor(((x + 0.5) * m.w) / w));
-        if (m.mask[sy * m.w + sx]) out[y * w + x] = 1;
-      }
-    }
+    const one = resampleMask(url, w, h);
+    for (let i = 0; i < out.length; i++) if (one[i]) out[i] = 1;
   }
   return out;
 }
@@ -393,7 +401,16 @@ function ransacPlane(pts: Float32Array, active: number[], thr: number, rounds = 
 const percentile = (sorted: number[], q: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.floor(q * (sorted.length - 1))))];
 
 /** Planes, pitch and sizes from depth, masks and focal length. Pure geometry, no network. */
-export function measureGeometry(depth: Float32Array, w: number, h: number, f: number, roof: Uint8Array, wall: Uint8Array | null): Omit<Measurement, 'ms'> {
+export function measureGeometry(
+  depth: Float32Array,
+  w: number,
+  h: number,
+  f: number,
+  roof: Uint8Array,
+  wall: Uint8Array | null,
+  /** Masks of objects of known height (doors) and that height in metres: they check and correct the scale. */
+  refs: { masks: Uint8Array[]; heightM: number } | null = null,
+): Omit<Measurement, 'ms'> {
   const notes: string[] = [];
   const roofCloud = backProject(depth, roof, w, h, f, 6000);
   const count = (m: Uint8Array | null) => (m ? m.reduce((s, v) => s + (v ? 1 : 0), 0) : 0);
@@ -434,6 +451,32 @@ export function measureGeometry(depth: Float32Array, w: number, h: number, f: nu
   }
   if (upSource === 'level') notes.push('No usable wall found: the camera was assumed level, so pitch can be off by the real tilt.');
 
+  // Scale check against objects of known height (a door is about 2 m): the measured height says whether the depth scale is right.
+  let scale = 1;
+  if (refs?.masks.length) {
+    const heights: number[] = [];
+    for (const mask of refs.masks) {
+      const cloud = backProject(depth, mask, w, h, f, 1500);
+      if (cloud.n < 120) continue;
+      const along = Array.from({ length: cloud.n }, (_, i) => dot([cloud.pts[i * 3], cloud.pts[i * 3 + 1], cloud.pts[i * 3 + 2]], up)).sort((a, b) => a - b);
+      const height = percentile(along, 0.98) - percentile(along, 0.02);
+      if (height > 0.3 && height < 8) heights.push(height);
+    }
+    if (heights.length) {
+      heights.sort((a, b) => a - b);
+      const measured = heights[heights.length >> 1];
+      const factor = refs.heightM / measured;
+      debug.referenceMeasured = `${measured.toFixed(2)} m (expected ${refs.heightM} m, ${heights.length} object${heights.length > 1 ? 's' : ''})`;
+      if (Math.abs(factor - 1) < 0.08) notes.push('A door in the photo confirms the scale.');
+      else if (factor > 0.5 && factor < 2) {
+        scale = factor;
+        notes.push(`A door in the photo measured ${measured.toFixed(2)} m instead of about ${refs.heightM} m: all sizes were scaled by ${factor.toFixed(2)}.`);
+      } else notes.push(`A door in the photo measured ${measured.toFixed(2)} m, far from ${refs.heightM} m: the depth scale can't be trusted.`);
+      debug.scaleFactor = scale.toFixed(2);
+      if (factor <= 0.5 || factor >= 2) debug.scaleCheck = 'failed';
+    } else notes.push('No usable door found to check the scale.');
+  }
+
   const planes: PlaneResult[] = [];
   let active = Array.from({ length: roofCloud.n }, (_, i) => i);
   let covered = 0;
@@ -472,9 +515,9 @@ export function measureGeometry(depth: Float32Array, w: number, h: number, f: nu
     const slope = percentile(B, 0.99) - percentile(B, 0.01);
     planes.push({
       pitchDeg: Math.round(pitch * 10) / 10,
-      eaveM: Math.round(eave * 10) / 10,
-      slopeM: Math.round(slope * 10) / 10,
-      areaM2: Math.round(area * roofCloud.weight * 10) / 10,
+      eaveM: Math.round(eave * scale * 10) / 10,
+      slopeM: Math.round(slope * scale * 10) / 10,
+      areaM2: Math.round(area * roofCloud.weight * scale * scale * 10) / 10,
       share: plane.inliers.length / roofCloud.n,
     });
   }
@@ -486,6 +529,9 @@ export function measureGeometry(depth: Float32Array, w: number, h: number, f: nu
   } else if (covered < roofCloud.n * 0.4) {
     confidence = 'low';
     notes.push('The roof surface was too uneven or too hidden to fit planes reliably.');
+  }
+  if (debug.scaleCheck === 'failed') {
+    confidence = 'low';
   }
   if (planes.some((p) => p.pitchDeg > 70 || p.eaveM > 60 || p.slopeM > 30)) {
     confidence = 'low';
@@ -502,17 +548,20 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
   const token = process.env[settings.keyEnv];
   if (!token) throw new Error(`${settings.keyEnv} is not set`);
   const started = Date.now();
-  const [d, roofMasks, wallMasks] = await Promise.all([
+  const refPrompt = settings.referencePrompt.trim();
+  const [d, roofMasks, wallMasks, refMasks] = await Promise.all([
     depthPro(token, image),
     segmentRoof(seg, image),
     segmentRoof({ ...seg, prompt: settings.wallPrompt || 'wall' }, image).catch(() => [] as string[]),
+    refPrompt ? segmentRoof({ ...seg, prompt: refPrompt }, image).catch(() => [] as string[]) : Promise.resolve([] as string[]),
   ]);
   if (!roofMasks.length) throw new Error('SAM 3 found no roof in the photo');
   const size = imageSize(image);
   const f = size && size.width !== d.w ? (d.focalPx * d.w) / size.width : d.focalPx;
   const roof = unionMasks(roofMasks, d.w, d.h);
   const wall = wallMasks.length ? unionMasks(wallMasks, d.w, d.h) : null;
-  const result = measureGeometry(d.depth, d.w, d.h, f, roof, wall);
+  const refs = refMasks.length ? { masks: refMasks.map((u) => resampleMask(u, d.w, d.h)), heightM: settings.referenceHeightM } : null;
+  const result = measureGeometry(d.depth, d.w, d.h, f, roof, wall, refs);
   const debug = {
     ...result.debug,
     depthMap: `${d.w} × ${d.h}`,

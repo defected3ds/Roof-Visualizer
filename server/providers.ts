@@ -39,7 +39,7 @@ function defaultDepth(): DepthSettings {
 }
 
 export function defaultMeasurement(): MeasurementSettings {
-  return { tool: 'off', keyEnv: 'REPLICATE_API_TOKEN', wallPrompt: 'wall', show: true };
+  return { tool: 'off', keyEnv: 'REPLICATE_API_TOKEN', wallPrompt: 'wall', referencePrompt: 'door', referenceHeightM: 2, show: true };
 }
 
 export function hasMeasurementKey(m: MeasurementSettings): boolean {

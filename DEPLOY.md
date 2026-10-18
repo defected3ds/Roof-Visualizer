@@ -123,3 +123,7 @@ measures each photo (pitch, eave and slope length, area) and adds a short block 
 It costs one Depth Pro call and two SAM 3 calls per photo (the Costs tab shows it as "Roof measurement"; the Depth Pro price in the price table is a
 guess until you have seen the first Replicate bill). If a photo can't be measured reliably, no numbers are sent. `DEPTH_PRO_VERSION` (optional)
 overrides the Replicate model version. Check the Depth Pro licence for commercial use before going live.
+
+The measurement also checks its scale against an object of known size in the photo (default: a door of 2.0 m, found by SAM 3). If the door measures
+far from its real height, all sizes are scaled to match (within a factor of 2); beyond that the photo is marked not reliable. Change or clear the
+object under Roof measurements. This adds one more SAM 3 call per photo.

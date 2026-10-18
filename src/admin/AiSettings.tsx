@@ -595,6 +595,18 @@ function MeasurementTool({
               <span className="mt-1 block text-xs font-normal text-muted">The wall shows which way is up, which makes the pitch more exact.</span>
             </label>
           </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-semibold">
+              Object of known size, to check the scale
+              <input value={m.referencePrompt} onChange={(e) => setM({ referencePrompt: e.target.value })} placeholder="door" className={fieldClass} />
+              <span className="mt-1 block text-xs font-normal text-muted">SAM 3 looks for it; its measured height is compared with the real one. Empty = no check.</span>
+            </label>
+            <label className="block text-sm font-semibold">
+              Its real height (metres)
+              <input type="number" min={0.3} max={6} step="0.05" value={m.referenceHeightM} onChange={(e) => setM({ referenceHeightM: Number(e.target.value) })} className={fieldClass} />
+              <span className="mt-1 block text-xs font-normal text-muted">A door is about 2.0 m (UK front doors 1.98 m, patio doors about 2.1 m).</span>
+            </label>
+          </div>
           <div className="mt-4">
             <Toggle label="Show pitch and roof area to visitors on the loading screen (rounded)" checked={m.show} onChange={(v) => setM({ show: v })} />
           </div>

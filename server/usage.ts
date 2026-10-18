@@ -91,8 +91,8 @@ export function depthCost(prices: PriceItem[], tool: 'marigold' | 'midas' | 'bro
 }
 
 export const roofMaskCost = (prices: PriceItem[]) => priceOf(prices, 'sam3.photo');
-/** Depth Pro plus two SAM 3 calls (roof and wall). */
-export const measureCost = (prices: PriceItem[]) => priceOf(prices, 'depthpro.photo') + 2 * priceOf(prices, 'sam3.photo');
+/** Depth Pro plus three SAM 3 calls (roof, wall, door). */
+export const measureCost = (prices: PriceItem[]) => priceOf(prices, 'depthpro.photo') + 3 * priceOf(prices, 'sam3.photo');
 
 // ---- Storage ----------------------------------------------------------------------------------
 
