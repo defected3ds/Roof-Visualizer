@@ -1,6 +1,6 @@
 /** The loading-screen slide for the roof measurement: the roof tinted on the photo, with rounded pitch and area at its centre. */
 export interface MeasureSummary {
-  pitchDeg: number;
+  pitchDeg?: number;
   areaM2?: number;
   /** Arrows along the eave and up the slope: [x1, y1, x2, y2] as fractions of the photo, and the length in metres (rounded). */
   eave?: { line: [number, number, number, number]; m: number };
@@ -36,7 +36,9 @@ export async function buildMeasureCard(overlay: string, _mask: string, s: Measur
   if (s.slope) arrow(ctx, s.slope.line, w, h, `about ${fmt(s.slope.m)} m`, label);
 
   const size = Math.max(11, Math.round(w / 60));
-  const lines = [`Roof pitch about ${s.pitchDeg}°`, ...(s.areaM2 ? [`Roof area about ${s.areaM2} m²`] : [])];
+  const lines = [...(s.pitchDeg ? [`Roof pitch about ${s.pitchDeg}°`] : []), ...(s.areaM2 ? [`Roof area about ${s.areaM2} m²`] : [])];
+  if (!lines.length && !s.eave && !s.slope) return overlay;
+  if (!lines.length) return canvas.toDataURL('image/jpeg', 0.88);
   ctx.font = `600 ${size}px "Noto Sans", system-ui, sans-serif`;
   const textW = Math.max(...lines.map((l) => ctx.measureText(l).width));
   const padX = size * 0.7;

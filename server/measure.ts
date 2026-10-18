@@ -6,6 +6,7 @@
 import { inflateRawSync, inflateSync } from 'node:zlib';
 import { imageSize } from './providers';
 import { segmentCached } from './segcache';
+import { encodePng, turbo } from './png';
 import type { MeasurementSettings, Product, SegmentationSettings } from '../src/types';
 
 const REPLICATE = process.env.REPLICATE_API_URL || 'https://api.replicate.com/v1';
@@ -51,7 +52,7 @@ export interface Measurement {
 
 // ---- Depth Pro on Replicate -----------------------------------------------------------------
 
-async function depthPro(token: string, image: string): Promise<{ depth: Float32Array; w: number; h: number; focalPx: number; colorMap?: string }> {
+async function depthPro(token: string, image: string): Promise<{ depth: Float32Array; w: number; h: number; focalPx: number }> {
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
   const res = await fetch(`${REPLICATE}/predictions`, {
     method: 'POST',
@@ -77,18 +78,7 @@ async function depthPro(token: string, image: string): Promise<{ depth: Float32A
   const { depth, w, h } = readNpzDepth(Buffer.from(await file.arrayBuffer()));
   const focalPx = Number(out.focal_length_px);
   if (!Number.isFinite(focalPx) || focalPx <= 0) throw new Error('Depth Pro returned no focal length');
-  let colorMap: string | undefined;
-  if (out.color_map?.startsWith('http')) {
-    try {
-      const pic = await fetch(out.color_map, { signal: AbortSignal.timeout(30_000) });
-      const type = pic.headers.get('content-type') || 'image/png';
-      const bytes = pic.ok ? Buffer.from(await pic.arrayBuffer()) : null;
-      if (bytes && bytes.length < 3_000_000 && type.startsWith('image/')) colorMap = `data:${type};base64,${bytes.toString('base64')}`;
-    } catch {
-      /* the picture is only decoration */
-    }
-  }
-  return { depth, w, h, focalPx, colorMap };
+  return { depth, w, h, focalPx };
 }
 
 /** Uploads the photo to Replicate's file store and returns its URL (a large data URL in the request body is slow and may be refused). Falls back to the data URL. */
@@ -609,6 +599,33 @@ export function measureGeometry(
   return { planes, roofAreaM2, focalPx: f, up: upSource, confidence, notes, debug, scaleChecked };
 }
 
+/** Depth as a colour picture (near = warm, far = cool), at most 640 px wide, coloured over the 2–98% range of the pixels in `focus`. */
+function depthPicture(depth: Float32Array, w: number, h: number, focus: Uint8Array): string | undefined {
+  const valid = (z: number) => Number.isFinite(z) && z > 0.1 && z < 500;
+  let zs: number[] = [];
+  for (let i = 0; i < depth.length; i += 7) if (focus[i] && valid(depth[i])) zs.push(depth[i]);
+  if (zs.length < 500) {
+    zs = [];
+    for (let i = 0; i < depth.length; i += 7) if (valid(depth[i])) zs.push(depth[i]);
+  }
+  if (zs.length < 100) return undefined;
+  zs.sort((a, b) => a - b);
+  const lo = percentile(zs, 0.02);
+  const hi = Math.max(percentile(zs, 0.98), lo + 0.5);
+  const scale = Math.min(1, 640 / w);
+  const ow = Math.max(1, Math.round(w * scale));
+  const oh = Math.max(1, Math.round(h * scale));
+  const rgb = new Uint8Array(ow * oh * 3);
+  for (let y = 0; y < oh; y++) {
+    for (let x = 0; x < ow; x++) {
+      const z = depth[Math.min(h - 1, Math.floor(y / scale)) * w + Math.min(w - 1, Math.floor(x / scale))];
+      const t = valid(z) ? 1 - (z - lo) / (hi - lo) : 0;
+      rgb.set(turbo(t), (y * ow + x) * 3);
+    }
+  }
+  return `data:image/png;base64,${encodePng(rgb, ow, oh).toString('base64')}`;
+}
+
 // ---- The whole measurement ---------------------------------------------------------------------
 
 /** Measures the roof in a photo. Throws on provider errors; returns confidence "low" when the photo can't be trusted. */
@@ -646,7 +663,11 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
     focalFromDepthPro: Math.round(d.focalPx),
     focalUsed: Math.round(f),
   };
-  return { ...result, debug, ms: Date.now() - started, colorMap: d.colorMap, samCalls };
+  // A depth picture for the loading screen, coloured over the distances of the house, ground and door only (not the sky).
+  const focus = new Uint8Array(d.w * d.h);
+  for (const mask of [roof, wall, ground?.mask, ...(refs?.masks ?? [])]) if (mask) for (let i = 0; i < focus.length; i++) if (mask[i]) focus[i] = 1;
+  const colorMap = depthPicture(d.depth, d.w, d.h, focus);
+  return { ...result, debug, ms: Date.now() - started, colorMap, samCalls };
 }
 
 // ---- Cache by photo, so the measurement made while the visitor looks at the photo is there at Generate ----

@@ -29,6 +29,7 @@ import { createProvider, estimateDepth, hasDepthKey, hasKey, hasMeasurementKey, 
 import { buildModelPrompt, type ImageRoles } from './src/lib/prompt';
 import { requestContext } from './server/visitor';
 import { segmentCached } from './server/segcache';
+import { reliablePitch } from './src/lib/measureText';
 import { measureRoof, measurementText, recallMeasurement, rememberMeasurement } from './server/measure';
 import { activePriceIds, attachPreviews, depthCost, measureCost, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
 import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
@@ -372,14 +373,16 @@ async function startServer() {
       // Rounded, and only for a reliable result: this is what visitors may see.
       const main = [...m.planes].sort((a, b) => b.share - a.share)[0];
       const round = (v: number, step: number) => Math.max(step, Math.round(v / step) * step);
+      const pitch = reliablePitch(m);
       res.json({
         ok: true,
         confidence: m.confidence,
         depthColor: ai.measurement.show && m.confidence === 'ok' ? m.colorMap : undefined,
         summary:
-          ai.measurement.show && m.confidence === 'ok' && main
+          ai.measurement.show && m.confidence === 'ok' && main && (pitch !== undefined || m.scaleChecked)
             ? {
-                pitchDeg: round(main.pitchDeg, 5),
+                // The pitch only when "up" came from a wall and the planes agree; a hip roof or an aerial view gets no single number.
+                pitchDeg: pitch !== undefined ? round(pitch, 5) : undefined,
                 // Sizes only when a door or the camera height confirmed the scale; otherwise just the pitch.
                 areaM2: m.scaleChecked ? round(m.roofAreaM2, m.roofAreaM2 >= 20 ? 5 : 1) : undefined,
                 eave: m.scaleChecked && main.eaveLine && main.eaveLineM ? { line: main.eaveLine, m: Math.max(0.5, Math.round(main.eaveLineM * 2) / 2) } : undefined,

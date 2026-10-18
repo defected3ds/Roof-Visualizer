@@ -5,7 +5,23 @@ export interface MeasureForText {
   confidence: 'ok' | 'low';
   /** True when a door or the camera height confirmed the metric scale; if not, only the pitch is sent. */
   scaleChecked?: boolean;
-  planes: { pitchDeg: number; eaveM: number; slopeM: number; areaM2: number }[];
+  /** How "up" was found: from a wall (reliable) or by assuming a level camera (the pitch can be off by the camera's tilt). */
+  up?: 'wall' | 'level';
+  planes: { pitchDeg: number; eaveM: number; slopeM: number; areaM2: number; share?: number }[];
+}
+
+/**
+ * The roof pitch to show or send: only when "up" came from a wall and the larger planes agree (within 10°). A hip roof, a camera looking
+ * down from above or a missing wall make a single number unreliable, and then none is given.
+ */
+export function reliablePitch(m: MeasureForText): number | undefined {
+  if (m.up !== 'wall') return undefined;
+  const big = m.planes.filter((p) => (p.share ?? 1) >= 0.15);
+  if (!big.length) return undefined;
+  const pitches = big.map((p) => p.pitchDeg);
+  if (Math.max(...pitches) - Math.min(...pitches) > 10) return undefined;
+  const total = big.reduce((s, p) => s + (p.share ?? 1), 0);
+  return big.reduce((s, p) => s + p.pitchDeg * (p.share ?? 1), 0) / total;
 }
 
 /** First number (mm) in a spec whose label contains one of the words, e.g. "Cover width: 165 mm". */
@@ -28,14 +44,15 @@ function specMm(product: Product | undefined, words: string[]): number | undefin
  */
 export function measurementText(m: MeasureForText | undefined, product?: Product): string {
   if (!m || m.confidence !== 'ok' || !m.planes.length) return '';
+  const pitch = reliablePitch(m);
   const cover = specMm(product, ['cover', 'width']);
   const gauge = specMm(product, ['batten', 'gauge']) ?? specMm(product, ['gauge']);
   if (!m.scaleChecked) {
-    const p = m.planes[0];
-    return `ROOF MEASUREMENT (estimated from the photo): the main roof plane has a pitch of about ${Math.round(p.pitchDeg)}°. Use it only to understand the roof's slope; the photo and the product photos decide the result.`;
+    if (pitch === undefined) return '';
+    return `ROOF MEASUREMENT (estimated from the photo): the roof has a pitch of about ${Math.round(pitch)}°. Use it only to understand the roof's slope; the photo and the product photos decide the result.`;
   }
   const lines = m.planes.map((p, i) => {
-    let line = `Roof plane ${i + 1}: pitch about ${Math.round(p.pitchDeg)}°, eave about ${p.eaveM.toFixed(1)} m, slope length about ${p.slopeM.toFixed(1)} m, area about ${Math.round(p.areaM2)} m²`;
+    let line = `Roof plane ${i + 1}: ${pitch !== undefined ? `pitch about ${Math.round(pitch)}°, ` : ''}eave about ${p.eaveM.toFixed(1)} m, slope length about ${p.slopeM.toFixed(1)} m, area about ${Math.round(p.areaM2)} m²`;
     if (cover && gauge) {
       const per = Math.max(1, Math.round((p.eaveM * 1000) / cover));
       const courses = Math.max(1, Math.round((p.slopeM * 1000) / gauge));
