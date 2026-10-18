@@ -394,7 +394,8 @@ async function startServer() {
       res.json({
         ok: true,
         confidence: m.confidence,
-        depthColor: ai.measurement.show && m.confidence === 'ok' ? m.colorMap : undefined,
+        // The depth picture is only a visualization of the depth data, so it is shown whether or not the numbers are reliable.
+        depthColor: ai.measurement.show ? m.colorMap : undefined,
         summary:
           ai.measurement.show && m.confidence === 'ok' && main && (pitch !== undefined || m.scaleChecked)
             ? {

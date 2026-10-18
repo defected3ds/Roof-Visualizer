@@ -152,7 +152,7 @@ function GeneratingOverlay({
       // The list changed (a late slide, or the roof slide replaced by the measured one): stay on the slide being shown, so the show
       // never jumps; slides added before it appear in the next round.
       const elapsed = Date.now() - mapsSince;
-      const idx = Math.floor(elapsed / 3500) % prev.length;
+      const idx = Math.min(Math.floor(elapsed / 3500), prev.length - 1);
       let j = edgeMaps.indexOf(prev[idx]);
       if (j < 0) j = Math.min(idx, edgeMaps.length - 1);
       setMapsSince(Date.now() - (j * 3500 + (elapsed % 3500)));
@@ -161,9 +161,9 @@ function GeneratingOverlay({
     prevMaps.current = edgeMaps;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edgeMaps]);
-  // The show runs through the slides in order and starts again from the first while the image is being made, so a slide that arrives
-  // late takes its place in the next round instead of making the show jump back.
-  const stage = edgeMaps.length ? Math.floor((now - mapsSince) / 3500) % edgeMaps.length : 0;
+  // The show goes through the slides once, in order, and stays on the last one until the result arrives; a slide that arrives late
+  // is added behind the others and shown when its turn comes.
+  const stage = Math.min(Math.floor((now - mapsSince) / 3500), edgeMaps.length - 1);
   const r = 26;
   const circ = 2 * Math.PI * r;
   const progress = (elapsed % 12) / 12;
