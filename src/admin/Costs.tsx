@@ -477,6 +477,8 @@ interface MeasureDetail {
   planes?: { pitchDeg: number; eaveM: number; slopeM: number; areaM2: number; share: number }[];
   notes?: string[];
   debug?: Record<string, string | number>;
+  costLines?: { label: string; cost: number }[];
+  depthThumb?: string;
 }
 
 /** Everything about the roof measurement of a generation's photo, in one drop-down. */
@@ -527,12 +529,37 @@ function MeasureInfo({ gen, measure }: { gen: UsageEvent; measure?: UsageEvent }
                 </tbody>
               </table>
             )}
+            {d.costLines && d.costLines.length > 0 && (
+              <div>
+                <p className="font-semibold">What this measurement cost (estimates)</p>
+                <table className="mt-1 w-full text-left">
+                  <tbody>
+                    {d.costLines.map((l, i) => (
+                      <tr key={i} className="border-t border-line first:border-t-0">
+                        <td className="py-1 pr-2">{l.label}</td>
+                        <td className="py-1 text-right">{money(l.cost)}</td>
+                      </tr>
+                    ))}
+                    <tr className="border-t border-line font-semibold">
+                      <td className="py-1 pr-2">Total</td>
+                      <td className="py-1 text-right">{money(d.costLines.reduce((s, l) => s + l.cost, 0))}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
             {d.notes && d.notes.length > 0 && (
               <ul className="list-disc pl-5 text-muted">
                 {d.notes.map((n) => (
                   <li key={n}>{n}</li>
                 ))}
               </ul>
+            )}
+            {d.depthThumb && (
+              <div>
+                <p className="font-semibold">Depth Pro depth (red = near, blue = far)</p>
+                <img src={d.depthThumb} alt="Depth Pro depth" className="mt-1 h-40 rounded-[2px] border border-line" />
+              </div>
             )}
             {d.debug && (
               <dl className="grid grid-cols-[auto_1fr] gap-x-3 text-muted">

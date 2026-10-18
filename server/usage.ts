@@ -25,7 +25,7 @@ export function defaultPrices(): PriceItem[] {
   ];
 }
 
-const priceOf = (prices: PriceItem[], id: string) => prices.find((p) => p.id === id)?.price ?? defaultPrices().find((p) => p.id === id)?.price ?? 0;
+export const priceOf = (prices: PriceItem[], id: string) => prices.find((p) => p.id === id)?.price ?? defaultPrices().find((p) => p.id === id)?.price ?? 0;
 
 const megapixels = (dataUrl: string) => {
   try {

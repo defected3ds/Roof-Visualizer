@@ -42,6 +42,10 @@ export interface Measurement {
   ms: number;
   /** How many SAM 3 calls this measurement actually made (masks already made for the photo are reused). */
   samCalls?: number;
+  /** Which SAM 3 prompts this measurement asked for, and whether each was a paid call or shared with the browser's earlier one. */
+  samUsed?: { prompt: string; fresh: boolean }[];
+  /** A small version of the depth picture (for the cost history). */
+  depthThumb?: string;
   /** True when a door or the camera height confirmed (or corrected) the metric scale; if not, only the pitch can be trusted. */
   scaleChecked?: boolean;
   /** Numbers for checking a measurement by hand (shown in the admin test only). */
@@ -607,7 +611,7 @@ export function measureGeometry(
 }
 
 /** Depth as a colour picture (near = warm, far = cool), at most 800 px wide, coloured over the 2–98% range of the pixels in `focus`. */
-function depthPicture(depth: Float32Array, w: number, h: number, focus: Uint8Array): string | undefined {
+function depthPicture(depth: Float32Array, w: number, h: number, focus: Uint8Array, maxWidth = 800): string | undefined {
   const valid = (z: number) => Number.isFinite(z) && z > 0.1 && z < 500;
   let zs: number[] = [];
   for (let i = 0; i < depth.length; i += 7) if (focus[i] && valid(depth[i])) zs.push(depth[i]);
@@ -619,7 +623,7 @@ function depthPicture(depth: Float32Array, w: number, h: number, focus: Uint8Arr
   zs.sort((a, b) => a - b);
   const lo = percentile(zs, 0.02);
   const hi = Math.max(percentile(zs, 0.98), lo + 0.5);
-  const scale = Math.min(1, 800 / w);
+  const scale = Math.min(1, maxWidth / w);
   const ow = Math.max(1, Math.round(w * scale));
   const oh = Math.max(1, Math.round(h * scale));
   // Sample the depth for each output pixel, then take the median of 5 × 5: the thin band of in-between values along an edge (roof against
@@ -657,9 +661,11 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
   const refPrompt = settings.referencePrompt.trim();
   const groundPrompt = settings.groundPrompt.trim();
   let samCalls = 0;
+  const samUsed: { prompt: string; fresh: boolean }[] = [];
   const sam = (prompt: string) => {
     const { job, fresh } = segmentCached(photoId, { ...seg, prompt }, image);
     if (fresh) samCalls++;
+    samUsed.push({ prompt, fresh });
     return job;
   };
   const [d, roofMasks, wallMasks, refMasks, groundMasks] = await Promise.all([
@@ -688,7 +694,8 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
   const focus = new Uint8Array(d.w * d.h);
   for (const mask of [roof, wall, ground?.mask, ...(refs?.masks ?? [])]) if (mask) for (let i = 0; i < focus.length; i++) if (mask[i]) focus[i] = 1;
   const colorMap = depthPicture(d.depth, d.w, d.h, focus);
-  return { ...result, debug, ms: Date.now() - started, colorMap, samCalls };
+  const depthThumb = depthPicture(d.depth, d.w, d.h, focus, 240);
+  return { ...result, debug, ms: Date.now() - started, colorMap, samCalls, samUsed, depthThumb };
 }
 
 // ---- Cache by photo, so the measurement made while the visitor looks at the photo is there at Generate ----

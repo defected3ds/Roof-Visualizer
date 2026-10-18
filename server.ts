@@ -31,7 +31,7 @@ import { requestContext } from './server/visitor';
 import { segmentCached } from './server/segcache';
 import { reliablePitch } from './src/lib/measureText';
 import { measureRoof, measurementText, recallMeasurement, rememberMeasurement } from './server/measure';
-import { activePriceIds, attachPreviews, depthCost, measureCost, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
+import { activePriceIds, attachPreviews, depthCost, measureCost, priceOf, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
 import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_HOUR) || 20;
@@ -376,6 +376,12 @@ async function startServer() {
           focalPx: Math.round(m.focalPx),
           roofAreaM2: m.roofAreaM2,
           samCalls: m.samCalls,
+          // What this measurement cost, line by line (estimates from the price table; the real bills are at Replicate and fal.ai).
+          costLines: [
+            { label: 'Depth Pro on Replicate', cost: priceOf(prices, 'depthpro.photo') },
+            ...(m.samUsed ?? []).map((s) => ({ label: `SAM 3 on fal.ai: “${s.prompt}”${s.fresh ? '' : ' (shared with the roof/wall mask already made)'}`, cost: s.fresh ? priceOf(prices, 'sam3.photo') : 0 })),
+          ],
+          depthThumb: m.depthThumb,
           planes: m.planes.map((p) => ({ pitchDeg: p.pitchDeg, eaveM: p.eaveM, slopeM: p.slopeM, areaM2: p.areaM2, share: Math.round(p.share * 100) / 100 })),
           notes: m.notes,
           debug: m.debug,
