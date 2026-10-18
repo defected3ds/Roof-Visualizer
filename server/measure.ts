@@ -694,7 +694,7 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
 // ---- Cache by photo, so the measurement made while the visitor looks at the photo is there at Generate ----
 
 const cache = new Map<string, { at: number; m: Measurement }>();
-const TTL = 60 * 60 * 1000;
+const TTL = 24 * 60 * 60 * 1000;
 
 export function rememberMeasurement(photoId: string, m: Measurement) {
   const now = Date.now();
