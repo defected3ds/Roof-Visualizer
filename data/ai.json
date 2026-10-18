@@ -32,7 +32,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "open-ai-gpt-2-5",
+  "activeProvider": "bfl-flux-3-image",
   "providers": [
     {
       "id": "gemini",
