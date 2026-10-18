@@ -637,6 +637,9 @@ function RoofApp() {
           <ToolButton label="Full screen" onClick={() => setFullscreen(true)} disabled={busy}>
             <Maximize size={20} />
           </ToolButton>
+          <ToolButton label="Download image" onClick={() => downloadImage(current, fileTitle)} disabled={busy || current === base}>
+            <Download size={20} />
+          </ToolButton>
         </div>
         <div className="flex gap-2">
           <ToolButton label="Undo" onClick={() => step(-1)} disabled={busy || (cursor === 0 && results.length === 0)}>
