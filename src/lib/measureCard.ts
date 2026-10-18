@@ -35,26 +35,7 @@ export async function buildMeasureCard(overlay: string, _mask: string, s: Measur
   if (s.eave) arrow(ctx, s.eave.line, w, h, `about ${fmt(s.eave.m)} m`, label);
   if (s.slope) arrow(ctx, s.slope.line, w, h, `about ${fmt(s.slope.m)} m`, label);
 
-  const size = Math.max(11, Math.round(w / 60));
-  const lines = [...(s.pitchDeg ? [`Roof pitch about ${s.pitchDeg}°`] : []), ...(s.areaM2 ? [`Roof area about ${s.areaM2} m²`] : [])];
-  if (!lines.length && !s.eave && !s.slope) return overlay;
-  if (!lines.length) return canvas.toDataURL('image/jpeg', 0.88);
-  ctx.font = `600 ${size}px "Noto Sans", system-ui, sans-serif`;
-  const textW = Math.max(...lines.map((l) => ctx.measureText(l).width));
-  const padX = size * 0.7;
-  const padY = size * 0.5;
-  const boxW = textW + padX * 2;
-  const boxH = lines.length * size * 1.3 + padY * 2 - size * 0.3;
-  const margin = Math.round(w / 60);
-  const x = margin;
-  const y = h - boxH - margin;
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.beginPath();
-  ctx.roundRect(x, y, boxW, boxH, size * 0.35);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.textBaseline = 'top';
-  lines.forEach((l, i) => ctx.fillText(l, x + padX, y + padY + i * size * 1.3));
+  // Only the arrows with their lengths are drawn; the pitch and area are not written on the picture.
   return canvas.toDataURL('image/jpeg', 0.88);
 }
 
