@@ -33,7 +33,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "bfl-flux-3-image-klein",
+  "activeProvider": "openai-gpt-image-2-5-sunburst",
   "providers": [
     {
       "id": "gemini",
