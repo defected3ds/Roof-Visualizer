@@ -22,7 +22,7 @@ import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
 import { configureDepth, depthFor, depthWithin, snapToMask } from './lib/depth';
 import { configureRoofMask, roofMaskFor, roofMaskWithin, wallMaskFor } from './lib/roofmask';
-import { buildMeasureCard, captionSlide, type MeasureOutcome } from './lib/measureCard';
+import { buildMeasureCard, captionSlide, roofOverWalls, type MeasureOutcome } from './lib/measureCard';
 import { buildEdgeMaps, fileToDataUrl, shareImage, thumbnail } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
@@ -287,7 +287,12 @@ function RoofApp() {
       const measuring = measureTool.current === 'depthpro' && measureShow.current;
       const wall = measuring ? await Promise.race([wallMaskFor(base), new Promise<null>((r) => setTimeout(r, 12000))]) : null;
       const wallSlide = wall ? await captionSlide(wall.overlay, 'Walls found').catch(() => wall.overlay) : null;
-      const roofSlide = m ? (measuring ? await captionSlide(m.overlay, 'Roof found').catch(() => m.overlay) : m.overlay) : null;
+      // The walls stay tinted blue on the roof slide.
+      const roofSlide = m
+        ? measuring
+          ? await (wall ? roofOverWalls(wall.overlay, m.mask, 'Walls and roof found') : captionSlide(m.overlay, 'Roof found')).catch(() => m.overlay)
+          : m.overlay
+        : null;
       setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(wallSlide ? [wallSlide] : []), ...(roofSlide ? [roofSlide] : [])], tail: lateEdges });
       // Depth Pro's depth and the measured numbers join the show when they arrive.
       if (measuring) {
@@ -296,7 +301,10 @@ function RoofApp() {
         };
         const measured = await Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 120000))]);
         add(measured?.depthColor);
-        if (measured?.summary && m) add(await buildMeasureCard(m.overlay, m.mask, measured.summary).catch(() => null));
+        if (measured?.summary && m) {
+          const base = wall ? await roofOverWalls(wall.overlay, m.mask).catch(() => m.overlay) : m.overlay;
+          add(await buildMeasureCard(base, m.mask, measured.summary).catch(() => null));
+        }
       }
     });
     // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.

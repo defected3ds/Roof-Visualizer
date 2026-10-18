@@ -123,3 +123,27 @@ export async function captionSlide(src: string, text: string): Promise<string> {
   ctx.fillText(text, margin + size * 0.7, margin + size * 0.95);
   return canvas.toDataURL('image/jpeg', 0.88);
 }
+
+/** The wall slide with the roof tinted red on top, so the walls stay visible (blue) while the roof is shown. */
+export async function roofOverWalls(wallOverlay: string, roofMask: string, text?: string): Promise<string> {
+  const [base, mask] = await Promise.all([load(wallOverlay), load(roofMask)]);
+  const w = base.naturalWidth;
+  const h = base.naturalHeight;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(mask, 0, 0, w, h);
+  const m = ctx.getImageData(0, 0, w, h).data;
+  const tint = ctx.createImageData(w, h);
+  for (let i = 0; i < w * h; i++) tint.data.set([179, 0, 0, Math.round(m[i * 4] * 0.6)], i * 4);
+  ctx.clearRect(0, 0, w, h);
+  ctx.drawImage(base, 0, 0, w, h);
+  const layer = document.createElement('canvas');
+  layer.width = w;
+  layer.height = h;
+  layer.getContext('2d')!.putImageData(tint, 0, 0);
+  ctx.drawImage(layer, 0, 0);
+  const out = canvas.toDataURL('image/jpeg', 0.88);
+  return text ? captionSlide(out, text) : out;
+}
