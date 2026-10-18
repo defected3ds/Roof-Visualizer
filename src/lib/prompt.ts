@@ -109,9 +109,10 @@ export function buildFinalPrompt(
   category: Category | undefined,
   roles: ImageRoles,
   variant = 0,
+  measurements = '',
 ): string {
   let text = settings.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT;
-  const productText = productBlock(settings, product, category);
+  const productText = [productBlock(settings, product, category), measurements].filter(Boolean).join('\n\n');
   const imagesText = imageGuide(roles);
   text = text.includes('{{product}}') ? text.replace('{{product}}', productText) : `${text}\n\n${productText}`;
   text = text.includes('{{images}}') ? text.replace('{{images}}', imagesText) : `${text}\n\n${imagesText}`;
@@ -130,15 +131,17 @@ export function buildModelPrompt(
   category: Category | undefined,
   roles: ImageRoles,
   variant = 0,
+  measurements = '',
 ): { prompt: string; shortened: boolean } {
   const own = cfg.systemPrompt?.trim() ? { ...settings, systemPrompt: cfg.systemPrompt } : settings;
-  const full = buildFinalPrompt(own, product, category, roles, variant);
+  const full = buildFinalPrompt(own, product, category, roles, variant, measurements);
   const limit = promptLimit(cfg);
   if (!limit || full.length <= limit) return { prompt: full, shortened: false };
 
   // Keep product data + image guide (+ variation note) whole, and fit as much of the system prompt as possible.
   const tail = [
     productBlock(own, product, category),
+    measurements,
     imageGuide(roles),
     variant > 0 ? `Variation ${variant + 1}: allow natural, subtle differences in colour blend and weathering.` : '',
   ]

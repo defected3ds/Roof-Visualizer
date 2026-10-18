@@ -99,6 +99,8 @@ export interface AiSettings {
   segmentation: SegmentationSettings;
   /** How the depth map is made. */
   depthEstimation: DepthSettings;
+  /** Optional roof measurements (pitch, size, tile counts) added to the prompt. */
+  measurement: MeasurementSettings;
   activeProvider: string;
   providers: ProviderConfig[];
 }
@@ -111,6 +113,16 @@ export interface DepthSettings {
   keyEnv: string;
   /** Marigold speed / quality preset. */
   quality: 'fast' | 'balanced' | 'best';
+}
+
+/** Roof measurements from the photo: SAM 3 finds roof and wall, Depth Pro gives metric depth, the server fits planes. */
+export interface MeasurementSettings {
+  /** off = the old setup, nothing measured; depthpro = Apple Depth Pro on Replicate plus SAM 3. */
+  tool: 'off' | 'depthpro';
+  /** Env variable with the Replicate token, e.g. REPLICATE_API_TOKEN. */
+  keyEnv: string;
+  /** What SAM 3 looks for to find the wall (used to work out which way is up). */
+  wallPrompt: string;
 }
 
 export interface SegmentationSettings {
@@ -128,6 +140,8 @@ export interface AiSettingsView {
   keyStatus: Record<string, boolean>;
   /** Whether the roof mask tool's key is set on the server. */
   segmentationKey: boolean;
+  /** Whether the measurement tool's token is set on the server. */
+  measurementKey: boolean;
   /** Whether the depth map tool's key is set on the server. */
   depthKey: boolean;
 }

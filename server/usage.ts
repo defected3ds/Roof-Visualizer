@@ -20,6 +20,7 @@ export function defaultPrices(): PriceItem[] {
     { id: 'other.image', label: 'Other image models (fal.ai, kie.ai, Replicate, GPT Image 1)', unit: 'result', price: 0.05, note: 'A rough default: check the provider price page' },
     { id: 'sam3.photo', label: 'Meta SAM 3 roof mask (fal.ai)', unit: 'photo', price: 0.005 },
     { id: 'marigold.second', label: 'Marigold depth map (fal.ai)', unit: 'compute second', price: 0.000575 },
+    { id: 'depthpro.photo', label: 'Depth Pro measurement (Replicate)', unit: 'photo', price: 0.01, note: 'a guess: check the first call on your Replicate usage page' },
     { id: 'midas.photo', label: 'MiDaS depth map (fal.ai)', unit: 'photo', price: 0.002, note: 'fal.ai lists no price: a guess, check the model page' },
   ];
 }
@@ -79,6 +80,7 @@ export function activePriceIds(ai: AiSettings): string[] {
   if (ai.segmentation.tool === 'sam3') ids.push('sam3.photo');
   if (ai.depthEstimation.tool === 'marigold') ids.push('marigold.second');
   if (ai.depthEstimation.tool === 'midas') ids.push('midas.photo');
+  if (ai.measurement.tool === 'depthpro') ids.push('depthpro.photo');
   return ids;
 }
 
@@ -89,6 +91,8 @@ export function depthCost(prices: PriceItem[], tool: 'marigold' | 'midas' | 'bro
 }
 
 export const roofMaskCost = (prices: PriceItem[]) => priceOf(prices, 'sam3.photo');
+/** Depth Pro plus two SAM 3 calls (roof and wall). */
+export const measureCost = (prices: PriceItem[]) => priceOf(prices, 'depthpro.photo') + 2 * priceOf(prices, 'sam3.photo');
 
 // ---- Storage ----------------------------------------------------------------------------------
 

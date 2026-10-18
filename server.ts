@@ -25,10 +25,11 @@ import {
   SITE_URL_PREFIX,
   syncFromGitHub,
 } from './server/store';
-import { createProvider, estimateDepth, hasDepthKey, hasKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
+import { createProvider, estimateDepth, hasDepthKey, hasKey, hasMeasurementKey, hasSegmentationKey, imageLimit, PROVIDER_TYPES, segmentRoof, type Provider } from './server/providers';
 import { buildModelPrompt, type ImageRoles } from './src/lib/prompt';
 import { requestContext } from './server/visitor';
-import { activePriceIds, attachPreviews, depthCost, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
+import { measureRoof, measurementText, recallMeasurement, rememberMeasurement } from './server/measure';
+import { activePriceIds, attachPreviews, depthCost, measureCost, imageCost, listUsage, purgeUsage, recordUsage, roofMaskCost, usageLastError, usageStorage } from './server/usage';
 import type { AiSettings, Category, GenerateBody, Product, ProductInput, ProviderConfig, Texts } from './src/types';
 // Generations allowed per visitor IP per hour (each generation is several paid model calls).
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_HOUR) || 20;
@@ -119,6 +120,8 @@ async function startServer() {
       maskTool: ai.segmentation.tool === 'sam3' && hasSegmentationKey(ai.segmentation) ? 'sam3' : 'clipseg',
       // Depth map tool: Marigold on the server (needs its fal.ai key), else Depth Anything in the browser.
       depthTool: ai.depthEstimation.tool !== 'browser' && hasDepthKey(ai.depthEstimation) ? ai.depthEstimation.tool : 'browser',
+      // Roof measurements (Depth Pro + SAM 3): on only when both tokens are set.
+      measureTool: ai.measurement.tool === 'depthpro' && hasMeasurementKey(ai.measurement) && hasSegmentationKey(ai.segmentation) && usesImages ? 'depthpro' : 'off',
       // Line / edge maps on the loading screen (display only).
       edgeMaps: ai.showEdgeMaps,
     });
@@ -212,6 +215,28 @@ async function startServer() {
       res.status(502).json({ error: String(err?.message ?? err).slice(0, 400) });
     }
   });
+  // "Test measurements" in AI settings: the full numbers for one photo.
+  admin.post('/test-measure', async (req, res) => {
+    const { image, measurement } = (req.body ?? {}) as { image?: string; measurement?: Partial<AiSettings['measurement']> };
+    if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
+    const ai = getAiSettings();
+    const settings = { ...ai.measurement, ...measurement, tool: 'depthpro' as const };
+    try {
+      const m = await measureRoof(settings, { ...ai.segmentation, tool: 'sam3' }, image);
+      void recordUsage({
+        kind: 'test-measure',
+        provider: 'Depth Pro (Replicate) + SAM 3',
+        model: 'depth-pro',
+        ms: m.ms,
+        cost: measureCost(getUsageSettings().prices),
+        detail: { confidence: m.confidence, planes: m.planes.length, up: m.up },
+      });
+      res.json({ measurement: m, text: measurementText(m) });
+    } catch (err: any) {
+      console.error('[test-measure] failed:', err);
+      res.status(502).json({ error: String(err?.message ?? err).slice(0, 500) });
+    }
+  });
   // Cost history for Admin > Costs.
   admin.get('/usage', async (req, res) => {
     const days = Number(req.query.days);
@@ -238,6 +263,7 @@ async function startServer() {
       settings,
       keyStatus: Object.fromEntries(settings.providers.map((p) => [p.id, hasKey(p)])),
       segmentationKey: hasSegmentationKey(settings.segmentation),
+      measurementKey: hasMeasurementKey(settings.measurement),
       depthKey: hasDepthKey(settings.depthEstimation),
       types: PROVIDER_TYPES,
     });
@@ -249,6 +275,7 @@ async function startServer() {
         ...result,
         keyStatus: Object.fromEntries(result.settings.providers.map((p) => [p.id, hasKey(p)])),
         segmentationKey: hasSegmentationKey(result.settings.segmentation),
+        measurementKey: hasMeasurementKey(result.settings.measurement),
         depthKey: hasDepthKey(result.settings.depthEstimation),
       });
     } catch (err: any) {
@@ -311,6 +338,42 @@ async function startServer() {
     }
   });
 
+  // Roof measurements: SAM 3 (roof, wall) + Depth Pro + plane fitting. The result is kept for the photo and goes into the prompt at Generate.
+  app.post('/api/measure', async (req, res) => {
+    if (!hasAccessOrAdmin(req)) {
+      return res.status(401).json({ error: 'Wrong or missing access code.', locked: true });
+    }
+    if (rateLimited(`measure:${req.ip ?? 'unknown'}`, MASK_LIMIT)) {
+      return res.status(429).json({ code: 'limit', error: 'Too many measurements. Try again later.' });
+    }
+    const { image, photoId } = req.body as { image?: string; photoId?: string };
+    if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
+    const ai = getAiSettings();
+    if (ai.measurement.tool !== 'depthpro' || !hasMeasurementKey(ai.measurement) || !hasSegmentationKey(ai.segmentation)) {
+      return res.status(503).json({ code: 'unavailable', error: 'Measurement is off' });
+    }
+    try {
+      const m = await measureRoof(ai.measurement, ai.segmentation, image);
+      const id = cleanId(photoId);
+      if (id) rememberMeasurement(id, m);
+      console.log(`[measure] ${m.confidence} ${m.planes.map((p) => `${p.pitchDeg}°`).join(', ') || 'no plane'} in ${m.ms} ms`);
+      const prices = getUsageSettings().prices;
+      void recordUsage({
+        kind: 'measure',
+        photo_id: id,
+        provider: 'Depth Pro (Replicate) + SAM 3',
+        model: 'depth-pro',
+        ms: m.ms,
+        cost: measureCost(prices),
+        detail: { confidence: m.confidence, planes: m.planes.length, up: m.up },
+      });
+      res.json({ ok: true, confidence: m.confidence });
+    } catch (err) {
+      console.error('[measure] failed:', err);
+      res.status(502).json({ code: 'unavailable', error: 'Measurement failed' });
+    }
+  });
+
   // Roof mask with SAM 3 (fal.ai). The browser falls back to CLIPSeg when this fails.
   app.post('/api/roof-mask', async (req, res) => {
     if (!hasAccessOrAdmin(req)) {
@@ -358,8 +421,9 @@ async function startServer() {
     const roles: ImageRoles = { depth: Boolean(depth), mask: Boolean(mask), productPhotos: photos.length, swatch: Boolean(swatch) };
     const images = [body.image, depth, mask, ...photos, swatch].filter((x): x is string => Boolean(x));
     const category = getCategory(product.category);
-    const prompts = Array.from({ length: variants }, (_, v) => buildModelPrompt(ai, cfg, product, category, roles, v).prompt);
-    return { images, prompts, depth, mask, photos, swatch };
+    const measured = ai.measurement.tool === 'depthpro' ? measurementText(recallMeasurement(cleanId(body.photoId) ?? undefined), product) : '';
+    const prompts = Array.from({ length: variants }, (_, v) => buildModelPrompt(ai, cfg, product, category, roles, v, measured).prompt);
+    return { images, prompts, depth, mask, photos, swatch, measured: Boolean(measured) };
   }
 
   // "Test this model" in AI settings: one real generation with a model card as it is being edited.
@@ -416,7 +480,7 @@ async function startServer() {
     }
     const ai = getAiSettings();
     const cfg = activeConfig();
-    const { images, prompts, depth, mask, photos, swatch } = await buildRequest(ai, cfg, body as GenerateBody, product, ai.variants);
+    const { images, prompts, depth, mask, photos, swatch, measured } = await buildRequest(ai, cfg, body as GenerateBody, product, ai.variants);
 
     const started = Date.now();
     const usage = {
@@ -426,7 +490,7 @@ async function startServer() {
       provider: cfg.label,
       model: cfg.model || cfg.type,
     };
-    const sent = ['house photo', depth && 'depth map', mask && 'roof mask', photos.length && `${photos.length} product photo${photos.length > 1 ? 's' : ''}`, swatch && 'texture sample'].filter(Boolean);
+    const sent = ['house photo', depth && 'depth map', mask && 'roof mask', photos.length && `${photos.length} product photo${photos.length > 1 ? 's' : ''}`, swatch && 'texture sample', measured && 'roof measurements'].filter(Boolean);
     try {
       const results = await providerFor(cfg).generate({ images, prompts });
       if (results.length === 0) {

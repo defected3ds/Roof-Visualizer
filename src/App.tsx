@@ -109,6 +109,9 @@ function RoofApp() {
   const [history, setHistory] = useState<string[]>([]);
   // Random id of the picked photo: groups its API calls in the cost history (Admin > Costs).
   const photoId = useRef('');
+  // Roof measurement (admin option): started with the photo analysis, awaited at Generate so the numbers are ready for the prompt.
+  const measureTool = useRef('off');
+  const measuring = useRef<{ photo: string; id: string; done: Promise<void> } | null>(null);
   const [cursor, setCursor] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -149,6 +152,7 @@ function RoofApp() {
     if (health.analysis) setAnalysis(health.analysis);
     configureRoofMask({ tool: health.maskTool === 'sam3' ? 'sam3' : 'clipseg' });
     configureDepth({ tool: health.depthTool === 'marigold' || health.depthTool === 'midas' ? health.depthTool : 'browser' });
+    measureTool.current = health.measureTool === 'depthpro' ? 'depthpro' : 'off';
     if (typeof health.edgeMaps === 'boolean') setShowEdgeMaps(health.edgeMaps);
     return health as { locked: boolean; edgeMaps?: boolean; analysis?: typeof analysis; depthTool?: string };
   }
@@ -193,7 +197,23 @@ function RoofApp() {
     const [d, m] = await Promise.all([flags.depth ? depthFor(photo) : null, flags.mask ? roofMaskFor(photo) : null]);
     return [await sharpDepth(d, m), m] as const;
   };
-  const analyse = (photo: string) => analyseWith(photo, analysis);
+  const startMeasure = (photo: string): Promise<void> => {
+    if (measureTool.current !== 'depthpro') return Promise.resolve();
+    if (measuring.current?.photo === photo && measuring.current.id === photoId.current) return measuring.current.done;
+    const done = fetch('/api/measure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Access-Code': accessCode },
+      body: JSON.stringify({ image: photo, photoId: photoId.current }),
+    })
+      .then(() => undefined)
+      .catch(() => undefined);
+    measuring.current = { photo, id: photoId.current, done };
+    return done;
+  };
+  const analyse = (photo: string) => {
+    void startMeasure(photo);
+    return analyseWith(photo, analysis);
+  };
   useEffect(() => {
     if (!base) return setAnalysing(null);
     setAnalysing(base);
@@ -259,7 +279,9 @@ function RoofApp() {
     const [depthRaw, roofMask] = await Promise.all([
       use.depth ? depthWithin(base, live?.depthTool === 'marigold' || live?.depthTool === 'midas' ? 60000 : 20000) : null,
       use.mask ? roofMaskWithin(base, 20000) : null,
-    ]);
+      // The measurement is optional: wait for it at most 40 s, then generate without it.
+      Promise.race([startMeasure(base), new Promise<void>((r) => setTimeout(r, 40000))]),
+    ]).then(([d, m]) => [d, m] as const);
     const depthMaps = await sharpDepth(depthRaw, roofMask);
     setWaitingForAnalysis(false);
     const generationId = newId();

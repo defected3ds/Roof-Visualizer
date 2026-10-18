@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { imageLimit as imageLimitFor } from '../src/lib/models';
 import { DEFAULT_SYSTEM_PROMPT } from '../src/lib/prompt';
-import type { AiSettings, DepthSettings, ProviderConfig, SegmentationSettings } from '../src/types';
+import type { AiSettings, DepthSettings, MeasurementSettings, ProviderConfig, SegmentationSettings } from '../src/types';
 
 /** What every image model receives: the ordered images (house photo first) and one prompt per variant. */
 export interface ModelInput {
@@ -36,6 +36,14 @@ function defaultSegmentation(): SegmentationSettings {
 
 function defaultDepth(): DepthSettings {
   return { tool: 'browser', keyEnv: process.env.FAL_API_KEY || !process.env.FAL_KEY ? 'FAL_API_KEY' : 'FAL_KEY', quality: 'balanced' };
+}
+
+export function defaultMeasurement(): MeasurementSettings {
+  return { tool: 'off', keyEnv: 'REPLICATE_API_TOKEN', wallPrompt: 'wall' };
+}
+
+export function hasMeasurementKey(m: MeasurementSettings): boolean {
+  return validKeyEnv(m.keyEnv) && Boolean(process.env[m.keyEnv]);
 }
 
 export function hasDepthKey(d: DepthSettings): boolean {
@@ -138,6 +146,7 @@ export function defaultAiSettings(): AiSettings {
     showEdgeMaps: true,
     segmentation: defaultSegmentation(),
     depthEstimation: defaultDepth(),
+    measurement: defaultMeasurement(),
     activeProvider: active.id,
     providers,
   };

@@ -109,3 +109,17 @@ Supabase database (about 5 minutes, once):
 
 **Privacy:** the start screen has a note (editable under App texts, "Privacy note under the buttons") that previews are kept for up
 to 30 days. Change the number of days in Admin > Costs > Price table, and keep the note in step with it.
+
+## Roof measurements (optional)
+
+Admin → AI settings → **Roof measurements**. Off by default (the old setup). When switched to *Depth Pro on Replicate + SAM 3*, the server
+measures each photo (pitch, eave and slope length, area) and adds a short block to the prompt that helps the model judge the tile size.
+
+1. Create a token at replicate.com (Account → API tokens) and add it in Render → Environment as `REPLICATE_API_TOKEN`.
+2. The SAM 3 roof mask tool must be on (it needs `FAL_API_KEY`); the measurement uses SAM 3 to find the roof and a wall.
+3. In AI settings choose the measurement tool, save, then press **Measure the start photo** or **Measure my own photo…** to see the numbers.
+   Check them against a house whose real size you know before leaving it on.
+
+It costs one Depth Pro call and two SAM 3 calls per photo (the Costs tab shows it as "Roof measurement"; the Depth Pro price in the price table is a
+guess until you have seen the first Replicate bill). If a photo can't be measured reliably, no numbers are sent. `DEPTH_PRO_VERSION` (optional)
+overrides the Replicate model version. Check the Depth Pro licence for commercial use before going live.

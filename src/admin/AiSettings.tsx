@@ -4,6 +4,7 @@ import { PrimaryButton, SecondaryButton } from '../components/ui';
 import { imageLimit, promptLimit, PROVIDER_TYPES } from '../lib/models';
 import { buildModelPrompt, DEFAULT_SYSTEM_PROMPT, type ImageRoles } from '../lib/prompt';
 import { productThumb } from '../lib/swatch';
+import { fileToDataUrl } from '../lib/image';
 import { configureDepth, depthFor, orientedPreview } from '../lib/depth';
 import { configureRoofMask, mergeMasks, roofMaskWithin } from '../lib/roofmask';
 import type { AiSettings, AiSettingsView, Catalog, ProviderConfig, ProviderType } from '../types';
@@ -47,7 +48,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
     setError('');
     try {
       const res = await api<SaveResult & AiSettingsView>(password, 'PUT', '/api/admin/ai', draft);
-      setLoaded((l) => (l ? { ...l, settings: res.settings, keyStatus: res.keyStatus, segmentationKey: res.segmentationKey } : l));
+      setLoaded((l) => (l ? { ...l, settings: res.settings, keyStatus: res.keyStatus, segmentationKey: res.segmentationKey, measurementKey: res.measurementKey } : l));
       setDraft(res.settings);
       onSaved(res);
     } catch (err: any) {
@@ -236,6 +237,9 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
 
       {/* ---- Depth map tool ---- */}
       <DepthTool draft={draft} loaded={loaded} set={set} password={password} />
+
+      {/* ---- Roof measurements ---- */}
+      <MeasurementTool draft={draft} loaded={loaded} set={set} password={password} />
 
       {/* ---- Loading screen ---- */}
       <div>
@@ -523,6 +527,167 @@ function DepthTool({
           </div>
           <TestDepth password={password} depthEstimation={d} />
         </>
+      )}
+    </div>
+  );
+}
+
+function MeasurementTool({
+  draft,
+  loaded,
+  set,
+  password,
+}: {
+  draft: AiSettings;
+  loaded: AiSettingsView;
+  set: (patch: Partial<AiSettings>) => void;
+  password: string;
+}) {
+  const m = draft.measurement;
+  const setM = (patch: Partial<AiSettings['measurement']>) => set({ measurement: { ...m, ...patch } });
+  const keyKnown = loaded.settings.measurement.keyEnv === m.keyEnv;
+  const keySet = keyKnown && loaded.measurementKey;
+  return (
+    <div>
+      <h2 className="border-b border-line pb-2 text-lg font-bold">Roof measurements</h2>
+      <p className="mt-2 text-sm text-muted">
+        Optional. Measures the roof from the photo (pitch, eave and slope length, area, tile counts) and adds the numbers to the prompt as a guide for the tile size.
+        Off keeps the old setup unchanged. Costs one extra call per photo: Depth Pro and two SAM 3 calls (roof and wall).
+      </p>
+      <div className="mt-4 space-y-3">
+        {(
+          [
+            ['off', 'Off (old setup)', 'Nothing is measured; the prompt has no measurements.'],
+            ['depthpro', 'Depth Pro on Replicate + SAM 3', 'SAM 3 finds the roof and a wall, Depth Pro gives metric depth and focal length, the server fits roof planes. Needs the SAM 3 roof mask tool (fal.ai key) and a Replicate token.'],
+          ] as const
+        ).map(([tool, label, help]) => (
+          <label
+            key={tool}
+            className={`flex cursor-pointer gap-3 rounded-wb border p-4 ${m.tool === tool ? 'border-brand shadow-[0_0_0_1px_var(--color-brand)]' : 'border-line'}`}
+          >
+            <input type="radio" name="measure-tool" checked={m.tool === tool} onChange={() => setM({ tool })} className="mt-1 accent-[var(--color-brand)]" />
+            <span>
+              <span className="block font-semibold">{label}</span>
+              <span className="block text-sm text-muted">{help}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      {m.tool === 'depthpro' && (
+        <>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-semibold">
+              API key variable (in Render → Environment)
+              <input value={m.keyEnv} onChange={(e) => setM({ keyEnv: e.target.value.toUpperCase() })} className={`${fieldClass} font-mono`} />
+              {keySet ? (
+                <span className="mt-1 flex items-center gap-1 text-xs font-semibold text-ink">
+                  <Check size={14} /> Key {m.keyEnv} is set
+                </span>
+              ) : (
+                <span className="mt-1 flex items-center gap-1 text-xs font-semibold text-brand">
+                  <TriangleAlert size={14} /> {keyKnown ? `Key ${m.keyEnv} missing on the server: nothing is measured` : 'Save to check the key'}
+                </span>
+              )}
+            </label>
+            <label className="block text-sm font-semibold">
+              What SAM 3 looks for as the wall
+              <input value={m.wallPrompt} onChange={(e) => setM({ wallPrompt: e.target.value })} className={fieldClass} />
+              <span className="mt-1 block text-xs font-normal text-muted">The wall shows which way is up, which makes the pitch more exact.</span>
+            </label>
+          </div>
+          <TestMeasure password={password} measurement={m} />
+        </>
+      )}
+    </div>
+  );
+}
+
+interface MeasureResult {
+  planes: { pitchDeg: number; eaveM: number; slopeM: number; areaM2: number; share: number }[];
+  roofAreaM2: number;
+  focalPx: number;
+  up: 'wall' | 'level';
+  confidence: 'ok' | 'low';
+  notes: string[];
+  ms: number;
+}
+
+/** Measures the start photo, or a photo the admin picks (best: a house whose real size is known). */
+function TestMeasure({ password, measurement }: { password: string; measurement: AiSettings['measurement'] }) {
+  const [state, setState] = useState<{ busy?: boolean; result?: MeasureResult; text?: string; error?: string }>({});
+  async function run(photo: string) {
+    setState({ busy: true });
+    try {
+      const res = await api<{ measurement: MeasureResult; text: string }>(password, 'POST', '/api/admin/test-measure', { image: photo, measurement });
+      setState({ result: res.measurement, text: res.text });
+    } catch (err: any) {
+      setState({ error: err.message });
+    }
+  }
+  async function startPhoto() {
+    const texts = await (await fetch('/api/texts')).json().catch(() => ({}));
+    await run(await toDataUrl(texts['start.image'] || '/hero.jpg'));
+  }
+  async function ownPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    await run(await fileToDataUrl(file));
+  }
+  const r = state.result;
+  return (
+    <div className="mt-4">
+      <div className="flex flex-wrap gap-3">
+        <SecondaryButton onClick={startPhoto} disabled={state.busy} className="sm:w-64">
+          {state.busy ? 'Measuring… (up to 2 min)' : 'Measure the start photo'}
+        </SecondaryButton>
+        <label className={`inline-flex min-h-11 cursor-pointer items-center justify-center rounded-wb border border-line px-4 text-sm font-semibold ${state.busy ? 'opacity-50' : ''}`}>
+          Measure my own photo…
+          <input type="file" accept="image/*" disabled={state.busy} onChange={ownPhoto} className="sr-only" />
+        </label>
+      </div>
+      {state.error && <p className="mt-2 break-words text-sm font-semibold text-brand">Not working: {state.error}</p>}
+      {r && (
+        <div className="mt-3 rounded-wb border border-line p-3 text-sm">
+          <p className={`font-semibold ${r.confidence === 'ok' ? 'text-ink' : 'text-brand'}`}>
+            {r.confidence === 'ok' ? 'Reliable enough: these numbers would be sent.' : 'Not reliable: no numbers would be sent for this photo.'} ({(r.ms / 1000).toFixed(1)} s, focal length{' '}
+            {Math.round(r.focalPx)} px, up from {r.up === 'wall' ? 'the wall' : 'a level camera'})
+          </p>
+          {r.planes.length > 0 && (
+            <table className="mt-2 w-full text-left text-xs">
+              <thead className="text-muted">
+                <tr>
+                  <th className="py-1 pr-2">Plane</th>
+                  <th className="py-1 pr-2">Pitch</th>
+                  <th className="py-1 pr-2">Eave</th>
+                  <th className="py-1 pr-2">Slope</th>
+                  <th className="py-1 pr-2">Area</th>
+                  <th className="py-1">Share of roof</th>
+                </tr>
+              </thead>
+              <tbody>
+                {r.planes.map((p, i) => (
+                  <tr key={i} className="border-t border-line">
+                    <td className="py-1 pr-2">{i + 1}</td>
+                    <td className="py-1 pr-2">{p.pitchDeg}°</td>
+                    <td className="py-1 pr-2">{p.eaveM} m</td>
+                    <td className="py-1 pr-2">{p.slopeM} m</td>
+                    <td className="py-1 pr-2">{p.areaM2} m²</td>
+                    <td className="py-1">{Math.round(p.share * 100)} %</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {r.notes.length > 0 && (
+            <ul className="mt-2 list-disc pl-5 text-xs text-muted">
+              {r.notes.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+            </ul>
+          )}
+          {state.text && <pre className="mt-2 whitespace-pre-wrap rounded-[2px] bg-paper p-2 text-xs">{state.text}</pre>}
+        </div>
       )}
     </div>
   );

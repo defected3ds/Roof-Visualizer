@@ -13,6 +13,8 @@ const KIND_LABEL: Record<string, string> = {
   'test-depth': 'Depth map (test)',
   'roof-mask': 'Roof mask',
   'test-roof-mask': 'Roof mask (test)',
+  measure: 'Roof measurement',
+  'test-measure': 'Roof measurement (test)',
 };
 
 interface Row {
@@ -223,7 +225,7 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
             ))}
           </div>
           <p className="text-sm text-muted">
-            Images {money(summary.images)} · depth maps and roof masks {money(summary.analysis)}. All costs are estimates from the price table below.
+            Images {money(summary.images)} · depth maps, roof masks and measurements {money(summary.analysis)}. All costs are estimates from the price table below.
           </p>
 
           <div>

@@ -4,7 +4,7 @@ import { commitFiles, githubConfig, readRepoFile, type FileChange } from './gith
 import { DEFAULT_TEXTS, IMAGE_TEXT_KEYS } from '../src/texts';
 import { defaultAiSettings, validKeyEnv, PROVIDER_TYPES } from './providers';
 import { defaultPrices } from './usage';
-import type { AiSettings, Category, DepthSettings, UsageSettings, Product, ProductInput, ProviderConfig, SegmentationSettings, Spec, Texts } from '../src/types';
+import type { AiSettings, Category, DepthSettings, MeasurementSettings, UsageSettings, Product, ProductInput, ProviderConfig, SegmentationSettings, Spec, Texts } from '../src/types';
 
 /**
  * Catalog data (categories, products, product photos, app texts) lives in data/ in the repo.
@@ -316,6 +316,7 @@ export function getAiSettings(): AiSettings {
     include: { ...defaults.include, ...aiSettings.include },
     segmentation: { ...defaults.segmentation, ...aiSettings.segmentation },
     depthEstimation: { ...defaults.depthEstimation, ...aiSettings.depthEstimation },
+    measurement: { ...defaults.measurement, ...aiSettings.measurement },
     providers: aiSettings.providers?.length ? aiSettings.providers : defaults.providers,
   };
 }
@@ -347,6 +348,16 @@ function cleanDepth(d: DepthSettings): DepthSettings {
   }
   const quality = d.quality === 'fast' || d.quality === 'best' ? d.quality : 'balanced';
   return { tool, keyEnv, quality };
+}
+
+function cleanMeasurement(m: MeasurementSettings): MeasurementSettings {
+  const tool = m.tool === 'depthpro' ? 'depthpro' : 'off';
+  const keyEnv = String(m.keyEnv ?? '').trim().toUpperCase() || 'REPLICATE_API_TOKEN';
+  if (tool !== 'off' && !validKeyEnv(keyEnv)) {
+    throw new Error('Measurement: the key variable must be a name like REPLICATE_API_TOKEN (ending in KEY or TOKEN)');
+  }
+  const wallPrompt = String(m.wallPrompt ?? '').trim().slice(0, 100) || 'wall';
+  return { tool, keyEnv, wallPrompt };
 }
 
 function cleanSegmentation(s: SegmentationSettings): SegmentationSettings {
@@ -387,6 +398,7 @@ export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult &
       showEdgeMaps: Boolean(input.showEdgeMaps ?? current.showEdgeMaps),
       segmentation: cleanSegmentation({ ...current.segmentation, ...input.segmentation }),
       depthEstimation: cleanDepth({ ...current.depthEstimation, ...input.depthEstimation }),
+      measurement: cleanMeasurement({ ...current.measurement, ...input.measurement }),
       activeProvider,
       providers,
     };
