@@ -4,6 +4,7 @@ import { PrimaryButton, SecondaryButton } from '../components/ui';
 import type { UsageEvent, UsageSettings, UsageView, VisitorInfo } from '../types';
 import { api, fieldClass, type SaveResult } from './Admin';
 
+const seconds = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
 const money = (v: number) => `$${v.toFixed(v === 0 ? 2 : v < 0.1 ? 4 : 3)}`;
 const GENERATION = new Set(['image', 'test-image']);
 const KIND_LABEL: Record<string, string> = {
@@ -175,11 +176,11 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
     const gens = real.filter((e) => e.kind === 'image' && (e.results ?? 0) > 0);
     const failed = real.filter((e) => e.kind === 'image' && !(e.results ?? 0)).length;
     const images = real.filter((e) => e.kind === 'image').reduce((s, e) => s + e.cost, 0);
-    const byProvider = new Map<string, { calls: number; cost: number }>();
+    const byProvider = new Map<string, { calls: number; cost: number; times: number[] }>();
     for (const e of events) {
       const key = `${e.provider ?? 'unknown'}${e.kind.startsWith('test-') ? ' (tests)' : ''}`;
-      const cur = byProvider.get(key) ?? { calls: 0, cost: 0 };
-      byProvider.set(key, { calls: cur.calls + 1, cost: cur.cost + e.cost });
+      const cur = byProvider.get(key) ?? { calls: 0, cost: 0, times: [] };
+      byProvider.set(key, { calls: cur.calls + 1, cost: cur.cost + e.cost, times: e.ms ? [...cur.times, e.ms] : cur.times });
     }
     return { total, tests, gens: gens.length, failed, images, analysis: total - images, average: gens.length ? total / gens.length : 0, byProvider: [...byProvider.entries()].sort((a, b) => b[1].cost - a[1].cost) };
   }, [events]);
@@ -242,6 +243,8 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
                 <tr className="text-xs uppercase tracking-wide text-muted">
                   <th className="py-1.5 font-semibold">Service</th>
                   <th className="py-1.5 text-right font-semibold">Calls</th>
+                  <th className="py-1.5 text-right font-semibold">Typical time</th>
+                  <th className="py-1.5 text-right font-semibold">Fastest – slowest</th>
                   <th className="py-1.5 text-right font-semibold">Cost</th>
                 </tr>
               </thead>
@@ -250,12 +253,14 @@ export function CostsTab({ password, onSaved }: { password: string; onSaved: (r:
                   <tr key={name} className="border-t border-line">
                     <td className="py-1.5">{name}</td>
                     <td className="py-1.5 text-right">{v.calls}</td>
+                    <td className="py-1.5 text-right">{v.times.length ? seconds([...v.times].sort((a, b) => a - b)[v.times.length >> 1]) : '–'}</td>
+                    <td className="py-1.5 text-right text-muted">{v.times.length ? `${seconds(Math.min(...v.times))} – ${seconds(Math.max(...v.times))}` : '–'}</td>
                     <td className="py-1.5 text-right font-semibold">{money(v.cost)}</td>
                   </tr>
                 ))}
                 {summary.byProvider.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="py-3 text-muted">
+                    <td colSpan={5} className="py-3 text-muted">
                       Nothing recorded in this period yet.
                     </td>
                   </tr>
