@@ -533,6 +533,7 @@ function RoofApp() {
     <Shell app>
       {pickers}
       <Header
+        confirmLeave={() => window.confirm('Go to the start page? The photo and results on this screen will be lost.')}
         left={
           <button
             onClick={() => {

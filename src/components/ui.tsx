@@ -4,14 +4,22 @@ export function Shell({ children, wide, app }: { children: React.ReactNode; wide
   return <main className={`mx-auto flex min-h-dvh w-full flex-col bg-white text-ink ${width}`}>{children}</main>;
 }
 
-export function Header({ left, right }: { left?: React.ReactNode; right?: React.ReactNode }) {
+/** `confirmLeave`: asked before the logo leads to the start page, so a click can't throw away work in progress. */
+export function Header({ left, right, confirmLeave }: { left?: React.ReactNode; right?: React.ReactNode; confirmLeave?: () => boolean }) {
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b border-line bg-white px-5 lg:px-8">
       {left}
-      <span className="flex items-center gap-1.5" aria-label="wienerberger">
+      <a
+        href="/"
+        aria-label="wienerberger – start page"
+        onClick={(e) => {
+          if (confirmLeave && !confirmLeave()) e.preventDefault();
+        }}
+        className="flex items-center gap-1.5"
+      >
         <img src="/w-symbol.png" alt="" className="h-7 w-7" />
         <img src="/wienerberger-logo.svg" alt="wienerberger" className="h-[17px] w-auto" />
-      </span>
+      </a>
       <span className="flex-1" />
       {right}
     </header>

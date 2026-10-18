@@ -13,6 +13,8 @@ import {
   Star,
   Trash2,
   X,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from '../components/ui';
 import { AiSettingsEditor } from './AiSettings';
@@ -285,14 +287,52 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
     ...(orphans.length ? [{ key: '-', title: 'Without category', items: orphans }] : []),
   ];
 
+  // List or gallery grid; the choice is remembered in this browser.
+  const [view, setView] = useState<'list' | 'grid'>(() => {
+    try {
+      return localStorage.getItem('rv.productView') === 'grid' ? 'grid' : 'list';
+    } catch {
+      return 'list';
+    }
+  });
+  const chooseView = (v: 'list' | 'grid') => {
+    setView(v);
+    try {
+      localStorage.setItem('rv.productView', v);
+    } catch {
+      /* storage blocked */
+    }
+  };
+
   return (
     <>
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
         <p className="text-muted">These are the products customers can choose in the app.</p>
-        <div>
-          <PrimaryButton onClick={() => onEdit('new')} className="px-6">
-            <Plus size={18} /> Add product
-          </PrimaryButton>
+        <div className="flex items-center gap-3">
+          <div className="flex shrink-0 overflow-hidden rounded-wb border border-line" role="group" aria-label="View">
+            {(
+              [
+                ['list', 'List', List],
+                ['grid', 'Gallery', LayoutGrid],
+              ] as const
+            ).map(([v, label, Icon]) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => chooseView(v)}
+                aria-pressed={view === v}
+                title={label}
+                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold ${view === v ? 'bg-brand text-white' : 'bg-white text-muted hover:bg-paper'}`}
+              >
+                <Icon size={16} /> <span className="hidden sm:inline">{label}</span>
+              </button>
+            ))}
+          </div>
+          <div>
+            <PrimaryButton onClick={() => onEdit('new')} className="px-6">
+              <Plus size={18} /> Add product
+            </PrimaryButton>
+          </div>
         </div>
       </div>
       {groups.map((g) => (
@@ -301,6 +341,24 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
             {g.title} <span className="text-sm font-normal text-muted">({g.items.length})</span>
           </h2>
           {g.items.length === 0 && <p className="py-3 text-sm text-muted">No products in this category yet.</p>}
+          {view === 'grid' ? (
+            <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {g.items.map((p) => (
+                <li key={p.id}>
+                  <button onClick={() => onEdit(p)} className="group block w-full overflow-hidden rounded-wb border border-line bg-white text-left transition hover:border-brand">
+                    <img src={productThumb(p, 360)} alt="" className="aspect-square w-full object-cover" />
+                    <span className="block p-3">
+                      {p.brand && <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted">{p.brand}</span>}
+                      <span className="block truncate text-sm font-semibold group-hover:text-brand">{p.name}</span>
+                      <span className="mt-0.5 block text-xs text-muted">
+                        {p.images.length ? `${p.images.length} photo${p.images.length > 1 ? 's' : ''}` : 'No photos'} · {p.specs.length ? `${p.specs.length} data rows` : 'no data'}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
           <ul className="divide-y divide-dotted divide-line">
             {g.items.map((p) => (
               <li key={p.id}>
@@ -321,6 +379,7 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
               </li>
             ))}
           </ul>
+          )}
         </section>
       ))}
     </>
