@@ -2,6 +2,9 @@
 export interface MeasureSummary {
   pitchDeg: number;
   areaM2: number;
+  /** Arrows along the eave and up the slope: [x1, y1, x2, y2] as fractions of the photo, and the length in metres (rounded). */
+  eave?: { line: [number, number, number, number]; m: number };
+  slope?: { line: [number, number, number, number]; m: number };
 }
 
 /** What /api/measure returns for visitors: rounded numbers and Depth Pro's coloured depth picture (only for a reliable result). */
@@ -28,6 +31,10 @@ export async function buildMeasureCard(overlay: string, _mask: string, s: Measur
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(photo, 0, 0, w, h);
 
+  const label = Math.max(11, Math.round(w / 60));
+  if (s.eave) arrow(ctx, s.eave.line, w, h, `about ${fmt(s.eave.m)} m`, label);
+  if (s.slope) arrow(ctx, s.slope.line, w, h, `about ${fmt(s.slope.m)} m`, label);
+
   const size = Math.max(11, Math.round(w / 60));
   const lines = [`Roof pitch about ${s.pitchDeg}°`, `Roof area about ${s.areaM2} m²`];
   ctx.font = `600 ${size}px "Noto Sans", system-ui, sans-serif`;
@@ -47,4 +54,48 @@ export async function buildMeasureCard(overlay: string, _mask: string, s: Measur
   ctx.textBaseline = 'top';
   lines.forEach((l, i) => ctx.fillText(l, x + padX, y + padY + i * size * 1.3));
   return canvas.toDataURL('image/jpeg', 0.88);
+}
+
+const fmt = (m: number) => (Number.isInteger(m) ? String(m) : m.toFixed(1));
+
+/** A double-headed arrow with its length written along it, like a measurement drawing. */
+function arrow(ctx: CanvasRenderingContext2D, line: [number, number, number, number], w: number, h: number, text: string, size: number) {
+  const [x1, y1, x2, y2] = [line[0] * w, line[1] * h, line[2] * w, line[3] * h];
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  if (len < w * 0.08) return;
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const head = Math.max(8, size * 0.9);
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const stroke = (color: string, width: number) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    for (const [px, py, dir] of [[x1, y1, 1], [x2, y2, -1]] as const) {
+      for (const side of [-1, 1]) {
+        ctx.moveTo(px, py);
+        ctx.lineTo(px + dir * head * Math.cos(angle + side * 0.45), py + dir * head * Math.sin(angle + side * 0.45));
+      }
+    }
+    ctx.stroke();
+  };
+  stroke('rgba(0,0,0,0.55)', Math.max(4, size * 0.34));
+  stroke('#ffffff', Math.max(2, size * 0.16));
+  // Label in the middle, turned along the arrow but never upside down.
+  ctx.translate((x1 + x2) / 2, (y1 + y2) / 2);
+  ctx.rotate(angle > Math.PI / 2 || angle < -Math.PI / 2 ? angle + Math.PI : angle);
+  ctx.font = `600 ${size}px "Noto Sans", system-ui, sans-serif`;
+  const tw = ctx.measureText(text).width;
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.beginPath();
+  ctx.roundRect(-tw / 2 - size * 0.5, -size * 1.9, tw + size, size * 1.45, size * 0.3);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, 0, -size * 1.17);
+  ctx.restore();
 }

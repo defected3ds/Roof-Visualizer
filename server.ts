@@ -375,7 +375,15 @@ async function startServer() {
         ok: true,
         confidence: m.confidence,
         depthColor: ai.measurement.show && m.confidence === 'ok' ? m.colorMap : undefined,
-        summary: ai.measurement.show && m.confidence === 'ok' && main ? { pitchDeg: round(main.pitchDeg, 5), areaM2: round(m.roofAreaM2, m.roofAreaM2 >= 20 ? 5 : 1) } : undefined,
+        summary:
+          ai.measurement.show && m.confidence === 'ok' && main
+            ? {
+                pitchDeg: round(main.pitchDeg, 5),
+                areaM2: round(m.roofAreaM2, m.roofAreaM2 >= 20 ? 5 : 1),
+                eave: main.eaveLine && main.eaveLineM ? { line: main.eaveLine, m: Math.max(0.5, Math.round(main.eaveLineM * 2) / 2) } : undefined,
+                slope: main.slopeLine ? { line: main.slopeLine, m: Math.max(0.5, Math.round(main.slopeM * 2) / 2) } : undefined,
+              }
+            : undefined,
       });
     } catch (err) {
       console.error('[measure] failed:', err);

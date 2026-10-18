@@ -22,6 +22,11 @@ export interface PlaneResult {
   areaM2: number;
   /** Share of the roof mask that belongs to this plane, 0–1. */
   share: number;
+  /** Where the eave and the slope run in the photo, as [x1, y1, x2, y2] fractions of its width and height (for the loading-screen arrows). */
+  eaveLine?: [number, number, number, number];
+  slopeLine?: [number, number, number, number];
+  /** Length of the drawn eave line in metres (the eave edge itself, not the widest part). */
+  eaveLineM?: number;
 }
 
 export interface Measurement {
@@ -280,6 +285,8 @@ const unit = (a: V3): V3 => {
 interface Cloud {
   /** x, y, z per point (camera coordinates: x right, y down, z forward), metres. */
   pts: Float32Array;
+  /** Pixel position (x, y) of each point. */
+  uv: Float32Array;
   n: number;
   /** Pixels in the mask that had valid depth, and the pixels the sampled points stand for. */
   weight: number;
@@ -291,6 +298,7 @@ function backProject(depth: Float32Array, mask: Uint8Array, w: number, h: number
   for (let i = 0; i < mask.length; i++) if (mask[i]) total++;
   const step = Math.max(1, Math.floor(Math.sqrt(total / max)));
   const pts = new Float32Array(max * 3 * 2);
+  const uv = new Float32Array(max * 2 * 2);
   let n = 0;
   let valid = 0;
   for (let y = 0; y < h; y++) {
@@ -303,10 +311,12 @@ function backProject(depth: Float32Array, mask: Uint8Array, w: number, h: number
       pts[n * 3] = ((x + 0.5 - w / 2) * z) / f;
       pts[n * 3 + 1] = ((y + 0.5 - h / 2) * z) / f;
       pts[n * 3 + 2] = z;
+      uv[n * 2] = x + 0.5;
+      uv[n * 2 + 1] = y + 0.5;
       n++;
     }
   }
-  return { pts, n, weight: valid / Math.max(1, n) };
+  return { pts, uv, n, weight: valid / Math.max(1, n) };
 }
 
 function planeFromThree(pts: Float32Array, a: number, b: number, c: number): V3 | null {
@@ -509,11 +519,41 @@ export function measureGeometry(
       const d: V3 = [P[0] / P[2], P[1] / P[2], 1];
       area += (P[2] * P[2]) / (f * f * Math.max(0.15, Math.abs(dot(n, d))));
     }
+    // Lines for the loading-screen arrows: the eave is the edge of the plane that is lower in the photo.
+    const order = plane.inliers.map((_, k) => k);
+    let cov = 0;
+    const meanB = B.reduce((x, y) => x + y, 0) / B.length;
+    const meanV = plane.inliers.reduce((x, i) => x + roofCloud.uv[i * 2 + 1], 0) / plane.inliers.length;
+    plane.inliers.forEach((i, k) => (cov += (B[k] - meanB) * (roofCloud.uv[i * 2 + 1] - meanV)));
+    const sign = cov >= 0 ? 1 : -1;
+    order.sort((x, y) => sign * (B[x] - B[y]));
+    const bandSize = Math.max(8, Math.floor(order.length * 0.12));
+    const eaveBand = order.slice(order.length - bandSize).sort((x, y) => A[x] - A[y]);
+    const ridgeBand = order.slice(0, bandSize);
+    const pix = (k: number): [number, number] => [roofCloud.uv[plane.inliers[k] * 2] / w, roofCloud.uv[plane.inliers[k] * 2 + 1] / h];
+    const centre = (ks: number[]): [number, number] => {
+      let u = 0;
+      let v = 0;
+      for (const k of ks) {
+        const [pu, pv] = pix(k);
+        u += pu;
+        v += pv;
+      }
+      return [u / ks.length, v / ks.length];
+    };
+    const lo = eaveBand[Math.floor(bandSize * 0.015)];
+    const hi = eaveBand[Math.min(bandSize - 1, Math.floor(bandSize * 0.985))];
+    const eaveLine: [number, number, number, number] = [...pix(lo), ...pix(hi)];
+    const slopeLine: [number, number, number, number] = [...centre(eaveBand), ...centre(ridgeBand)];
+    const eaveLineM = Math.abs(A[hi] - A[lo]) * scale;
     A.sort((a, b) => a - b);
     B.sort((a, b) => a - b);
     const eave = percentile(A, 0.99) - percentile(A, 0.01);
     const slope = percentile(B, 0.99) - percentile(B, 0.01);
     planes.push({
+      eaveLine,
+      slopeLine,
+      eaveLineM: Math.round(eaveLineM * 10) / 10,
       pitchDeg: Math.round(pitch * 10) / 10,
       eaveM: Math.round(eave * scale * 10) / 10,
       slopeM: Math.round(slope * scale * 10) / 10,
