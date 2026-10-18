@@ -885,6 +885,16 @@ function FinalPromptPreview({ draft, catalog, limit, model }: { draft: AiSetting
   }
   if (at < prompt.length) pieces.push({ text: prompt.slice(at) });
   const markClass = { product: 'bg-sky-100', measure: 'bg-amber-100', images: 'bg-emerald-100' } as const;
+  // The order in which the model reads it: each piece of the prompt, as a short list.
+  const order = pieces
+    .map((p) => {
+      if (p.kind === 'product') return { kind: p.kind, label: 'Product data (description, specs, scale)' };
+      if (p.kind === 'measure') return { kind: p.kind, label: 'Roof measurements (segmentation + depth models)' };
+      if (p.kind === 'images') return { kind: p.kind, label: 'Guide to the attached images' };
+      const headings = [...p.text.matchAll(/^##\s*(?:\d+\.\s*)?(.+)$/gm)].map((h) => h[1].trim().toLowerCase().replace(/^./, (c) => c.toUpperCase()));
+      return p.text.trim() ? { kind: undefined, label: `General prompt${headings.length ? `: ${headings.slice(0, 3).join(', ')}${headings.length > 3 ? ', …' : ''}` : ''}` } : null;
+    })
+    .filter((x): x is { kind: 'product' | 'measure' | 'images' | undefined; label: string } => Boolean(x));
   const maxChars = promptLimit(model);
   const images = [
     'House photo',
@@ -940,6 +950,15 @@ function FinalPromptPreview({ draft, catalog, limit, model }: { draft: AiSetting
                   <img src={productThumb(product, 64)} alt="" className="h-8 w-8 rounded-wb border border-line object-cover" />
                 ) : null}
                 {label}
+              </li>
+            ))}
+          </ol>
+          <p className="mt-5 text-sm font-semibold">Instruction order</p>
+          <ol className="mt-2 space-y-1.5 text-sm">
+            {order.map((o, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="w-5 shrink-0 font-bold text-brand">{i + 1}</span>
+                <span className={`rounded-[2px] px-1 ${o.kind ? markClass[o.kind] : ''}`}>{o.label}</span>
               </li>
             ))}
           </ol>
