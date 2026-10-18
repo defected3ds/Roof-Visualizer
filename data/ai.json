@@ -32,7 +32,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "gemini",
+  "activeProvider": "openai-gpt-image-2-5-sunburst",
   "providers": [
     {
       "id": "gemini",
