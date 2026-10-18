@@ -216,17 +216,9 @@ function RoofApp() {
     measuring.current = { photo, id: photoId.current, done };
     return done;
   };
-  const analyse = (photo: string) => {
-    void startMeasure(photo);
-    if (measureTool.current === 'depthpro' && measureShow.current) void wallMaskFor(photo);
-    return analyseWith(photo, analysis);
-  };
-  useEffect(() => {
-    if (!base) return setAnalysing(null);
-    setAnalysing(base);
-    analyse(base).finally(() => setAnalysing((cur) => (cur === base ? null : cur)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [base, analysis]);
+  // Nothing is analysed when a photo is picked: depth map, roof mask, walls and measurement all start when Generate is pressed
+  // (visitors who only look at the photo cost nothing).
+  useEffect(() => setAnalysing(null), [base]);
 
   useEffect(() => {
     if (!toast) return;
@@ -272,6 +264,10 @@ function RoofApp() {
     setSlideBase({ head: [], tail: [] });
     const runId = ++generationRun.current;
     const live = await loadSettings().catch(() => null);
+    setAnalysing(base);
+    // Everything starts now, in parallel: depth map, roof mask (below), and for the measurement setup the walls and the measurement.
+    if (measureTool.current === 'depthpro' && measureShow.current) void wallMaskFor(base);
+    void startMeasure(base);
     const edges = (live?.edgeMaps ?? showEdgeMaps) ? buildEdgeMaps(base).catch(() => [] as string[]) : Promise.resolve([] as string[]);
     setNoAnalysis(false);
     // What the admin has switched on right now (not what this page loaded with): only those maps are made and shown.
@@ -326,6 +322,7 @@ function RoofApp() {
     ]).then(([d, m]) => [d, m] as const);
     const depthMaps = await sharpDepth(depthRaw, roofMask);
     setWaitingForAnalysis(false);
+    setAnalysing((cur) => (cur === base ? null : cur));
     const generationId = newId();
     try {
       const res = await fetch('/api/generate', {
