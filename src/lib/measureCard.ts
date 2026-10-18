@@ -4,6 +4,12 @@ export interface MeasureSummary {
   areaM2: number;
 }
 
+/** What /api/measure returns for visitors: rounded numbers and Depth Pro's coloured depth picture (only for a reliable result). */
+export interface MeasureOutcome {
+  summary?: MeasureSummary;
+  depthColor?: string;
+}
+
 const load = (src: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();

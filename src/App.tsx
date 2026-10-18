@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,8 +21,8 @@ import { History, type HistoryItem } from './components/History';
 import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
 import { configureDepth, depthFor, depthWithin, snapToMask } from './lib/depth';
-import { configureRoofMask, roofMaskFor, roofMaskWithin } from './lib/roofmask';
-import { buildMeasureCard, type MeasureSummary } from './lib/measureCard';
+import { configureRoofMask, roofMaskFor, roofMaskWithin, wallMaskFor } from './lib/roofmask';
+import { buildMeasureCard, type MeasureOutcome } from './lib/measureCard';
 import { buildEdgeMaps, fileToDataUrl, shareImage, thumbnail } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
@@ -112,7 +112,7 @@ function RoofApp() {
   const photoId = useRef('');
   // Roof measurement (admin option): started with the photo analysis, awaited at Generate so the numbers are ready for the prompt.
   const measureTool = useRef('off');
-  const measuring = useRef<{ photo: string; id: string; done: Promise<MeasureSummary | null> } | null>(null);
+  const measuring = useRef<{ photo: string; id: string; done: Promise<MeasureOutcome | null> } | null>(null);
   const measureShow = useRef(true);
   const generationRun = useRef(0);
   const [cursor, setCursor] = useState(0);
@@ -127,7 +127,10 @@ function RoofApp() {
   const [viewing, setViewing] = useState<number | null>(null);
   const [generating, setGenerating] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
-  const [edgeMaps, setEdgeMaps] = useState<string[]>([]);
+  // Slides of the loading screen: head (depth maps, roof), extras that arrive later (wall, Depth Pro depth, measurement), tail (edge maps).
+  const [slideBase, setSlideBase] = useState<{ head: string[]; tail: string[] }>({ head: [], tail: [] });
+  const [slideExtras, setSlideExtras] = useState<string[]>([]);
+  const edgeMaps = useMemo(() => [...slideBase.head, ...slideExtras, ...slideBase.tail], [slideBase, slideExtras]);
   // Photo analysis (depth map, roof mask) for the current photo; which ones run is set in /admin > AI settings.
   const [analysis, setAnalysis] = useState({ depth: true, mask: true });
   const [showEdgeMaps, setShowEdgeMaps] = useState(true);
@@ -201,7 +204,7 @@ function RoofApp() {
     const [d, m] = await Promise.all([flags.depth ? depthFor(photo) : null, flags.mask ? roofMaskFor(photo) : null]);
     return [await sharpDepth(d, m), m] as const;
   };
-  const startMeasure = (photo: string): Promise<MeasureSummary | null> => {
+  const startMeasure = (photo: string): Promise<MeasureOutcome | null> => {
     if (measureTool.current !== 'depthpro') return Promise.resolve(null);
     if (measuring.current?.photo === photo && measuring.current.id === photoId.current) return measuring.current.done;
     const done = fetch('/api/measure', {
@@ -209,13 +212,14 @@ function RoofApp() {
       headers: { 'Content-Type': 'application/json', 'X-Access-Code': accessCode },
       body: JSON.stringify({ image: photo, photoId: photoId.current }),
     })
-      .then(async (r) => ((await r.json()) as { summary?: MeasureSummary }).summary ?? null)
+      .then(async (r) => ((await r.json()) as MeasureOutcome) ?? null)
       .catch(() => null);
     measuring.current = { photo, id: photoId.current, done };
     return done;
   };
   const analyse = (photo: string) => {
     void startMeasure(photo);
+    if (measureTool.current === 'depthpro' && measureShow.current) void wallMaskFor(photo);
     return analyseWith(photo, analysis);
   };
   useEffect(() => {
@@ -266,7 +270,8 @@ function RoofApp() {
     setCompare(false);
     // Previews for the loading animation: depth maps, the detected roof, then edge maps (if switched on in
     // /admin > AI settings). Until the analysis is done the overlay says "Analysing 3D shape".
-    setEdgeMaps([]);
+    setSlideBase({ head: [], tail: [] });
+    setSlideExtras([]);
     const runId = ++generationRun.current;
     const live = await loadSettings().catch(() => null);
     const edges = (live?.edgeMaps ?? showEdgeMaps) ? buildEdgeMaps(base).catch(() => [] as string[]) : Promise.resolve([] as string[]);
@@ -278,14 +283,16 @@ function RoofApp() {
       const depthName = d ? (d.source === 'marigold' ? 'Marigold (fal.ai)' : d.source === 'midas' ? 'MiDaS (fal.ai)' : `browser model${d.fallback ? ` (server depth map failed: ${d.fallback})` : ''}`) : 'none';
       setAnalysisInfo(`Depth map: ${depthName} · Roof mask: ${m ? (m.source === 'sam3' ? 'SAM 3 (fal.ai)' : 'CLIPSeg (browser)') : 'none'}`);
       const lateEdges = await edges;
-      setEdgeMaps([...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : []), ...lateEdges]);
-      // The measurement slide is added when the numbers arrive (they can take longer than the maps).
-      if (m && measureShow.current) {
-        const summary = await Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 90000))]);
-        if (summary && runId === generationRun.current) {
-          const card = await buildMeasureCard(m.overlay, m.mask, summary).catch(() => null);
-          if (card) setEdgeMaps((cur) => [...cur.slice(0, (d ? 2 : 0) + 1), card, ...cur.slice((d ? 2 : 0) + 1)]);
-        }
+      setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(m ? [m.overlay] : [])], tail: lateEdges });
+      // Roof measurement (new setup): the wall found by SAM 3, Depth Pro's depth and the measured numbers join the show as they arrive.
+      if (measureTool.current === 'depthpro' && measureShow.current) {
+        const add = (src?: string | null) => {
+          if (src && runId === generationRun.current) setSlideExtras((cur) => [...cur, src]);
+        };
+        void wallMaskFor(base).then((w) => add(w?.overlay));
+        const measured = await Promise.race([startMeasure(base), new Promise<null>((r) => setTimeout(r, 120000))]);
+        add(measured?.depthColor);
+        if (measured?.summary && m) add(await buildMeasureCard(m.overlay, m.mask, measured.summary).catch(() => null));
       }
     });
     // Depth map and roof mask help the AI understand the roof; don't wait long for slow phones.

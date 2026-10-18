@@ -374,6 +374,7 @@ async function startServer() {
       res.json({
         ok: true,
         confidence: m.confidence,
+        depthColor: ai.measurement.show && m.confidence === 'ok' ? m.colorMap : undefined,
         summary: ai.measurement.show && m.confidence === 'ok' && main ? { pitchDeg: round(main.pitchDeg, 5), areaM2: round(m.roofAreaM2, m.roofAreaM2 >= 20 ? 5 : 1) } : undefined,
       });
     } catch (err) {
@@ -390,10 +391,14 @@ async function startServer() {
     if (rateLimited(`mask:${req.ip ?? 'unknown'}`, MASK_LIMIT)) {
       return res.status(429).json({ code: 'limit', error: 'Too many roof masks. Try again later.' });
     }
-    const { image, photoId } = req.body as { image?: string; photoId?: string };
+    const { image, photoId, target } = req.body as { image?: string; photoId?: string; target?: string };
     if (!image?.startsWith('data:image/')) return res.status(400).json({ error: 'Expected { image: dataURL }' });
-    const seg = getAiSettings().segmentation;
+    const ai = getAiSettings();
+    // target "wall": the wall found for the roof measurement (shown on the loading screen).
+    const wall = target === 'wall';
+    const seg = wall ? { ...ai.segmentation, prompt: ai.measurement.wallPrompt || 'wall' } : ai.segmentation;
     if (seg.tool !== 'sam3' || !hasSegmentationKey(seg)) return res.status(503).json({ code: 'unavailable', error: 'SAM 3 is off' });
+    if (wall && ai.measurement.tool !== 'depthpro') return res.status(503).json({ code: 'unavailable', error: 'Measurement is off' });
     try {
       const started = Date.now();
       const masks = await segmentRoof(seg, image);
@@ -406,7 +411,7 @@ async function startServer() {
         model: 'sam3',
         ms,
         cost: roofMaskCost(getUsageSettings().prices),
-        detail: { masks: masks.length },
+        detail: { masks: masks.length, ...(wall ? { target: 'wall' } : {}) },
       });
       res.json({ masks });
     } catch (err) {

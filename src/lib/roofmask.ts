@@ -72,7 +72,7 @@ async function runSam3(photo: string): Promise<RoofMask | null> {
 }
 
 /** Merges SAM 3 masks (one per roof found) into one mask plus the red-tinted preview. */
-export async function mergeMasks(photo: string, masks: string[]): Promise<RoofMask | null> {
+export async function mergeMasks(photo: string, masks: string[], tint: [number, number, number] = [179, 0, 0]): Promise<RoofMask | null> {
   if (!masks?.length) return null;
   const img = await loadImage(photo);
   const { W, H } = maskSize(img);
@@ -91,12 +91,12 @@ export async function mergeMasks(photo: string, masks: string[]): Promise<RoofMa
       if (v > roof[i]) roof[i] = v;
     }
   }
-  const result = paint(img, W, H, roof);
+  const result = paint(img, W, H, roof, tint);
   return result && { ...result, source: 'sam3' };
 }
 
 /** Black-and-white mask for the AI and a red-tinted photo for the loading animation. */
-function paint(img: HTMLImageElement, W: number, H: number, roof: Uint8ClampedArray): Omit<RoofMask, 'source'> | null {
+function paint(img: HTMLImageElement, W: number, H: number, roof: Uint8ClampedArray, color: [number, number, number] = [179, 0, 0]): Omit<RoofMask, 'source'> | null {
   let roofPixels = 0;
   for (const v of roof) if (v > 127) roofPixels++;
   // No roof found (e.g. a photo without a house): don't send a misleading empty mask.
@@ -109,7 +109,7 @@ function paint(img: HTMLImageElement, W: number, H: number, roof: Uint8ClampedAr
   const tint = ctx.createImageData(W, H);
   for (let i = 0; i < W * H; i++) {
     out.data.set([roof[i], roof[i], roof[i], 255], i * 4);
-    tint.data.set([179, 0, 0, Math.round(roof[i] * 0.6)], i * 4);
+    tint.data.set([color[0], color[1], color[2], Math.round(roof[i] * 0.6)], i * 4);
   }
   ctx.putImageData(out, 0, 0);
   const mask = canvas.toDataURL('image/png');
@@ -196,6 +196,31 @@ export function roofMaskFor(photo: string): Promise<RoofMask | null> {
   if (!job) {
     job = run(photo);
     cache.set(key, job);
+  }
+  return job;
+}
+
+/** The wall found by SAM 3 (only when the roof measurement is on), tinted blue for the loading animation. */
+const wallCache = new Map<string, Promise<RoofMask | null>>();
+export function wallMaskFor(photo: string): Promise<RoofMask | null> {
+  const key = `${config.photoId}:${photo}`;
+  let job = wallCache.get(key);
+  if (!job) {
+    job = (async () => {
+      try {
+        const res = await fetch('/api/roof-mask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Access-Code': config.accessCode, ...config.headers },
+          body: JSON.stringify({ image: photo, photoId: config.photoId, target: 'wall' }),
+        });
+        if (!res.ok) return null;
+        const { masks } = (await res.json()) as { masks: string[] };
+        return await mergeMasks(photo, masks, [0, 90, 200]);
+      } catch {
+        return null;
+      }
+    })();
+    wallCache.set(key, job);
   }
   return job;
 }

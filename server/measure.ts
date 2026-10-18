@@ -33,11 +33,13 @@ export interface Measurement {
   confidence: 'ok' | 'low';
   notes: string[];
   ms: number;
+  /** Depth Pro's coloured depth picture as a data URL (for the loading screen), when it could be fetched. */
+  colorMap?: string;
 }
 
 // ---- Depth Pro on Replicate -----------------------------------------------------------------
 
-async function depthPro(token: string, image: string): Promise<{ depth: Float32Array; w: number; h: number; focalPx: number }> {
+async function depthPro(token: string, image: string): Promise<{ depth: Float32Array; w: number; h: number; focalPx: number; colorMap?: string }> {
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
   const res = await fetch(`${REPLICATE}/predictions`, {
     method: 'POST',
@@ -56,14 +58,25 @@ async function depthPro(token: string, image: string): Promise<{ depth: Float32A
     if (!next.ok) throw new Error(`Replicate Depth Pro status ${next.status}`);
     pred = await next.json();
   }
-  const out = pred.output as { npz?: string; focal_length_px?: number } | undefined;
+  const out = pred.output as { npz?: string; color_map?: string; focal_length_px?: number } | undefined;
   if (!out?.npz) throw new Error(`Depth Pro returned no depth file: ${JSON.stringify(pred.output).slice(0, 200)}`);
   const file = await fetch(out.npz, { signal: AbortSignal.timeout(60_000) });
   if (!file.ok) throw new Error(`Downloading the depth file failed: ${file.status}`);
   const { depth, w, h } = readNpzDepth(Buffer.from(await file.arrayBuffer()));
   const focalPx = Number(out.focal_length_px);
   if (!Number.isFinite(focalPx) || focalPx <= 0) throw new Error('Depth Pro returned no focal length');
-  return { depth, w, h, focalPx };
+  let colorMap: string | undefined;
+  if (out.color_map?.startsWith('http')) {
+    try {
+      const pic = await fetch(out.color_map, { signal: AbortSignal.timeout(30_000) });
+      const type = pic.headers.get('content-type') || 'image/png';
+      const bytes = pic.ok ? Buffer.from(await pic.arrayBuffer()) : null;
+      if (bytes && bytes.length < 3_000_000 && type.startsWith('image/')) colorMap = `data:${type};base64,${bytes.toString('base64')}`;
+    } catch {
+      /* the picture is only decoration */
+    }
+  }
+  return { depth, w, h, focalPx, colorMap };
 }
 
 /** Uploads the photo to Replicate's file store and returns its URL (a large data URL in the request body is slow and may be refused). Falls back to the data URL. */
@@ -489,7 +502,7 @@ export async function measureRoof(settings: MeasurementSettings, seg: Segmentati
   const roof = unionMasks(roofMasks, d.w, d.h);
   const wall = wallMasks.length ? unionMasks(wallMasks, d.w, d.h) : null;
   const result = measureGeometry(d.depth, d.w, d.h, f, roof, wall);
-  return { ...result, ms: Date.now() - started };
+  return { ...result, ms: Date.now() - started, colorMap: d.colorMap };
 }
 
 // ---- Cache by photo, so the measurement made while the visitor looks at the photo is there at Generate ----
