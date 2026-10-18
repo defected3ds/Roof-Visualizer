@@ -380,7 +380,7 @@ function HistoryRow({ row, visits, measures, open, onToggle }: { row: Row; visit
                 .sort((a, b) => a.created_at.localeCompare(b.created_at))
                 .map((c) => (
                   <tr key={String(c.id)} className="border-t border-line first:border-t-0">
-                    <td className="py-1.5 pr-2 align-top font-semibold">{KIND_LABEL[c.kind] ?? c.kind}</td>
+                    <td className="py-1.5 pr-2 align-top font-semibold">{c.kind === 'roof-mask' && c.detail?.target === 'wall' ? 'Wall mask' : KIND_LABEL[c.kind] ?? c.kind}</td>
                     <td className="py-1.5 pr-2 align-top text-muted">
                       {c.provider}
                       {c.ms ? ` · ${(c.ms / 1000).toFixed(1)} s` : ''}
@@ -400,6 +400,7 @@ function HistoryRow({ row, visits, measures, open, onToggle }: { row: Row; visit
 function detailText(c: UsageEvent): string {
   const d = c.detail ?? {};
   const parts: string[] = [];
+  if (d.shared) parts.push('same call as the roof measurement, no extra charge');
   if (Array.isArray(d.sent)) parts.push(`sent: ${(d.sent as string[]).join(', ')}`);
   if (typeof d.basis === 'string') parts.push(`estimate: ${d.basis}`);
   if (typeof d.quality === 'string') parts.push(`quality: ${d.quality}`);
