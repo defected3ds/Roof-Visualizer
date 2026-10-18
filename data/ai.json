@@ -10,6 +10,7 @@
   "maxProductPhotos": 2,
   "variants": 1,
   "showEdgeMaps": false,
+  "showModelName": true,
   "segmentation": {
     "tool": "sam3",
     "keyEnv": "FAL_API_KEY",
@@ -32,7 +33,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "bfl-flux-3-image",
+  "activeProvider": "bfl-flux-3-image-klein",
   "providers": [
     {
       "id": "gemini",
