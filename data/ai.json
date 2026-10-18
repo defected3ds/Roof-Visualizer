@@ -23,7 +23,8 @@
   "measurement": {
     "tool": "depthpro",
     "keyEnv": "REPLICATE_API_TOKEN",
-    "wallPrompt": "wall"
+    "wallPrompt": "wall",
+    "show": true
   },
   "activeProvider": "gemini",
   "providers": [
