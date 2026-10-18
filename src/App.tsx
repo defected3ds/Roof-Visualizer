@@ -302,9 +302,11 @@ function RoofApp() {
     } = { d: null, m: null, wall: null, summary: null, depthPro: null, tail: [] };
     // Rebuilds run one after the other, so a slow one can't overwrite a newer picture.
     let queue: Promise<void> = Promise.resolve();
+    // Nothing is shown until the first slides are ready, so the show starts in the agreed order.
+    let revealed = false;
     const rebuild = () =>
       (queue = queue.then(async () => {
-        if (runId !== generationRun.current) return;
+        if (runId !== generationRun.current || !revealed) return;
         const { d, m, wall } = parts;
         const flat = measuring && wall && m ? await roofOverWalls(wall.overlay, m.mask).catch(() => m.overlay) : m?.overlay;
         const card = flat && m && measuring && parts.summary ? await buildMeasureCard(flat, m.mask, parts.summary).catch(() => flat) : flat;
@@ -312,27 +314,38 @@ function RoofApp() {
         const wallSlide = wall ? await captionSlide(wall.overlay, [WALL_LABEL]).catch(() => wall.overlay) : null;
         const depthProSlide = parts.depthPro ? await captionSlide(parts.depthPro, 'Distance from the camera: red = near, blue = far').catch(() => parts.depthPro!) : null;
         if (runId !== generationRun.current) return;
-        // Order: depth maps, Depth Pro's depth (3rd), walls, roof.
-        setSlideBase({ head: [...(d ? [d.gray, d.color] : []), ...(depthProSlide ? [depthProSlide] : []), ...(wallSlide ? [wallSlide] : []), ...(roofSlide ? [roofSlide] : [])], tail: parts.tail });
+        // New setup: the quick SAM 3 slides first (walls, then roof with the walls), the slower ones added behind them as they arrive,
+        // so nothing is ever inserted before a slide that is already showing. Old setup: depth maps, then the roof.
+        const depthSlides = d ? [d.gray, d.color] : [];
+        const head = measuring
+          ? [wallSlide, roofSlide, ...depthSlides, depthProSlide]
+          : [...depthSlides, roofSlide];
+        setSlideBase({ head: head.filter((x): x is string => Boolean(x)), tail: parts.tail });
       }));
     const depthP = use.depth ? depthFor(base) : Promise.resolve(null);
     const maskP = use.mask ? roofMaskFor(base) : Promise.resolve(null);
     void (async () => {
-      const raw = await depthP.catch(() => null);
-      parts.d = raw;
-      void rebuild();
+      // The roof mask (and with it the walls) comes first: SAM 3 answers in about a second.
       const m = await maskP.catch(() => null);
       parts.m = m;
+      if (measuring) {
+        parts.wall = await Promise.race([wallMaskFor(base).catch(() => null), new Promise<null>((r) => setTimeout(r, 6000))]);
+        revealed = true;
+        void rebuild();
+      }
+      const raw = await depthP.catch(() => null);
       parts.d = await sharpDepth(raw, m).catch(() => raw);
       const d = parts.d;
       setNoAnalysis((use.depth || use.mask) && !d && !m);
       const depthName = d ? (d.source === 'marigold' ? 'Marigold (fal.ai)' : d.source === 'midas' ? 'MiDaS (fal.ai)' : `browser model${d.fallback ? ` (server depth map failed: ${d.fallback})` : ''}`) : 'none';
       setAnalysisInfo(`Depth map: ${depthName} · Roof mask: ${m ? (m.source === 'sam3' ? 'SAM 3 (fal.ai)' : 'CLIPSeg (browser)') : 'none'}`);
       parts.tail = await edges;
+      revealed = true;
       void rebuild();
     })();
     if (measuring) {
       void wallMaskFor(base).then((w) => {
+        if (!w) return;
         parts.wall = w;
         void rebuild();
       });

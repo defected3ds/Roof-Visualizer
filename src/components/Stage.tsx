@@ -147,20 +147,23 @@ function GeneratingOverlay({
   const prevMaps = useRef<string[]>([]);
   useEffect(() => {
     const prev = prevMaps.current;
-    if (mapCount.current === 0 || edgeMaps.length < mapCount.current) setMapsSince(Date.now());
-    else if (edgeMaps.length > prev.length) {
-      // A slide added later (Depth Pro's depth, a late wall) is inserted where it belongs; if the show has already passed that place,
-      // it is shown now and the show continues from there, so it isn't skipped.
-      let at = 0;
-      while (at < prev.length && prev[at] === edgeMaps[at]) at++;
-      const current = Math.min(Math.floor((Date.now() - mapsSince) / 3500), prev.length - 1);
-      if (current >= at) setMapsSince(Date.now() - at * 3500);
+    if (prev.length === 0 || edgeMaps.length === 0) setMapsSince(Date.now());
+    else {
+      // The list changed (a late slide, or the roof slide replaced by the measured one): stay on the slide being shown, so the show
+      // never jumps; slides added before it appear in the next round.
+      const elapsed = Date.now() - mapsSince;
+      const idx = Math.floor(elapsed / 3500) % prev.length;
+      let j = edgeMaps.indexOf(prev[idx]);
+      if (j < 0) j = Math.min(idx, edgeMaps.length - 1);
+      setMapsSince(Date.now() - (j * 3500 + (elapsed % 3500)));
     }
     mapCount.current = edgeMaps.length;
     prevMaps.current = edgeMaps;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edgeMaps]);
-  const stage = Math.min(Math.floor((now - mapsSince) / 3500), edgeMaps.length - 1);
+  // The show runs through the slides in order and starts again from the first while the image is being made, so a slide that arrives
+  // late takes its place in the next round instead of making the show jump back.
+  const stage = edgeMaps.length ? Math.floor((now - mapsSince) / 3500) % edgeMaps.length : 0;
   const r = 26;
   const circ = 2 * Math.PI * r;
   const progress = (elapsed % 12) / 12;
