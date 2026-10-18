@@ -28,7 +28,7 @@
     "referenceHeightM": 2,
     "groundPrompt": "ground",
     "cameraHeightM": 1.6,
-    "waitSeconds": 60,
+    "waitSeconds": 5,
     "show": true
   },
   "activeProvider": "gemini",
