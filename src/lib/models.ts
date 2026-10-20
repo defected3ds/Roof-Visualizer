@@ -62,7 +62,7 @@ export function imageLimit(cfg: Pick<ProviderConfig, 'type' | 'model'>): number 
     case 'kie':
       return MULTI_IMAGE.test(cfg.model) && !/kontext/i.test(cfg.model) ? 10 : 1;
     case 'replicate':
-      return 1;
+      return /nano-banana/i.test(cfg.model) ? 8 : 1;
     case 'demo':
       return 8; // runs the whole pipeline so it can be tried without a key
   }

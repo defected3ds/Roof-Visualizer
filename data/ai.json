@@ -92,6 +92,13 @@
       "type": "fal",
       "model": "fal-ai/nano-banana-pro/edit",
       "keyEnv": "FAL_API_KEY"
+    },
+    {
+      "id": "replicate-google-nano-banana-pro",
+      "label": "Replicate – Nano Banana Pro",
+      "type": "replicate",
+      "model": "google/nano-banana-pro",
+      "keyEnv": "REPLICATE_API_TOKEN"
     }
   ]
 }

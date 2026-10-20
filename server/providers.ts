@@ -481,6 +481,13 @@ function replicateProvider(cfg: ProviderConfig, token: string): Provider {
   return {
     name: cfg.label,
     async generate({ images, prompts }) {
+      // Nano Banana (Pro) takes a list of images in image_input; Kontext-style models take one input_image.
+      if (/nano-banana/i.test(cfg.model)) {
+        const urls = await Promise.all(images.map(upload));
+        return allVariants(prompts, (prompt) =>
+          predict({ prompt, image_input: urls, aspect_ratio: 'match_input_image', resolution: '2K', output_format: 'jpg' }),
+        );
+      }
       const imageUrl = await upload(images[0]);
       return allVariants(prompts, (prompt) =>
         predict({
