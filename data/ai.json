@@ -33,7 +33,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "gemini",
+  "activeProvider": "fal-alibaba-qwen-image-3-edit",
   "providers": [
     {
       "id": "gemini",
