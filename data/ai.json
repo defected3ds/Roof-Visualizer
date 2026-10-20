@@ -33,7 +33,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "openai-gpt-image-2-5-sunburst",
+  "activeProvider": "replicate-google-nano-banana-pro",
   "providers": [
     {
       "id": "gemini",
