@@ -77,6 +77,13 @@
       "type": "bfl",
       "model": "flux-3-image-klein",
       "keyEnv": "BFL_API_KEY"
+    },
+    {
+      "id": "fal-alibaba-qwen-image-3-edit",
+      "label": "fal.ai – Qwen Image 3 Edit",
+      "type": "fal",
+      "model": "alibaba/qwen-image-3/edit",
+      "keyEnv": "FAL_API_KEY"
     }
   ]
 }
