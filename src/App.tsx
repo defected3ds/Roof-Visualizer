@@ -23,7 +23,7 @@ import { Stage } from './components/Stage';
 import { Header, PrimaryButton, SecondaryButton, Shell, Tag } from './components/ui';
 import { configureDepth, depthFor, depthWithin, snapToMask } from './lib/depth';
 import { configureRoofMask, roofMaskFor, roofMaskWithin, wallMaskFor, type RoofMask } from './lib/roofmask';
-import { buildMeasureCard, captionSlide, roofOverWalls, ROOF_LABEL, WALL_LABEL, type MeasureOutcome } from './lib/measureCard';
+import { buildMeasureCard, captionSlide, roofOverWalls, HOUSE_LABEL, ROOF_LABEL, WALL_LABEL, type MeasureOutcome } from './lib/measureCard';
 import { buildEdgeMaps, downloadImage, fileToDataUrl, shareImage, thumbnail } from './lib/image';
 import { productThumb, renderSwatch } from './lib/swatch';
 import { TextsProvider, useT, useTextsReady } from './lib/texts';
@@ -324,8 +324,8 @@ function RoofApp() {
         // so nothing is ever inserted before a slide that is already showing. Old setup: depth maps, then the roof.
         const depthSlides = d
           ? [
-              await captionSlide(d.gray, [{ text: 'Depth map: brighter = closer to the camera' }]).catch(() => d.gray),
-              await captionSlide(d.color, [{ text: 'Depth map in colour: bright = near, dark = far' }]).catch(() => d.color),
+              await captionSlide(d.gray, [HOUSE_LABEL]).catch(() => d.gray),
+              await captionSlide(d.color, [HOUSE_LABEL]).catch(() => d.color),
             ]
           : [];
         const titled: [string | null, string][] = measuring

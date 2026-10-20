@@ -91,6 +91,7 @@ export interface SlideLabel {
 
 export const WALL_LABEL: SlideLabel = { text: 'Walls found', color: '#2f7be0' };
 export const ROOF_LABEL: SlideLabel = { text: 'Roof found', color: '#c01818' };
+export const HOUSE_LABEL: SlideLabel = { text: 'House found', color: '#d8d8d8' };
 
 /** Captions stacked in the top-left corner of a loading-screen slide ("Walls found", then "Roof found"), each with a colour swatch. */
 export async function captionSlide(src: string, labels: SlideLabel[] | string): Promise<string> {

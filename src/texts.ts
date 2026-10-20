@@ -59,7 +59,7 @@ export const TEXT_GROUPS: { title: string; fields: TextField[] }[] = [
       { key: 'editor.generating', label: 'Text while generating', value: 'Generating images' },
       { key: 'editor.slideWalls', label: 'Text while the walls are shown', value: 'Finding the walls' },
       { key: 'editor.slideRoof', label: 'Text while the roof is shown', value: 'Finding the roof' },
-      { key: 'editor.slideDepth', label: 'Text while a depth map is shown', value: 'Calculating depth' },
+      { key: 'editor.slideDepth', label: 'Text while the house depth map is shown', value: 'Finding the house' },
       { key: 'editor.slideMeasure', label: 'Text while the measured depth is shown', value: 'Measuring distances' },
       { key: 'editor.slideEdges', label: 'Text while the edge maps are shown', value: 'Tracing edges' },
       { key: 'editor.analysing', label: 'Text while the 3D depth map is calculated', value: 'Analysing 3D shape' },
