@@ -13,6 +13,7 @@ import {
   Star,
   Trash2,
   X,
+  ArrowUpDown,
   LayoutGrid,
   List,
 } from 'lucide-react';
@@ -208,7 +209,7 @@ export default function Admin() {
           </div>
         )}
 
-        {tab === 'products' && <ProductList catalog={catalog} onEdit={setEditing} />}
+        {tab === 'products' && <ProductList password={password} catalog={catalog} onEdit={setEditing} onSaved={(r) => saved(r, 'Product order saved.')} />}
         {tab === 'categories' && (
           <CategoryEditor password={password} catalog={catalog} onSaved={(r) => saved(r, 'Categories saved.')} />
         )}
@@ -279,8 +280,75 @@ function AdminLogin({ onLogin }: { onLogin: (password: string) => Promise<void> 
 
 // ---- Products -------------------------------------------------------------------------------
 
-function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Product | 'new') => void }) {
-  const { categories, products } = catalog;
+function ProductList({
+  password,
+  catalog,
+  onEdit,
+  onSaved,
+}: {
+  password: string;
+  catalog: Catalog;
+  onEdit: (p: Product | 'new') => void;
+  onSaved: (r: SaveResult) => void;
+}) {
+  const { categories } = catalog;
+  // Reorder mode: a draft order (ids of all products) that is saved with one button. Customers see products in this order, per category.
+  const [draft, setDraft] = useState<string[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [orderError, setOrderError] = useState('');
+  const products = draft ? draft.map((id) => catalog.products.find((p) => p.id === id)).filter((p): p is Product => Boolean(p)) : catalog.products;
+  function move(id: string, groupIds: string[], dir: -1 | 1 | 'first' | 'last') {
+    if (!draft) return;
+    const at = groupIds.indexOf(id);
+    const target = dir === 'first' ? 0 : dir === 'last' ? groupIds.length - 1 : at + dir;
+    if (target < 0 || target >= groupIds.length || target === at) return;
+    // The products of this category keep the positions they already have in the list; only their order among themselves changes.
+    const slots = draft.map((d, i) => (groupIds.includes(d) ? i : -1)).filter((i) => i >= 0);
+    const order = [...groupIds];
+    order.splice(at, 1);
+    order.splice(target, 0, id);
+    const next = [...draft];
+    slots.forEach((slot, i) => (next[slot] = order[i]));
+    setDraft(next);
+  }
+  const mover = (id: string, ids: string[], vertical: boolean) =>
+    draft ? (
+      <span className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        {(
+          [
+            ['first', '«', 'To the start'],
+            [-1, vertical ? '↑' : '←', 'Earlier'],
+            [1, vertical ? '↓' : '→', 'Later'],
+            ['last', '»', 'To the end'],
+          ] as const
+        ).map(([dir, label, title]) => (
+          <button
+            key={String(dir)}
+            type="button"
+            title={title}
+            aria-label={title}
+            onClick={() => move(id, ids, dir)}
+            className="h-9 w-9 rounded-wb border border-line bg-white text-lg font-bold text-brand hover:bg-paper"
+          >
+            {label}
+          </button>
+        ))}
+      </span>
+    ) : null;
+  async function saveOrder() {
+    if (!draft) return;
+    setSaving(true);
+    setOrderError('');
+    try {
+      const result = await api<SaveResult>(password, 'PUT', '/api/admin/products-order', { ids: draft });
+      setDraft(null);
+      onSaved(result);
+    } catch (err: any) {
+      setOrderError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
   const orphans = products.filter((p) => !categories.some((c) => c.id === p.category));
   const groups = [
     ...categories.map((c) => ({ key: c.id, title: c.name, items: products.filter((p) => p.category === c.id) })),
@@ -327,6 +395,36 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
               </button>
             ))}
           </div>
+          {draft ? (
+            <>
+              <button
+                type="button"
+                onClick={saveOrder}
+                disabled={saving}
+                className="flex h-12 w-44 shrink-0 items-center justify-center gap-2 rounded-wb bg-brand px-3 text-[15px] font-bold uppercase tracking-wide text-white transition hover:bg-brand-dark disabled:opacity-50"
+              >
+                {saving ? 'Saving…' : 'Save order'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDraft(null);
+                  setOrderError('');
+                }}
+                className="flex h-12 w-44 shrink-0 items-center justify-center gap-2 rounded-wb border border-line bg-white px-3 text-[15px] font-bold uppercase tracking-wide text-muted hover:bg-paper"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setDraft(catalog.products.map((p) => p.id))}
+              className="flex h-12 w-44 shrink-0 items-center justify-center gap-2 rounded-wb border border-line bg-white px-3 text-[15px] font-bold uppercase tracking-wide text-muted hover:bg-paper"
+            >
+              <ArrowUpDown size={18} /> Reorder
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onEdit('new')}
@@ -336,6 +434,12 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
           </button>
         </div>
       </div>
+      {draft && (
+        <p className="mt-4 rounded-wb border-l-4 border-brand bg-paper p-3 text-sm">
+          <strong>Reorder mode.</strong> Move products with the arrows, then press <strong>Save order</strong>. The order applies inside each category, as customers see it in the app.
+        </p>
+      )}
+      {orderError && <p className="mt-3 text-sm font-semibold text-brand">{orderError}</p>}
       {groups.map((g) => (
         <section key={g.key} className="mt-8">
           <h2 className="border-b border-line pb-2 text-lg font-bold">
@@ -346,6 +450,7 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
             <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
               {g.items.map((p) => (
                 <li key={p.id}>
+                  {draft && <div className="mb-1 flex justify-center">{mover(p.id, g.items.map((x) => x.id), false)}</div>}
                   <button onClick={() => onEdit(p)} className="group block w-full overflow-hidden rounded-wb border border-line bg-white text-left transition hover:border-brand">
                     <img src={productThumb(p, 360)} alt="" className="aspect-square w-full object-cover" />
                     <span className="block p-3">
@@ -363,7 +468,7 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
           <ul className="divide-y divide-dotted divide-line lg:grid lg:grid-cols-2 lg:gap-x-10 lg:divide-y-0 [&>li]:lg:border-b [&>li]:lg:border-dotted [&>li]:lg:border-line">
             {g.items.map((p) => (
               <li key={p.id}>
-                <button onClick={() => onEdit(p)} className="flex w-full items-center gap-4 py-3 text-left hover:bg-paper">
+                <div role="button" tabIndex={0} onClick={() => onEdit(p)} onKeyDown={(e) => e.key === 'Enter' && onEdit(p)} className="flex w-full cursor-pointer items-center gap-4 py-3 text-left hover:bg-paper">
                   <img src={productThumb(p, 120)} alt="" className="h-14 w-14 shrink-0 rounded-wb border border-line object-cover" />
                   <span className="min-w-0 flex-1">
                     {p.brand && <span className="block text-xs font-semibold uppercase tracking-wide text-muted">{p.brand}</span>}
@@ -375,8 +480,8 @@ function ProductList({ catalog, onEdit }: { catalog: Catalog; onEdit: (p: Produc
                     <br />
                     {p.specs.length ? `${p.specs.length} data rows` : 'No technical data'}
                   </span>
-                  <ArrowRight size={18} className="shrink-0 text-brand" />
-                </button>
+                  {draft ? mover(p.id, g.items.map((x) => x.id), true) : <ArrowRight size={18} className="shrink-0 text-brand" />}
+                </div>
               </li>
             ))}
           </ul>

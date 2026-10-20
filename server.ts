@@ -5,6 +5,7 @@ import path from 'path';
 import { githubConfig } from './server/github';
 import {
   deleteProduct,
+  reorderProducts,
   ensureImage,
   getAiSettings,
   getCategory,
@@ -162,6 +163,13 @@ async function startServer() {
   admin.post('/products', async (req, res) => {
     try {
       res.json(await saveProduct(req.body as ProductInput));
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  admin.put('/products-order', async (req, res) => {
+    try {
+      res.json(await reorderProducts((req.body as { ids?: string[] }).ids ?? []));
     } catch (err: any) {
       res.status(400).json({ error: err.message });
     }

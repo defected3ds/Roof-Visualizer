@@ -243,6 +243,20 @@ export function deleteProduct(id: string): Promise<SaveResult> {
   });
 }
 
+/** Saves a new product order: `ids` lists every product, in the order customers see them (within each category). */
+export function reorderProducts(ids: string[]): Promise<SaveResult> {
+  return serialized(async () => {
+    const byId = new Map(products.map((p) => [p.id, p]));
+    if (!Array.isArray(ids) || ids.length !== products.length || new Set(ids).size !== ids.length || ids.some((id) => !byId.has(id))) {
+      throw new Error('The list does not match the products. Reload the page and try again.');
+    }
+    const next = ids.map((id) => byId.get(id)!);
+    const result = await persist([{ path: FILES.products, content: json(next) }], 'Reorder products');
+    products = next;
+    return result;
+  });
+}
+
 // ---- Categories -----------------------------------------------------------------------------
 
 /** Replaces the whole category list (adds, renames, reorders, deletes in one save). */
