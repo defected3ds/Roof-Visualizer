@@ -15,7 +15,15 @@ export function MaterialPicker({ categories, products, selected, onSelect, disab
   const t = useT();
   const [filter, setFilter] = useState<string>(selected.category);
   const tabs = categories.filter((c) => products.some((p) => p.category === c.id));
-  const items = useMemo(() => (filter === 'all' ? products : products.filter((p) => p.category === filter)), [filter, products]);
+  // "All" lists the products category by category, in the category order and the product order set in the admin.
+  const items = useMemo(() => {
+    if (filter !== 'all') return products.filter((p) => p.category === filter);
+    const rank = (id: string) => {
+      const at = categories.findIndex((c) => c.id === id);
+      return at < 0 ? categories.length : at;
+    };
+    return products.map((p, i) => [p, i] as const).sort((a, b) => rank(a[0].category) - rank(b[0].category) || a[1] - b[1]).map(([p]) => p);
+  }, [filter, products, categories]);
   const tabRow = useRef<HTMLDivElement>(null);
   const productList = useRef<HTMLDivElement>(null);
 
