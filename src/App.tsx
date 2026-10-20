@@ -318,7 +318,7 @@ function RoofApp() {
         const card = flat && m && measuring && parts.summary ? await buildMeasureCard(flat, m.mask, parts.summary).catch(() => flat) : flat;
         const roofSlide = card ? await captionSlide(card, measuring && wall ? [WALL_LABEL, ROOF_LABEL] : [ROOF_LABEL]).catch(() => card) : null;
         const wallSlide = wall ? await captionSlide(wall.overlay, [WALL_LABEL]).catch(() => wall.overlay) : null;
-        const depthProSlide = parts.depthPro ? await captionSlide(parts.depthPro, 'Distance from the camera: red = near, blue = far').catch(() => parts.depthPro!) : null;
+        const depthProSlide = parts.depthPro ? await captionSlide(parts.depthPro, [HOUSE_LABEL]).catch(() => parts.depthPro!) : null;
         if (runId !== generationRun.current) return;
         // New setup: the quick SAM 3 slides first (walls, then roof with the walls), the slower ones added behind them as they arrive,
         // so nothing is ever inserted before a slide that is already showing. Old setup: depth maps, then the roof.
