@@ -33,7 +33,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "fal-alibaba-qwen-image-3-edit",
+  "activeProvider": "open-ai-gpt-2-5",
   "providers": [
     {
       "id": "gemini",
