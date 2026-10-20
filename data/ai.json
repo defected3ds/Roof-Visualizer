@@ -33,7 +33,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "fal-nano-banana-pro-edit",
+  "activeProvider": "replicate-google-nano-banana-pro",
   "providers": [
     {
       "id": "gemini",
