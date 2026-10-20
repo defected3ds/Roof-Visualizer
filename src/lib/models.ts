@@ -70,6 +70,6 @@ export function imageLimit(cfg: Pick<ProviderConfig, 'type' | 'model'>): number 
 
 /** Longest prompt (characters) a model accepts, if it has a limit. Longer prompts are shortened (see fitPrompt). */
 export function promptLimit(cfg: Pick<ProviderConfig, 'type' | 'model'>): number | null {
-  if (cfg.type === 'fal' && /krea/i.test(cfg.model)) return 5000;
+  if (cfg.type === 'fal' && /krea|qwen/i.test(cfg.model)) return 5000;
   return null;
 }
