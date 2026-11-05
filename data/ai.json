@@ -43,18 +43,18 @@
       "keyEnv": "GEMINI_API_KEY"
     },
     {
-      "id": "open-ai-gpt-2-5",
-      "label": "Open AI GPT 2.5",
-      "type": "openai",
-      "model": "gpt-image-2.5-flare",
-      "keyEnv": "OPENAI_API_KEY"
+      "id": "fal-gpt-image-2-6-flare",
+      "label": "fal.ai – GPT Image 2.6 Flare",
+      "type": "fal",
+      "model": "openai/gpt-image-2.6/flare/edit",
+      "keyEnv": "FAL_API_KEY"
     },
     {
-      "id": "openai-gpt-image-2-5-sunburst",
-      "label": "OpenAI – GPT Image 2.5 Sunburst",
-      "type": "openai",
-      "model": "gpt-image-2.5-sunburst",
-      "keyEnv": "OPENAI_API_KEY"
+      "id": "fal-gpt-image-2-6-sunburst",
+      "label": "fal.ai – GPT Image 2.6 Sunburst",
+      "type": "fal",
+      "model": "openai/gpt-image-2.6/sunburst/edit",
+      "keyEnv": "FAL_API_KEY"
     },
     {
       "id": "fal-krea-v3-edit",
