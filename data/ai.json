@@ -33,7 +33,7 @@
     "waitSeconds": 5,
     "show": true
   },
-  "activeProvider": "gemini",
+  "activeProvider": "fal-gpt-image-2-6-flare",
   "providers": [
     {
       "id": "gemini",
