@@ -6123,5 +6123,73 @@
     "images": [
       "/product-images/test-1-mve6gilq/mve6gilq-0.jpg"
     ]
+  },
+  {
+    "id": "actua-multiblend-2-mw9dufqa",
+    "name": "Actua Multiblend 2",
+    "category": "large-flat",
+    "brand": "Koramic",
+    "description": "Large-format flat interlocking clay tile with a smooth, completely flat face and straight edges. Laid with vertical joints aligned, giving a clean, modern, almost slate-like grid with thin shadow lines. Colour: red with a blend of darker red-brown tiles.",
+    "specs": [
+      {
+        "label": "",
+        "value": "Clay"
+      },
+      {
+        "label": "",
+        "value": "472 x 303 mm"
+      },
+      {
+        "label": "",
+        "value": "262 mm"
+      },
+      {
+        "label": "",
+        "value": "440 mm"
+      },
+      {
+        "label": "",
+        "value": "31 mm"
+      },
+      {
+        "label": "",
+        "value": "10.5 tiles per m² at 102mm headlap"
+      },
+      {
+        "label": "",
+        "value": "22.5°"
+      },
+      {
+        "label": "",
+        "value": "102mm"
+      },
+      {
+        "label": "",
+        "value": "162mm"
+      },
+      {
+        "label": "",
+        "value": "46.2 kg"
+      },
+      {
+        "label": "",
+        "value": "310 mm"
+      },
+      {
+        "label": "",
+        "value": "370 mm"
+      },
+      {
+        "label": "",
+        "value": "240"
+      },
+      {
+        "label": "",
+        "value": "750750"
+      }
+    ],
+    "images": [
+      "/product-images/actua-multiblend-2-mw9dufqa/mw9dufqb-0.jpg"
+    ]
   }
 ]
