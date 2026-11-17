@@ -58,7 +58,50 @@ export function scaleGuide(product: Product): string | null {
   ].join(' ');
 }
 
-export function productBlock(settings: AiSettings, product: Product, category?: Category): string {
+/**
+ * What each technical-data field means for the image, so the model knows which numbers to draw and which to ignore.
+ * Matched on the admin's label; the first match wins, so specific labels come before general ones.
+ */
+const SPEC_NOTES: [RegExp, string][] = [
+  [/vertical wall|\bwall\b/i, 'applies to wall cladding, not to the roof; ignore it for the roof.'],
+  [/^material/i, 'what the tile is made of; it sets the surface character (fired clay, concrete, slate and so on).'],
+  [/length\s*[×x*]\s*width|overall dimensions/i, 'full size of one loose tile, including the parts hidden under neighbouring tiles; it is NOT the visible size on the roof.'],
+  [/cover(ing)? width|effective cover/i, 'visible width of one installed tile across the roof (side overlap removed): the spacing of tiles along each course.'],
+  [/hanging length|covering length/i, 'length of the tile as it hangs from the batten; the headlap hides part of it, so the visible course height is smaller.'],
+  [/profile depth/i, 'height of the tile relief from its lowest to highest point: how deep the rolls, ribs or camber and their shadows look. A few millimetres means almost flat.'],
+  [/covering capacity|tiles per m/i, 'tiles per square metre of roof: a higher number means smaller visible tiles.'],
+  [/roof pitch/i, 'installation rule only; never change the pitch of the roof in the photo to match it.'],
+  [/headlap/i, 'how far each course overlaps the course below; hidden on the finished roof, it shortens the visible course height.'],
+  [/batten gauge/i, 'distance between battens = the visible height of each course up the slope; use it for the course spacing.'],
+  [/weight/i, 'not visible; ignore it for the image.'],
+  [/per pallet|quantity/i, 'logistics only; ignore it for the image.'],
+  [/product id|article|\bsku\b|\bean\b/i, 'catalogue reference only; ignore it and never draw it.'],
+  [/installation|laying|bond/i, 'how the tiles are laid; follow this pattern.'],
+  [/colou?r/i, 'the colour name; the product photos remain the reference for the exact tone.'],
+  [/finish|surface/i, 'the surface finish; show it only as far as the product photos support it.'],
+];
+
+const specNote = (label: string) => SPEC_NOTES.find(([re]) => re.test(label))?.[1];
+
+/**
+ * One line per technical-data field, with what it means for the image when that is known. A note is given once:
+ * minimum and maximum of the same field (batten gauge, headlap) share it.
+ */
+function specLines(product: Product, explain: boolean): string[] {
+  const given = new Set<string>();
+  return product.specs
+    .filter((s) => s.value.trim())
+    .map((s) => {
+      const label = s.label.trim();
+      const value = s.value.trim().replace(/\.$/, '');
+      let note = explain && label ? specNote(label) : undefined;
+      if (note && given.has(note)) note = undefined;
+      if (note) given.add(note);
+      return `- ${label ? `${label}: ` : ''}${value}${note ? `. Meaning: ${note}` : ''}`;
+    });
+}
+
+export function productBlock(settings: AiSettings, product: Product, category?: Category, explain = true): string {
   const label = [product.brand, product.name].filter(Boolean).join(' ');
   const kind = category ? ` (${category.name})` : '';
   const lines = [`SELECTED PRODUCT: ${label}${kind}.`];
@@ -67,9 +110,7 @@ export function productBlock(settings: AiSettings, product: Product, category?: 
     lines.push(`Appearance: ${product.description}`);
   }
   if (settings.include.specs && product.specs.length) {
-    lines.push(
-      `Technical data (use it for the correct tile size, proportions and colour): ${product.specs.map((s) => `${s.label}: ${s.value}`).join('; ')}.`,
-    );
+    lines.push('Technical data (use it for the correct tile size, proportions and colour):', ...specLines(product, explain));
     const guide = scaleGuide(product);
     if (guide) lines.push(guide);
   }
@@ -138,9 +179,10 @@ export function buildModelPrompt(
   const limit = promptLimit(cfg);
   if (!limit || full.length <= limit) return { prompt: full, shortened: false };
 
-  // Keep product data + image guide (+ variation note) whole, and fit as much of the system prompt as possible.
+  // Keep product data (without the field explanations, to save room) + image guide (+ variation note) whole, and fit as
+  // much of the system prompt as possible.
   const tail = [
-    productBlock(own, product, category),
+    productBlock(own, product, category, false),
     measurements,
     imageGuide(roles),
     variant > 0 ? `Variation ${variant + 1}: allow natural, subtle differences in colour blend and weathering.` : '',

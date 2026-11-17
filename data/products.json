@@ -6132,59 +6132,59 @@
     "description": "Large-format flat interlocking clay tile with a smooth, completely flat face and straight edges. Laid with vertical joints aligned, giving a clean, modern, almost slate-like grid with thin shadow lines. Colour: red with a blend of darker red-brown tiles.\n\nA seamless tiling texture of terracotta roof shingles or clay tiles, filling the entire frame. Rectangular tiles in warm reddish-brown and rust tones are laid in horizontal rows with staggered, offset vertical joints, like brickwork. Thin dark grout lines separate each tile, and subtle mottled shading gives a weathered, slightly glossy ceramic appearance. Flat, even lighting; no text or objects present",
     "specs": [
       {
-        "label": "",
+        "label": "Material",
         "value": "Clay"
       },
       {
-        "label": "",
+        "label": "Length × width",
         "value": "472 x 303 mm"
       },
       {
-        "label": "",
+        "label": "Cover width",
         "value": "262 mm"
       },
       {
-        "label": "",
+        "label": "Hanging length",
         "value": "440 mm"
       },
       {
-        "label": "",
+        "label": "Profile depth",
         "value": "31 mm"
       },
       {
-        "label": "",
+        "label": "Covering capacity",
         "value": "10.5 tiles per m² at 102mm headlap"
       },
       {
-        "label": "",
+        "label": "Minimum roof pitch",
         "value": "22.5°"
       },
       {
-        "label": "",
+        "label": "Minimum headlap",
         "value": "102mm"
       },
       {
-        "label": "",
+        "label": "Maximum headlap",
         "value": "162mm"
       },
       {
-        "label": "",
+        "label": "Maximum weight per m²",
         "value": "46.2 kg"
       },
       {
-        "label": "",
+        "label": "Minimum batten gauge",
         "value": "310 mm"
       },
       {
-        "label": "",
+        "label": "Maximum batten gauge",
         "value": "370 mm"
       },
       {
-        "label": "",
+        "label": "Quantity per pallet",
         "value": "240"
       },
       {
-        "label": "",
+        "label": "Product ID",
         "value": "750750"
       }
     ],
