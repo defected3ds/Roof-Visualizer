@@ -322,12 +322,8 @@ function RoofApp() {
         if (runId !== generationRun.current) return;
         // New setup: the quick SAM 3 slides first (walls, then roof with the walls), the slower ones added behind them as they arrive,
         // so nothing is ever inserted before a slide that is already showing. Old setup: depth maps, then the roof.
-        const depthSlides = d
-          ? [
-              await captionSlide(d.gray, [HOUSE_LABEL]).catch(() => d.gray),
-              await captionSlide(d.color, [HOUSE_LABEL]).catch(() => d.color),
-            ]
-          : [];
+        // Only the colour depth map is shown; the grey one is what the AI receives.
+        const depthSlides = d ? [await captionSlide(d.color, [HOUSE_LABEL]).catch(() => d.color)] : [];
         const titled: [string | null, string][] = measuring
           ? [
               [wallSlide, t('editor.slideWalls')],
