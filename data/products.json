@@ -1,82 +1,5 @@
 [
   {
-    "id": "alban-sussex-blend",
-    "name": "Alban Sussex Blend",
-    "category": "plain-tile",
-    "brand": "Sandtoft",
-    "description": "Cambered clay plain tile with a lightly sanded surface and soft, slightly irregular edges, laid double-lap in broken bond. The camber gives each course a gently curved, rippled look. Colour: blended red-brown with darker purple-brown and lighter sandy tones.",
-    "specs": [
-      {
-        "label": "Material",
-        "value": "Clay"
-      },
-      {
-        "label": "Length × width",
-        "value": "265 x 165 mm"
-      },
-      {
-        "label": "Cover width",
-        "value": "165 mm"
-      },
-      {
-        "label": "Hanging length",
-        "value": "245 mm"
-      },
-      {
-        "label": "Profile depth",
-        "value": "13 mm"
-      },
-      {
-        "label": "Covering capacity (roof)",
-        "value": "60 tiles per m²"
-      },
-      {
-        "label": "Minimum roof pitch (roof)",
-        "value": "35°"
-      },
-      {
-        "label": "Headlap (roof)",
-        "value": "65mm"
-      },
-      {
-        "label": "Covering capacity (vertical wall)",
-        "value": "53 tiles per m²"
-      },
-      {
-        "label": "Minimum roof pitch (vertical wall)",
-        "value": "75°"
-      },
-      {
-        "label": "Headlap (vertical wall)",
-        "value": "38mm"
-      },
-      {
-        "label": "Maximum weight per m²",
-        "value": "60 kg"
-      },
-      {
-        "label": "Minimum batten gauge",
-        "value": "100 mm"
-      },
-      {
-        "label": "Maximum batten gauge",
-        "value": "100 mm"
-      },
-      {
-        "label": "Quantity per pallet",
-        "value": "510"
-      },
-      {
-        "label": "Product ID",
-        "value": "750754"
-      }
-    ],
-    "images": [
-      "/product-images/alban-sussex-blend/1.jpg",
-      "/product-images/alban-sussex-blend/2.jpg"
-    ]
-  },
-  {
     "id": "barrow-bay-brown",
     "name": "Barrow Bay Brown",
     "category": "plain-tile",
@@ -1799,6 +1722,83 @@
     "images": [
       "/product-images/village-reclaimed/1.jpg",
       "/product-images/village-reclaimed/2.jpg"
+    ]
+  },
+  {
+    "id": "alban-sussex-blend",
+    "name": "Alban Sussex Blend",
+    "category": "plain-tile",
+    "brand": "Sandtoft",
+    "description": "Cambered clay plain tile with a lightly sanded surface and soft, slightly irregular edges, laid double-lap in broken bond. The camber gives each course a gently curved, rippled look. Colour: blended red-brown with darker purple-brown and lighter sandy tones.",
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Clay"
+      },
+      {
+        "label": "Length × width",
+        "value": "265 x 165 mm"
+      },
+      {
+        "label": "Cover width",
+        "value": "165 mm"
+      },
+      {
+        "label": "Hanging length",
+        "value": "245 mm"
+      },
+      {
+        "label": "Profile depth",
+        "value": "13 mm"
+      },
+      {
+        "label": "Covering capacity (roof)",
+        "value": "60 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (roof)",
+        "value": "35°"
+      },
+      {
+        "label": "Headlap (roof)",
+        "value": "65mm"
+      },
+      {
+        "label": "Covering capacity (vertical wall)",
+        "value": "53 tiles per m²"
+      },
+      {
+        "label": "Minimum roof pitch (vertical wall)",
+        "value": "75°"
+      },
+      {
+        "label": "Headlap (vertical wall)",
+        "value": "38mm"
+      },
+      {
+        "label": "Maximum weight per m²",
+        "value": "60 kg"
+      },
+      {
+        "label": "Minimum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Maximum batten gauge",
+        "value": "100 mm"
+      },
+      {
+        "label": "Quantity per pallet",
+        "value": "510"
+      },
+      {
+        "label": "Product ID",
+        "value": "750754"
+      }
+    ],
+    "images": [
+      "/product-images/alban-sussex-blend/1.jpg",
+      "/product-images/alban-sussex-blend/2.jpg"
     ]
   },
   {
