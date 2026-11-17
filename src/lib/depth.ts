@@ -75,14 +75,14 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-// Magma-like colour ramp (dark purple → red → orange → pale yellow), like common depth visualisations.
+// Warm colour ramp for the loading animation: far is deep red, then rose and peach, near is pale yellow.
 const RAMP = [
-  [0, 0, 4],
-  [59, 15, 112],
-  [140, 41, 129],
-  [222, 73, 104],
-  [254, 159, 109],
-  [252, 253, 191],
+  [110, 14, 24],
+  [178, 28, 44],
+  [224, 82, 96],
+  [242, 142, 128],
+  [250, 196, 150],
+  [255, 240, 192],
 ];
 
 function rampColour(v: number): number[] {
