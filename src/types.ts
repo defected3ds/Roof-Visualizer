@@ -79,9 +79,19 @@ export interface ProviderConfig {
 }
 
 /** AI settings edited in /admin > AI settings (data/ai.json). */
+/** A saved version of the system prompt, so the admin can switch between prompts and compare results. */
+export interface PromptVersion {
+  id: string;
+  name: string;
+  text: string;
+}
+
 export interface AiSettings {
-  /** General instructions; {{product}} and {{images}} mark where product data and the image guide go. */
+  /** General instructions; {{product}} and {{images}} mark where product data and the image guide go. The text of the active prompt version. */
   systemPrompt: string;
+  /** Saved prompt versions; systemPrompt is the text of the active one. */
+  promptVersions?: PromptVersion[];
+  activePromptVersion?: string;
   include: {
     /** Product description and category note. */
     productData: boolean;

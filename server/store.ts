@@ -4,7 +4,7 @@ import { commitFiles, githubConfig, readRepoFile, type FileChange } from './gith
 import { DEFAULT_TEXTS, IMAGE_TEXT_KEYS } from '../src/texts';
 import { defaultAiSettings, validKeyEnv, PROVIDER_TYPES } from './providers';
 import { defaultPrices } from './usage';
-import type { AiSettings, Category, DepthSettings, MeasurementSettings, UsageSettings, Product, ProductInput, ProviderConfig, SegmentationSettings, Spec, Texts } from '../src/types';
+import type { AiSettings, Category, DepthSettings, MeasurementSettings, PromptVersion, UsageSettings, Product, ProductInput, ProviderConfig, SegmentationSettings, Spec, Texts } from '../src/types';
 
 /**
  * Catalog data (categories, products, product photos, app texts) lives in data/ in the repo.
@@ -390,6 +390,29 @@ function cleanSegmentation(s: SegmentationSettings): SegmentationSettings {
   return { tool, keyEnv, prompt };
 }
 
+/**
+ * Prompt versions with clean ids and names. The active version's text is the system prompt being saved, so editing the
+ * prompt edits the active version.
+ */
+function cleanPromptVersions(input: Partial<AiSettings>, current: AiSettings, systemPrompt: string) {
+  const list = (Array.isArray(input.promptVersions) ? input.promptVersions : current.promptVersions ?? []).slice(0, 20);
+  const seen = new Set<string>();
+  const versions: PromptVersion[] = [];
+  for (const v of list) {
+    let id = String(v?.id ?? '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'prompt';
+    while (seen.has(id)) id += '-2';
+    seen.add(id);
+    const text = String(v?.text ?? '').trim().slice(0, 30000);
+    versions.push({ id, name: String(v?.name ?? '').trim().slice(0, 60) || 'Prompt', text });
+  }
+  if (versions.length === 0) return {};
+  const wanted = input.promptVersions ? input.activePromptVersion : current.activePromptVersion;
+  const active = versions.find((v) => v.id === wanted) ?? versions[0];
+  active.text = systemPrompt;
+  if (versions.some((v) => !v.text)) throw new Error('A prompt version cannot be empty');
+  return { promptVersions: versions, activePromptVersion: active.id };
+}
+
 export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult & { settings: AiSettings }> {
   return serialized(async () => {
     const current = getAiSettings();
@@ -404,8 +427,10 @@ export function saveAiSettings(input: Partial<AiSettings>): Promise<SaveResult &
     if (providers.length === 0) throw new Error('Keep at least one image model');
     const activeProvider = providers.some((p) => p.id === input.activeProvider) ? input.activeProvider! : providers[0].id;
     const clamp = (n: unknown, lo: number, hi: number, d: number) => Math.min(hi, Math.max(lo, Math.round(Number(n)) || d));
+    const systemPrompt = String(input.systemPrompt ?? current.systemPrompt).trim();
     const next: AiSettings = {
-      systemPrompt: String(input.systemPrompt ?? current.systemPrompt).trim(),
+      systemPrompt,
+      ...cleanPromptVersions(input, current, systemPrompt),
       include: {
         productData: Boolean(input.include?.productData ?? current.include.productData),
         specs: Boolean(input.include?.specs ?? current.include.specs),

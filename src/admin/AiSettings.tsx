@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Plus, RotateCcw, Trash2, TriangleAlert } from 'lucide-react';
+import { Check, Copy, Pencil, Plus, RotateCcw, Trash2, TriangleAlert } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from '../components/ui';
 import { imageLimit, promptLimit, PROVIDER_TYPES } from '../lib/models';
 import { buildModelPrompt, DEFAULT_SYSTEM_PROMPT, imageGuide, productBlock, type ImageRoles } from '../lib/prompt';
@@ -8,7 +8,7 @@ import { productThumb } from '../lib/swatch';
 import { fileToDataUrl } from '../lib/image';
 import { configureDepth, depthFor, orientedPreview } from '../lib/depth';
 import { configureRoofMask, mergeMasks, roofMaskWithin } from '../lib/roofmask';
-import type { AiSettings, AiSettingsView, Catalog, ProviderConfig, ProviderType } from '../types';
+import type { AiSettings, AiSettingsView, Catalog, PromptVersion, ProviderConfig, ProviderType } from '../types';
 import { api, fieldClass, type SaveResult } from './Admin';
 
 /** What a model receives, from its image limit (see src/lib/models.ts). */
@@ -40,6 +40,31 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
   if (!draft || !loaded) return <p className="mt-6 text-muted">{error || 'Loading…'}</p>;
 
   const set = (patch: Partial<AiSettings>) => setDraft((d) => (d ? { ...d, ...patch } : d));
+  // Prompt versions: settings saved before versions existed get one version holding the current prompt.
+  const versions: PromptVersion[] = draft.promptVersions?.length ? draft.promptVersions : [{ id: 'original', name: 'Original prompt', text: draft.systemPrompt }];
+  const activeVersion = versions.find((v) => v.id === draft.activePromptVersion) ?? versions[0];
+  /** Editing the prompt edits the active version. */
+  const setPrompt = (systemPrompt: string) =>
+    set({ systemPrompt, promptVersions: versions.map((v) => (v.id === activeVersion.id ? { ...v, text: systemPrompt } : v)), activePromptVersion: activeVersion.id });
+  const switchVersion = (id: string) => {
+    const v = versions.find((x) => x.id === id);
+    if (v) set({ systemPrompt: v.text, promptVersions: versions, activePromptVersion: v.id });
+  };
+  const copyVersion = () => {
+    const name = window.prompt('Name of the new prompt version', `${activeVersion.name} (copy)`)?.trim();
+    if (!name) return;
+    const id = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'prompt'}-${Date.now().toString(36)}`;
+    set({ promptVersions: [...versions, { id, name, text: draft.systemPrompt }], activePromptVersion: id });
+  };
+  const renameVersion = () => {
+    const name = window.prompt('New name for this prompt version', activeVersion.name)?.trim();
+    if (name) set({ promptVersions: versions.map((v) => (v.id === activeVersion.id ? { ...v, name } : v)), activePromptVersion: activeVersion.id });
+  };
+  const deleteVersion = () => {
+    if (versions.length < 2 || !window.confirm(`Delete the prompt version "${activeVersion.name}"?`)) return;
+    const rest = versions.filter((v) => v.id !== activeVersion.id);
+    set({ promptVersions: rest, activePromptVersion: rest[0].id, systemPrompt: rest[0].text });
+  };
   const setInclude = (patch: Partial<AiSettings['include']>) => set({ include: { ...draft.include, ...patch } });
   const setProvider = (i: number, patch: Partial<ProviderConfig>) =>
     set({ providers: draft.providers.map((p, j) => (j === i ? { ...p, ...patch } : p)) });
@@ -180,7 +205,7 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
         <div className="flex items-end justify-between gap-4 border-b border-line pb-2">
           <h2 className="text-lg font-bold">System prompt</h2>
           {draft.systemPrompt.trim() !== DEFAULT_SYSTEM_PROMPT && (
-            <button type="button" onClick={() => set({ systemPrompt: DEFAULT_SYSTEM_PROMPT })} className="flex items-center gap-1 text-sm font-semibold text-brand">
+            <button type="button" onClick={() => setPrompt(DEFAULT_SYSTEM_PROMPT)} className="flex items-center gap-1 text-sm font-semibold text-brand">
               <RotateCcw size={14} /> Restore default
             </button>
           )}
@@ -190,9 +215,38 @@ export function AiSettingsEditor({ password, catalog, onSaved }: { password: str
           goes and <code>{'{{images}}'}</code> where the description of the attached images goes; if you leave them out they are added
           at the end.
         </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <label className="font-semibold" htmlFor="prompt-version">
+            Prompt version
+          </label>
+          <select
+            id="prompt-version"
+            value={activeVersion.id}
+            onChange={(e) => switchVersion(e.target.value)}
+            className="rounded-wb border border-line bg-white px-2 py-1.5 text-sm"
+          >
+            {versions.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.name}
+              </option>
+            ))}
+          </select>
+          <button type="button" onClick={copyVersion} className="flex items-center gap-1 font-semibold text-brand">
+            <Copy size={14} /> Save as new version
+          </button>
+          <button type="button" onClick={renameVersion} className="flex items-center gap-1 font-semibold text-brand">
+            <Pencil size={14} /> Rename
+          </button>
+          {versions.length > 1 && (
+            <button type="button" onClick={deleteVersion} className="flex items-center gap-1 font-semibold text-red-700">
+              <Trash2 size={14} /> Delete
+            </button>
+          )}
+        </div>
+        <p className="mt-1 text-xs text-muted">The selected version is the one the AI uses after you save. Edits change the selected version only.</p>
         <textarea
           value={draft.systemPrompt}
-          onChange={(e) => set({ systemPrompt: e.target.value })}
+          onChange={(e) => setPrompt(e.target.value)}
           rows={16}
           className={`${fieldClass} font-mono text-[13px] leading-relaxed`}
         />
